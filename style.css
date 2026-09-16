@@ -42,3 +42,5 @@ h1 span{color:#ef4d83}
 footer{text-align:center;background:#183f70;color:#fff;padding:18px;margin-top:15px;font-size:13px}
 @media(max-width:950px){nav{display:none}.hero-content{width:65%}.game-grid{grid-template-columns:repeat(3,1fr)}.subject-grid{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}.features div:nth-child(2n){border:0}}
 @media(max-width:600px){.navbar{height:65px;padding:0 15px}.logo{font-size:19px}.nav-actions{margin-left:auto}.hero{min-height:500px}.hero-content{width:100%;padding:40px 24px}.hero-illustration{position:absolute;opacity:.25}.hero h1{font-size:50px}.game-grid{grid-template-columns:repeat(2,1fr)}.game-picture{height:100px}.features{grid-template-columns:1fr}.features div{border:0;border-bottom:1px solid #cbddeb;padding:12px}.section-heading>span{display:none}}
+
+.game-load-error{padding:20px;border-radius:16px;background:#fff0f0;color:#a33;font-weight:700;text-align:center;margin-top:20px}

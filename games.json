@@ -1,0 +1,58 @@
+[
+  {
+    "category": "Türkçe",
+    "id": "turkce",
+    "file": "deyim-i 3 oyun.html",
+    "title": "Deyim Eşleştirme",
+    "icon": "💬🔗",
+    "picture": "blue",
+    "tagClass": "turkce-tag",
+    "description": "Deyimleri eşleştirerek Türkçe becerilerini pekiştir."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "sandık masaldestan.html",
+    "title": "Efsaneler Sandığı",
+    "icon": "📜✨",
+    "picture": "purple",
+    "description": "Masal ve destan konularını eğlenceli bir yarışmayla keşfet."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "Çarkıfelek masaldestan.html",
+    "title": "Çarkıfelek: Masal & Destan",
+    "icon": "❓🏆",
+    "picture": "orange",
+    "description": "Masal ve destan sorularıyla çarkıfelek yarışmasına katıl."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "Ejderha masal.html",
+    "title": "Ejderha Masal",
+    "icon": "🐉📖",
+    "picture": "cyan",
+    "description": "Masal dünyasında eğlenceli bir maceraya çık."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "masal_destan_dedektifleri_hazırbulunuşluk.html",
+    "title": "Masal & Destan Dedektifleri",
+    "icon": "🔎📜",
+    "picture": "pink",
+    "description": "Masal ve destan ipuçlarını bulup dedektiflik yap."
+  },
+  {
+    "category": "Genel Kültür",
+    "id": "genel-kultur",
+    "file": "Bilmece_oyun(1).html",
+    "title": "Bilmece Turnuvası",
+    "icon": "🧩❓",
+    "picture": "pink",
+    "tagClass": "genel-tag",
+    "description": "Bilmecelerle düşün, yarış ve eğlen."
+  }
+]
