@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Masal & Destan Dedektifleri</title>
+<style>
+:root{--bg1:#280308;--bg2:#5b0711;--bg3:#160104;--gold:#f8d37a;--gold2:#b87918;--silver:#e6edf5;--silver2:#8997a8;--paper:#fff8ef;--ink:#27141a;--muted:#725e64;--red:#b61f32;--red2:#7d0e1d;--green:#22a66f;--shadow:0 22px 60px rgba(0,0,0,.42)}
+*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);overflow-x:hidden;background-color:var(--bg2);background-image:radial-gradient(circle at 20% 10%,rgba(255,210,112,.14),transparent 17%),radial-gradient(circle at 80% 15%,rgba(255,255,255,.08),transparent 18%),linear-gradient(135deg,var(--bg3),var(--bg2) 45%,var(--bg1));position:relative}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:repeating-linear-gradient(90deg,transparent 0 7px,rgba(255,255,255,.018) 7px 9px),repeating-linear-gradient(0deg,transparent 0 7px,rgba(0,0,0,.04) 7px 9px);mix-blend-mode:screen}
+button,input{font:inherit}.app{min-height:100vh;padding:14px 20px 100px}.header{display:flex;align-items:center;gap:12px;max-width:1500px;margin:0 auto 8px}.logo{width:52px;height:52px;border-radius:20px;display:grid;place-items:center;font-size:25px;background:linear-gradient(145deg,#e23b4d,#7d0716);border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 28px rgba(248,211,122,.22),var(--shadow)}.title h1{margin:0;color:#fff8ee;font-size:clamp(24px,3.2vw,39px);letter-spacing:-1px;text-shadow:0 3px 18px rgba(0,0,0,.45)}.title p{display:none}
+.topbar{max-width:1500px;margin:0 auto 8px;display:flex;align-items:center;gap:12px}.progress-card,.scoreboard,.side-card{background:linear-gradient(150deg,rgba(90,10,19,.88),rgba(35,3,8,.88));border:1px solid rgba(248,211,122,.32);box-shadow:var(--shadow);border-radius:22px;color:white}.progress-card{padding:6px 10px;flex:1;max-width:420px}.progress-line{display:flex;justify-content:space-between;gap:8px;font-weight:900;color:#ffedc2;font-size:11px}.progress{height:7px;background:rgba(255,255,255,.11);border-radius:999px;margin-top:9px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#8d1726,#f1c65d,#fff3b6);box-shadow:0 0 18px rgba(248,211,122,.6);transition:.45s}
+.scoreboard{padding:12px 14px}.score-head{display:flex;justify-content:space-between;align-items:center;font-weight:950;color:#ffe7a8}.live{font-size:10px;color:#fff;background:#1e9d69;border-radius:999px;padding:4px 7px;box-shadow:0 0 12px rgba(34,166,111,.38)}.team{position:relative;display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:13px;margin-top:7px;font-weight:850;color:#fff8ef;transition:.25s}.team.active{background:linear-gradient(90deg,rgba(213,38,58,.33),rgba(248,211,122,.14));outline:1px solid rgba(248,211,122,.75);box-shadow:inset 0 0 22px rgba(248,211,122,.06)}.team.leader{background:linear-gradient(90deg,rgba(248,211,122,.18),rgba(255,255,255,.03));box-shadow:0 0 14px rgba(248,211,122,.16)}.dot{width:12px;height:12px;border-radius:50%;flex:0 0 12px;border:1px solid rgba(255,255,255,.6)}.team .pts{margin-left:auto;font-variant-numeric:tabular-nums;color:#ffe5a0;font-size:17px}.diamond{display:inline-grid;place-items:center;font-size:20px;filter:drop-shadow(0 0 7px rgba(120,210,255,.9));animation:diamondPulse 1.45s ease-in-out infinite}.spark{display:inline-block;animation:sparkle .9s infinite alternate}
+.main{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}.card{border-radius:28px}.game{background:linear-gradient(145deg,#fff9ee,#f1dfbd);box-shadow:var(--shadow),0 0 45px rgba(248,211,122,.18);min-height:620px;padding:clamp(22px,3vw,36px);position:relative;overflow:hidden;border:2px solid rgba(248,211,122,.5)}.game:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 90% 0%,rgba(248,211,122,.22),transparent 23%),radial-gradient(circle at 0% 100%,rgba(182,31,50,.12),transparent 23%)}.game:after{content:"✦   ✧   ✦   ✧   ✦";position:absolute;right:-10px;bottom:8px;font-size:50px;letter-spacing:15px;color:rgba(182,31,50,.09);transform:rotate(-8deg)}.content{position:relative;z-index:1}.round-tag{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#720b19,#9d1629);color:#fff3cf;border:1px solid rgba(248,211,122,.48);font-weight:900;border-radius:999px;padding:4px 8px;font-size:10px;box-shadow:0 6px 18px rgba(93,3,15,.2)}.question-top{display:block;margin:10px 0 12px}.question-top h2{margin:0;font-size:clamp(22px,2.4vw,32px);line-height:1.12;letter-spacing:-1px;color:#56101a;text-shadow:0 1px 0 white}.turn{display:none}.question{font-size:clamp(19px,2vw,27px);line-height:1.42;font-weight:900;max-width:1100px;margin:10px 0 20px;color:#3a1a20}.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}.choice{border:2px solid rgba(208,164,67,.7);padding:17px 19px;text-align:left;border-radius:18px;background:linear-gradient(145deg,#fffdf7,#f5e4b9 55%,#fffaf0);color:var(--ink);font-weight:900;font-size:17px;cursor:pointer;transition:.16s;min-height:80px;box-shadow:0 8px 18px rgba(111,66,17,.12),inset 0 0 0 1px rgba(255,255,255,.9),0 0 18px rgba(248,211,122,.12)}.choice:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(71,34,40,.14),0 0 22px rgba(248,211,122,.35);border-color:#d4a92e;background:#fff7df}.choice.selected{background:linear-gradient(145deg,#fff0bd,#ffe8a0);box-shadow:0 0 0 3px rgba(182,31,50,.42),0 0 28px rgba(248,211,122,.45)}.choice.correct{background:#e9fff3;box-shadow:0 0 0 3px #38bb7d}.choice.wrong{background:#ffe5e7;box-shadow:0 0 0 3px #d74757}.letter{display:inline-grid;place-items:center;width:31px;height:31px;border-radius:10px;background:linear-gradient(145deg,#fff,#e7ddd3);margin-right:8px;color:#6e1421;border:1px solid #dbcbbf}.feedback{margin-top:17px;padding:14px 16px;border-radius:16px;font-weight:850;display:none}.feedback.show{display:block}.feedback.ok{background:#eaf9ef;color:#12633f;border:1px solid #78cda7}.feedback.bad{background:#fff0f1;color:#8b2330;border:1px solid #e8929b}.feedback.info{background:#fff6dd;color:#7a5500;border:1px solid #e4bc56}.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:21px}.left-actions,.right-actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:0;border-radius:15px;padding:12px 16px;font-weight:900;cursor:pointer;box-shadow:0 8px 18px rgba(49,21,25,.11);transition:.16s}.btn:hover{transform:translateY(-1px)}.btn.primary{background:linear-gradient(145deg,#c12c40,#7d0e1d);color:#fff5df;border:1px solid rgba(248,211,122,.55)}.btn.primary:disabled{opacity:.45;cursor:not-allowed;transform:none}.btn.ghost{background:#f3ebe4;color:#5b2730}.btn.hint{background:linear-gradient(145deg,#fff6d7,#f0d591);color:#6d4a00;border:1px solid #d4ae55}.btn.finish{position:fixed;right:20px;bottom:20px;z-index:50;background:linear-gradient(145deg,#d1d6dd,#707c8c);color:#1c232c;border-radius:999px;padding:14px 21px;border:2px solid #f5f8fb;box-shadow:0 0 0 3px rgba(248,211,122,.22),0 10px 28px rgba(0,0,0,.33)}
+.sidebar{display:flex;flex-direction:column;gap:10px;position:sticky;top:10px}.side-card{padding:12px}.side-card h3{margin:0 0 11px;font-size:15px;color:#ffe7a8}.order{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.pill{padding:7px 9px;border-radius:11px;font-weight:900;font-size:11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.09);color:#fff4df}.pill.active{background:rgba(248,211,122,.16);color:#ffe5a0;border-color:rgba(248,211,122,.38)}.legend{display:grid;gap:8px}.legend-row{display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700;color:#f4dfdf}.tiny{font-size:12px;color:#dbc4c4;line-height:1.45}
+.overlay{position:fixed;inset:0;background:rgba(18,0,4,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}.modal{width:min(980px,100%);max-height:88vh;overflow:auto;background:linear-gradient(145deg,#fffaf2,#f3e9df);border-radius:28px;box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 0 2px rgba(248,211,122,.45);padding:27px;border:1px solid rgba(132,18,32,.15)}.modal h2{margin:0 0 8px;font-size:32px;color:#64101e}.modal p{color:var(--muted)}.start{display:grid;gap:15px}.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.team-edit{padding:13px;border-radius:16px;background:#f7eee7;border:1px solid #e3d7cf}.team-edit label{font-size:12px;font-weight:800;color:var(--muted);display:block;margin-bottom:6px}.team-edit input{width:100%;padding:10px 12px;border:1px solid #d8c9bf;border-radius:11px;font-weight:800;background:#fff}.intro{background:linear-gradient(135deg,#650919,#9f1528 60%,#c18b2e);padding:19px;border-radius:19px;color:#fff6df;box-shadow:inset 0 0 20px rgba(0,0,0,.12)}.intro strong{display:block;font-size:20px;margin-bottom:4px}.intro p{color:#ffe6c2;margin:4px 0}.teacher{display:grid;gap:16px}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.stat{padding:15px;border-radius:17px;background:#f7eee7;border:1px solid #e3d7cf}.stat b{display:block;font-size:27px;color:#741525}.barrow{display:grid;grid-template-columns:180px 1fr 55px;gap:10px;align-items:center;font-size:13px;font-weight:800}.bar{height:11px;background:#eadfd7;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#7d0e1d,#d7b252);border-radius:99px}.table{width:100%;border-collapse:collapse;font-size:13px}.table th,.table td{text-align:left;padding:10px 8px;border-bottom:1px solid #e5d9d0}.table th{font-size:12px;color:var(--muted)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:linear-gradient(145deg,#6b0a18,#2d0208);color:#fff3cf;padding:12px 17px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:210;font-weight:900;border:1px solid rgba(248,211,122,.5);box-shadow:0 10px 30px rgba(0,0,0,.4)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.effect-layer{position:fixed;inset:0;pointer-events:none;z-index:190;display:none}.effect-layer.show{display:block}.emoji-burst{position:absolute;font-size:34px;animation:burst 1.25s ease-out forwards}.wrong-flash{position:fixed;inset:0;background:rgba(181,21,39,.25);animation:flash .35s ease-out 2}.shake{animation:shake .46s ease-in-out 2}.correct-glow{animation:correctGlow .72s ease-out}.confetti-piece{position:absolute;top:-30px;font-size:26px;animation:fall 1.4s cubic-bezier(.1,.7,.25,1) forwards}
+@keyframes burst{0%{transform:translate(0,0) scale(.4) rotate(0deg);opacity:0}15%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}@keyframes fall{0%{transform:translateY(-10vh) rotate(0);opacity:0}15%{opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}@keyframes flash{50%{opacity:.8}100%{opacity:0}}@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px) rotate(-.5deg)}75%{transform:translateX(8px) rotate(.5deg)}}@keyframes correctGlow{50%{box-shadow:0 0 0 4px rgba(35,166,111,.25),0 0 35px rgba(35,166,111,.28),var(--shadow)}}@keyframes diamondPulse{50%{transform:scale(1.25) rotate(8deg)} }@keyframes sparkle{to{transform:scale(1.35) rotate(18deg);opacity:.55}}
+@media(max-width:1020px){.topbar{grid-template-columns:1fr}.main{grid-template-columns:1fr}.scoreboard{position:sticky;top:8px;z-index:30}.choices{grid-template-columns:1fr}.turn{text-align:left}.question-top{flex-direction:column}.stats-grid{grid-template-columns:1fr 1fr}}@media(max-width:650px){.app{padding:12px 12px 88px}.team-grid,.stats-grid{grid-template-columns:1fr}.game{min-height:680px;padding:19px}.btn.finish{right:12px;bottom:12px}.barrow{grid-template-columns:120px 1fr 48px}}
+
+.scoreboard-wrap{display:flex;flex-direction:column;gap:8px}.turn-banner{background:linear-gradient(145deg,#7f0b19,#b31930);color:#fff5d9;border:1px solid rgba(248,211,122,.55);border-radius:16px;padding:9px 12px;font-weight:900;text-align:center;box-shadow:0 0 18px rgba(248,211,122,.18)}.turn-banner small{display:block;font-size:10px;opacity:.8;margin-top:2px}.sidebar .side-card{display:none}.scoreboard{box-shadow:var(--shadow),0 0 30px rgba(248,211,122,.12)}
+.hero-figures{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}.hero{position:absolute;font-size:44px;filter:drop-shadow(0 0 8px rgba(248,211,122,.45));opacity:.85;animation:floatAcross linear infinite}.hero.h1{top:15%;left:-10vw;animation-duration:24s}.hero.h2{top:47%;left:-12vw;animation-duration:31s;animation-delay:5s}.hero.h3{top:72%;left:-10vw;animation-duration:27s;animation-delay:2s}.hero.h4{top:27%;left:-14vw;animation-duration:34s;animation-delay:9s}@keyframes floatAcross{0%{transform:translateX(0) translateY(0) rotate(-5deg);opacity:0}8%{opacity:.82}50%{transform:translateX(58vw) translateY(-18px) rotate(5deg)}92%{opacity:.82}100%{transform:translateX(125vw) translateY(10px) rotate(-4deg);opacity:0}}
+.gold-edge{box-shadow:0 0 0 2px rgba(248,211,122,.28),0 0 35px rgba(248,211,122,.12)}
+@media(max-width:1020px){.topbar{display:block}.progress-card{max-width:none}.main{grid-template-columns:1fr}.sidebar{position:static}.choices{grid-template-columns:1fr}.scoreboard{position:relative}.hero{font-size:34px}}
+@media(max-width:650px){.app{padding:10px 10px 88px}.game{min-height:680px;padding:18px}.btn.finish{right:10px;bottom:10px}.barrow{grid-template-columns:120px 1fr 48px}.header{gap:8px}}
+
+/* final visual refinement */
+.game{overflow:hidden}
+.orbit-orb{position:absolute;z-index:3;pointer-events:none;font-size:34px;filter:drop-shadow(0 0 9px rgba(248,211,122,.65));opacity:.92}
+.orb1{left:4%;top:7%;animation:orbitFloat1 5.5s ease-in-out infinite}
+.orb2{right:5%;top:9%;animation:orbitFloat2 6.2s ease-in-out infinite}
+.orb3{right:4%;bottom:8%;animation:orbitFloat3 5.8s ease-in-out infinite}
+.orb4{left:5%;bottom:9%;animation:orbitFloat4 6.5s ease-in-out infinite}
+@keyframes orbitFloat1{0%,100%{transform:translate(0,0) rotate(-8deg)}50%{transform:translate(26px,18px) rotate(8deg)}}
+@keyframes orbitFloat2{0%,100%{transform:translate(0,0) rotate(7deg)}50%{transform:translate(-24px,20px) rotate(-9deg)}}
+@keyframes orbitFloat3{0%,100%{transform:translate(0,0) rotate(-6deg)}50%{transform:translate(-22px,-18px) rotate(10deg)}}
+@keyframes orbitFloat4{0%,100%{transform:translate(0,0) rotate(8deg)}50%{transform:translate(24px,-16px) rotate(-7deg)}}
+.finish{user-select:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">🕵️</div>
+    <div class="title"><h1>Masal&amp;Destan Dedektifi</h1></div>
+  </header>
+  
+  <div class="topbar">
+    <section class="progress-card">
+      <div class="progress-line"><span id="roundLabel">Tur 1 / 6</span><span id="taskLabel">Görev 1 / 24</span></div>
+      <div class="progress"><div id="progressFill"></div></div>
+    </section>
+  </div>
+  <main class="main">
+    <section class="game card gold-edge" id="gameCard"><div class="orbit-orb orb1">🧙‍♀️</div><div class="orbit-orb orb2">🐺</div><div class="orbit-orb orb3">🧚‍♀️</div><div class="orbit-orb orb4">⚔️</div><div class="content" id="gameContent"></div></section>
+    <aside class="sidebar">
+      <div class="scoreboard-wrap">
+        <div class="turn-banner" id="turnBanner">Şimdi sıra: Kayıp Parşömen<small>Bu turda sıradaki ekip cevaplıyor.</small></div>
+        <aside class="scoreboard">
+          <div class="score-head"><span>🏆 Canlı Skor</span><span class="live">CANLI</span></div>
+          <div id="scoreRows"></div>
+        </aside>
+      </div>
+    </aside>
+  </main>
+  <section class="teacher-footer" style="max-width:1500px;margin:16px auto 0;color:#f2d9d9;font-size:11px;opacity:.85;line-height:1.5">
+    <details><summary style="cursor:pointer;color:#ffe7a8;font-weight:800">Öğretmen ipucu · Puanlama rehberi · Oyun kuralı</summary>
+      <div style="padding:10px 2px">Her sorudan önce tüm öğrenciler bireysel cevap kartını gösterir, ardından aktif ekip ortak cevabı seçer. Doğru +10, ipucuyla doğru +5, yanlış +0. Her ekip her turda yalnızca bir görev yapar; cevap sonrası sıra otomatik olarak sıradaki ekibe geçer.</div>
+    </details>
+  </section>
+</div>
+<button class="btn finish" id="finishBtn" type="button">⏹ Oyunu Bitir</button>
+<div class="toast" id="toast"></div><div class="effect-layer" id="effectLayer"></div>
+
+<div class="overlay" id="startOverlay" style="display:flex">
+  <div class="modal start">
+    <div class="intro"><strong>Gizli dosya açıldı.</strong> 4 ekip, 6 seviyeyi birlikte keşfedecek. Her turda sıra yeniden ilk ekibe dönecek.</div>
+    <div><h2>Ekiplerini oluştur</h2><p>İsimleri değiştirebilir veya önerilen isimlerle devam edebilirsin.</p></div>
+    <div class="team-grid" id="teamInputs"></div>
+    <div class="tiny">Önerilen kullanım: Her soru önce tüm sınıf için 5–10 saniyelik bireysel düşünme, sonra aktif ekibin ortak cevabı.</div>
+    <button class="btn primary" onclick="startGame()">🚪 Dosyayı Aç ve Başla</button>
+  </div>
+</div>
+
+<script>
+const teams = [
+  {name:'Kayıp Parşömen', color:'#6c63ff', score:0},
+  {name:'Altın Anahtar', color:'#f0a92e', score:0},
+  {name:'Bozkır Kaşifleri', color:'#39b8a4', score:0},
+  {name:'Masal Avcıları', color:'#ff6b9d', score:0},
+];
+const rounds = [
+ {name:'Masal Dedektifi', icon:'🔎', skill:'Masal türünü tanıma', tasks:[
+  {q:'Aşağıdaki anlatımlardan hangisi masal türünü en iyi karşılar?', c:['Belirli bir tarih ve mekânda yaşanmış olayları anlatan metin','Yer ve zamanın çoğu kez belirsiz olduğu, olağanüstü unsurların bulunabildiği anlatı','Bir kişinin yaşamını belge ve tarihlerle anlatan yazı','Bir düşünceyi kanıtlamak için yazılan öğretici metin'],a:1,h:'“Bir varmış bir yokmuş” havasını düşün.'},
+  {q:'“Bir dev, gece boyunca konuşan bir ağaca dönüşür.” Bu olay bize en çok hangi özelliği düşündürür?', c:['Masallarda olağanüstülük bulunabilir.','Masallar yalnızca gerçek olayları anlatır.','Masallarda tarihî belgeler kullanılır.','Masalların tamamı şiir biçimindedir.'],a:0,h:'Gerçek hayatta gerçekleşmesi zor olan bir dönüşüm var.'},
+  {q:'Aşağıdakilerden hangisi bir masalın başlangıcına daha uygundur?', c:['MÖ 1071 yılında...','Ankara, 14 Mayıs 2026...','Bir varmış, bir yokmuş; evvel zaman içinde...','Gazetelerin 3. sayfalarında...'],a:2,h:'Masalların geleneksel başlangıç kalıplarını hatırla.'},
+  {q:'Bir öğrenci “Bu metinde kesin tarih, gerçek bir şehir ve belgelere dayalı olaylar var.” diyor. Bu ipucu masal için ne söyler?', c:['Masal olma ihtimalini güçlendirir.','Masal olma ihtimalini azaltır.','Kesin olarak masal olduğunu gösterir.','Tür hakkında hiçbir ipucu vermez.'],a:1,h:'Masal dünyasının zaman ve mekânı çoğu kez belirsizdir.'}
+ ]},
+ {name:'Masalın DNA’sı', icon:'🧩', skill:'Yapı unsurları ve mesaj', tasks:[
+  {q:'“Padişahın oğlu ormana girdi, karşısına yaşlı bir kadın çıktı.” Bu cümlede aşağıdakilerden hangisi doğrudan bulunmaz?', c:['Kişi','Yer','Olay','Mesaj'],a:3,h:'Metnin ne anlatmak istediği henüz söylenmedi.'},
+  {q:'Bir masalın girişinde kahraman ve çevresi tanıtılıyor, asıl sorun henüz başlamıyor. Bu bölüm hangisine daha yakındır?', c:['Serim','Düğüm','Çözüm','Dilek'],a:0,h:'Gelişmeden önceki tanıtma bölümünü düşün.'},
+  {q:'“Keloğlan arkadaşını yalnız bırakmaz ve sonunda birlikte kurtulurlar.” Bu bölümden çıkarılabilecek temel mesaj hangisidir?', c:['Zengin olmak her şeyden önemlidir.','Dostluk ve dayanışma değerlidir.','Her sorun yalnız çözülmelidir.','Korku her zaman kazanır.'],a:1,h:'Kahramanın davranışındaki değere bak.'},
+  {q:'Başlık ve görsellerden yola çıkarak masalın devamını tahmin etmek hangi beceriyle daha çok ilgilidir?', c:['Tahminde bulunma','Kaynakça hazırlama','Dilekçe yazma','Tarih hesaplama'],a:0,h:'Henüz okunmayan bölüme ilişkin öngörü yapılıyor.'}
+ ]},
+ {name:'Gizemli Motifler', icon:'🗝️', skill:'Motifler, değerler ve kültür', tasks:[
+  {q:'Aşağıdakilerden hangisi programda destanlarda üzerinde durulan millî motiflerden biridir?', c:['Rüya','Denklem','Dipnot','Kaynakça'],a:0,h:'Programdaki örnek motiflerden biri.'},
+  {q:'Bir anlatıda at, ışık ve ağaç gibi tekrar eden semboller özel anlamlar taşıyor. Bunlara ne ad verilebilir?', c:['Motif','Başlık','Dipnot','Paragraf'],a:0,h:'Tekrarlanan sembolik unsurları düşün.'},
+  {q:'“Kahraman zor durumda olanları koruyor ve adaletli davranıyor.” Bu davranış en çok hangi değerle ilişkilidir?', c:['Adalet','Merak','Şaşkınlık','Rastlantı'],a:0,h:'Hakkaniyetli davranma kavramını düşün.'},
+  {q:'Masal veya destanda toplumun yaşamına, inançlarına ve kültürüne dair izler bulunması bize en çok neyi gösterir?', c:['Anlatının kültürel birikim taşıdığını','Metnin mutlaka bilimsel olduğunu','Her olayın gerçek olduğunu','Yalnızca tek bir kişiyi anlattığını'],a:0,h:'Anlatıların toplum hafızasıyla ilişkisini düşün.'}
+ ]},
+ {name:'Destan Avcıları', icon:'⚔️', skill:'Destan türü ve masal-destan farkı', tasks:[
+  {q:'Aşağıdaki özelliklerden hangisi destanlar için daha belirgindir?', c:['Milletleri derinden etkileyen büyük olayların konu edilmesi','Her zaman komik hayvanların bulunması','Kesinlikle kısa ve tek olaylı olmaları','Yalnızca bireysel günlük olayları anlatmaları'],a:0,h:'Savaş, göç, kıtlık gibi toplumu etkileyen olaylara odaklan.'},
+  {q:'Programdaki bilgiye göre destanların ait olduğu milletin sosyal ve kültürel özelliklerini yansıtması hangi özelliktir?', c:['Millî özellik taşıması','Bilimsel olması','Gazetecilik yapması','Biyografi olması'],a:0,h:'“Millet” ve “kültür” kelimelerine dikkat.'},
+  {q:'Masal ile destan karşılaştırmasında aşağıdakilerden hangisi daha doğrudur?', c:['İkisi de yalnızca gerçek olayları anlatır.','Destanlarda toplumları etkileyen büyük olaylar ve millî unsurlar daha belirgin olabilir.','Masalların hepsi tarih kitabıdır.','Destanlarda olağanüstülük bulunamaz.'],a:1,h:'Destanın toplumsal boyutunu düşün.'},
+  {q:'Doğal destanların ortaya çıkışında aşağıdakilerden hangisi önemlidir?', c:['Milleti derinden etkileyen bir olayın yaşanması','Bir yayınevinin kapak tasarlaması','Bir gazetenin manşet atması','Bir sözlüğün yayımlanması'],a:0,h:'Savaş, göç, kıtlık gibi olaylar programda örnekleniyor.'}
+ ]},
+ {name:'Destanın İzinde', icon:'📜', skill:'Doğal-yapma destan ayrımı', tasks:[
+  {q:'Yüzyıllar boyunca halk arasında anlatılarak şekillenen bir kahramanlık anlatısı hangi türe daha yakındır?', c:['Doğal destan','Yapma destan','Deneme','Biyografi'],a:0,h:'Halk içinde uzun süreçte oluşması önemli ipucudur.'},
+  {q:'Bir şairin toplumda iz bırakan bir savaş olayından esinlenerek bilinçli biçimde yazdığı destan hangi türe daha yakındır?', c:['Yapma destan','Doğal destan','Masal','Fabl'],a:0,h:'“Bir şairin bilinçli biçimde yazması” ipucunu kullan.'},
+  {q:'Doğal destan ile yapma destan arasındaki temel farklardan biri aşağıdakilerden hangisidir?', c:['Yapma destanların bir kişi tarafından oluşturulması','Doğal destanlarda hiçbir olağanüstülük olmaması','Yapma destanların mutlaka sözlü olması','Doğal destanların millî özellik taşımaması'],a:0,h:'Oluşma biçimine odaklan.'},
+  {q:'Aşağıdakilerden hangisi yapma destanlara ait bir özellik olarak programda vurgulanır?', c:['Savaş ve kahramanlık konularının işlenebilmesi','Kesinlikle anonim olması','Yalnızca masal kalıplarıyla yazılması','Tarihî olayların hiç kullanılmaması'],a:0,h:'Programda yapma destanların konu alanına bak.'}
+ ]},
+ {name:'Büyük Anlatı Ustası', icon:'👑', skill:'Birden fazla bilgiyi birlikte kullanma', tasks:[
+  {q:'“Belirsiz bir zamanda geçen, olağanüstü olayların bulunduğu, kahramanın bir sınavdan geçtiği anlatı...” Bu metin için en güçlü ilk tahmin hangisidir?', c:['Masal','Yapma destan','Haber','Gezi yazısı'],a:0,h:'Üç ipucunu birlikte değerlendir: belirsiz zaman + olağanüstülük + kahramanın sınavı.'},
+  {q:'“Milleti etkileyen büyük bir göç, olağanüstü bir kahraman ve millî motifler...” Bu ipuçları hangi anlatı türünü daha çok çağrıştırır?', c:['Destan','Günlük','Makale','Biyografi'],a:0,h:'Toplumsal büyük olay + kahramanlık + millî motif.'},
+  {q:'Bir metnin “masal mı destan mı” olduğunu anlamaya çalışan bir dedektif için en işlevli üçlü hangisidir?', c:['Tür özellikleri + olayın niteliği + anlatıdaki değer/motifler','Yalnızca sayfa sayısı + yazı tipi + başlık uzunluğu','Yalnızca yazarın yaşı + yayınevi + fiyat','Sadece kapak rengi + kâğıt türü + paragraf sayısı'],a:0,h:'Türü anlamak için içeriksel ipuçlarını birlikte kullan.'},
+  {q:'Aşağıdaki eşleştirmelerden hangisi doğrudur?', c:['Masal — çoğu kez belirsiz zaman/yer; Destan — milleti etkileyen büyük olaylar ve millî unsurlar','Masal — yalnızca tarihî belge; Destan — yalnızca günlük olay','Masal — bilimsel rapor; Destan — haber metni','Masal — kesin tarih; Destan — tamamen kişisel günlük'],a:0,h:'İki türün temel özelliklerini aynı anda karşılaştır.'}
+ ]}
+];
+
+
+let state={started:false,round:0,team:0,questionAnswered:false,choice:null,usedHint:false,history:[]};
+const $=id=>document.getElementById(id);
+function renderTeamsInputs(){ $('teamInputs').innerHTML=teams.map((t,i)=>`<div class="team-edit"><label>Ekip ${i+1}</label><input id="teamName${i}" value="${escapeHtml(t.name)}"></div>`).join(''); }
+function startGame(){
+ teams.forEach((t,i)=>{const el=$('teamName'+i);if(el&&el.value.trim())t.name=el.value.trim();t.score=0});
+ state={started:true,round:0,team:0,questionAnswered:false,choice:null,usedHint:false,history:[]};
+ $('startOverlay').style.display='none'; $('turnBanner').style.display='block'; render();
+}
+function currentTask(){return rounds[state.round].tasks[state.team]}
+function leaderIndexes(){const max=Math.max(...teams.map(t=>t.score)); return teams.map((t,i)=>t.score===max&&max>0?i:-1).filter(i=>i>=0)}
+function renderScore(){
+ const leaders=leaderIndexes();
+ $('scoreRows').innerHTML=teams.map((t,i)=>`<div class="team ${i===state.team?'active':''} ${leaders.includes(i)?'leader':''}"><span class="dot" style="background:${t.color}"></span><span>${escapeHtml(t.name)}</span>${leaders.includes(i)?'<span class="diamond" aria-label="lider">💎</span>':''}<span class="pts">${t.score}</span></div>`).join('');
+ const banner=$('turnBanner'); if(banner) banner.innerHTML=`Şimdi sıra: ${escapeHtml(teams[state.team].name)}<small>Tur ${state.round+1} · ${rounds[state.round].name}</small>`;
+}
+function render(){
+ renderScore();
+ const round=rounds[state.round],task=currentTask();
+ $('roundLabel').textContent=`Tur ${state.round+1} / 6 · ${round.name}`;
+ $('taskLabel').textContent=`Görev ${state.round*4+state.team+1} / 24`;
+ $('progressFill').style.width=`${((state.round*4+state.team)/24)*100}%`;
+ const selected=state.choice;
+ $('gameContent').innerHTML=`
+  <span class="round-tag">${round.icon} ${round.name} · ${round.skill}</span>
+  <div class="question-top"><h2>Gizli Dosya #${String(state.round*4+state.team+1).padStart(2,'0')}</h2></div>
+  <div class="question">${task.q}</div>
+  <div class="choices">${task.c.map((c,i)=>`<button type="button" class="choice ${selected===i?'selected':''}" data-choice="${i}"><span class="letter">${String.fromCharCode(65+i)}</span>${c}</button>`).join('')}</div>
+  <div id="feedback" class="feedback"></div>
+  <div class="controls"><div class="left-actions"><button type="button" class="btn hint" id="hintBtn">💡 İpucu</button><button type="button" class="btn ghost" id="teacherPromptBtn">👩‍🏫 Sınıfa Sor</button></div><div class="right-actions"><button type="button" class="btn primary" id="submitBtn" disabled>Cevabı Kilitle →</button></div></div>`;
+ attachGameEvents();
+}
+function attachGameEvents(){
+ document.querySelectorAll('.choice[data-choice]').forEach(btn=>btn.onclick=()=>choose(Number(btn.dataset.choice)));
+ $('hintBtn')?.addEventListener('click',useHint);
+ $('teacherPromptBtn')?.addEventListener('click',showTeacherPrompt);
+ $('submitBtn')?.addEventListener('click',submitAnswer);
+}
+function choose(i){
+ if(state.questionAnswered)return;
+ state.choice=i;
+ document.querySelectorAll('.choice[data-choice]').forEach(btn=>{btn.classList.toggle('selected',Number(btn.dataset.choice)===i)});
+ const sub=$('submitBtn'); if(sub) sub.disabled=false;
+}
+function useHint(){
+ if(state.questionAnswered)return;
+ if(state.usedHint){toast('İpucu zaten kullanıldı.');return;}
+ state.usedHint=true; const f=$('feedback');
+ f.className='feedback show info';f.innerHTML=`💡 <b>İpucu:</b> ${currentTask().h}`;
+}
+function showTeacherPrompt(){toast('Önce herkes cevabını düşündü mü? A–B–C–D kartlarını kaldırın; sonra aktif ekip ortak kararını versin.');}
+function submitAnswer(){
+ if(state.choice===null||state.questionAnswered)return;
+ state.questionAnswered=true;
+ const task=currentTask(),correct=state.choice===task.a,gained=correct?(state.usedHint?5:10):0;
+ teams[state.team].score+=gained;
+ state.history.push({round:state.round,team:state.team,correct,gained,skill:rounds[state.round].skill,question:task.q});
+ const game=$('gameCard');
+ document.querySelectorAll('.choice[data-choice]').forEach(btn=>{btn.disabled=true; const idx=Number(btn.dataset.choice); if(idx===task.a)btn.classList.add('correct'); if(idx===state.choice&&!correct)btn.classList.add('wrong');});
+ const f=$('feedback');
+ if(correct){f.className='feedback show ok';f.innerHTML=correct?`🎉 <b>Doğru!</b> ${gained===10?'+10 puan.':'+5 puan (ipucuyla).'} ${answerExplain(task)}`:''; correctEffect(); game?.classList.add('correct-glow'); setTimeout(()=>game?.classList.remove('correct-glow'),800)}
+ else{f.className='feedback show bad';f.innerHTML=`💥 <b>Bu kez olmadı.</b> Doğru seçenek <b>${String.fromCharCode(65+task.a)}</b>. ${answerExplain(task)}`; wrongEffect();}
+ renderScore();
+ const sub=$('submitBtn'); if(sub)sub.disabled=true;
+ setTimeout(nextTurn,1800);
+}
+function answerExplain(task){return `<span style="font-weight:600">Dedektif notu:</span> ${task.h}`}
+function nextTurn(){
+ if(!state.questionAnswered)return;
+ state.questionAnswered=false;state.choice=null;state.usedHint=false;
+ if(state.team<3)state.team++;else{state.team=0;state.round++;}
+ if(state.round>=6){finishGame();return;} render();
+}
+function correctEffect(){
+ const layer=$('effectLayer'); if(!layer)return;
+ layer.innerHTML=`<div class="emoji-burst" style="left:14%;top:28%;--dx:130px;--dy:-90px;--rot:-25deg">✨</div><div class="emoji-burst" style="left:48%;top:22%;--dx:-40px;--dy:-120px;--rot:20deg">🎉</div><div class="emoji-burst" style="left:72%;top:34%;--dx:90px;--dy:-70px;--rot:30deg">🌟</div><div class="emoji-burst" style="left:37%;top:44%;--dx:-120px;--dy:85px;--rot:-18deg">💎</div><div class="emoji-burst" style="left:62%;top:48%;--dx:110px;--dy:90px;--rot:28deg">👏</div><div class="emoji-burst" style="left:50%;top:17%;--dx:0px;--dy:-100px;--rot:0deg">🏆</div>`;
+ layer.classList.add('show');setTimeout(()=>{layer.classList.remove('show');layer.innerHTML=''},1300);
+}
+function wrongEffect(){
+ const game=$('gameCard'); game?.classList.add('shake');setTimeout(()=>game?.classList.remove('shake'),1000);
+ const layer=$('effectLayer');if(!layer)return;layer.innerHTML='<div class="wrong-flash"></div>';layer.classList.add('show');setTimeout(()=>{layer.classList.remove('show');layer.innerHTML=''},800);
+}
+function confirmFinish(){if(!state.started){toast('Önce oyunu başlatın.');$('startOverlay').style.display='flex';return;}if(state.history.length===0){toast('Henüz tamamlanmış bir görev yok.');return;}if(window.confirm('Oyunu şimdi bitirip öğretmen sonuç ekranını açmak ister misin?')){finishGame();}}
+function finishGame(){
+ const total=state.history.length,correct=state.history.filter(x=>x.correct).length;const skillStats={};rounds.forEach(r=>skillStats[r.skill]={correct:0,total:0});state.history.forEach(x=>{skillStats[x.skill].total++;if(x.correct)skillStats[x.skill].correct++});
+ const groupRows=teams.map((t,i)=>`<tr><td><span class="dot" style="display:inline-block;background:${t.color};margin-right:6px;vertical-align:middle"></span>${escapeHtml(t.name)}</td><td>${t.score}</td><td>${state.history.filter(x=>x.team===i&&x.correct).length}/${state.history.filter(x=>x.team===i).length}</td></tr>`).join('');
+ const skillRows=Object.entries(skillStats).map(([k,v])=>{const p=v.total?Math.round(v.correct/v.total*100):0;return `<div class="barrow"><span>${k}</span><div class="bar"><i style="width:${p}%"></i></div><strong>${p}%</strong></div>`}).join('');
+ $('gameContent').innerHTML=`<div class="teacher"><span class="round-tag">📊 Öğretmen Paneli · Hazırbulunuşluk</span><h2>Dedektif Dosyası Tamamlandı</h2><p>Bu sonuç, oyundaki <b>ekip cevaplarını</b> özetleyen bir hazırbulunuşluk göstergesidir. Bireysel düzeyi görmek için her sorudan önce tüm öğrencilerin A–B–C–D kartlarını kaldırması önerilir.</p><div class="stats-grid"><div class="stat"><span>Çözülen görev</span><b>${total}</b></div><div class="stat"><span>Doğru oranı</span><b>${total?Math.round(correct/total*100):0}%</b></div><div class="stat"><span>Toplam puan</span><b>${teams.reduce((a,b)=>a+b.score,0)}</b></div></div><h3>Beceri profili</h3><div style="display:grid;gap:12px">${skillRows}</div><h3>Ekip skorları</h3><table class="table"><thead><tr><th>Ekip</th><th>Puan</th><th>Doğru</th></tr></thead><tbody>${groupRows}</tbody></table><div class="controls"><div class="left-actions"><button class="btn ghost" id="restartBtn">↻ Baştan Oyna</button></div><div class="right-actions"><button class="btn primary" id="printBtn">🖨 Sonuçları Yazdır</button></div></div></div>`;
+ $('roundLabel').textContent='Oyun tamamlandı';$('taskLabel').textContent='24 / 24';$('progressFill').style.width='100%';$('turnBanner').style.display='none';renderScore();$('restartBtn')?.addEventListener('click',()=>location.reload());$('printBtn')?.addEventListener('click',()=>window.print());
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),2400)}
+renderTeamsInputs();
+document.getElementById('finishBtn')?.addEventListener('click', confirmFinish);
+</script>
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaf Dağı'nın Ejderhaları - Masal Bilgi Yarışması</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #0d091f;
+    --gold: #f8c044;
+    --gold-glow: rgba(248, 192, 68, 0.4);
+    --fire: #ff4500;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: radial-gradient(circle at center, #1b1236 0%, #070412 100%);
+    font-family: 'Nunito', sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Masalsı Parıltılar */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="20" cy="20" r="1.2" fill="%23fff" opacity="0.4"/><circle cx="80" cy="60" r="1.5" fill="%23ffdb80" opacity="0.6"/><circle cx="40" cy="90" r="1" fill="%23fff" opacity="0.3"/></svg>') repeat;
+    animation: drift 60s linear infinite;
+    z-index: 0;
+  }
+  @keyframes drift { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    width: 95%;
+    max-width: 1050px;
+    background: rgba(18, 12, 38, 0.88);
+    border: 3px solid #ffcc66;
+    border-radius: 28px;
+    box-shadow: 0 0 45px rgba(255, 185, 45, 0.25), inset 0 0 30px rgba(0,0,0,0.7);
+    padding: 30px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--gold);
+    text-shadow: 0 0 15px rgba(248, 192, 68, 0.6);
+  }
+
+  /* EJDERHA SAHNESİ */
+  #arena {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    min-height: 240px;
+    margin-bottom: 25px;
+    background: linear-gradient(180deg, rgba(30,20,60,0.2) 0%, rgba(10,5,20,0.8) 100%);
+    border-radius: 20px;
+    border-bottom: 4px solid #4a3b75;
+    padding: 20px 10px 10px 10px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .dragon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    transition: all 0.5s ease;
+    position: relative;
+    width: 18%;
+  }
+
+  .dragon-card.current-turn::before {
+    content: "⚡ SIRADAKİ ⚡";
+    position: absolute;
+    top: -28px;
+    background: #f8c044;
+    color: #111;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px #f8c044;
+    animation: bounce 1s infinite alternate;
+  }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+  .dragon-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-origin: bottom center;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .dragon-svg {
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.7));
+  }
+
+  .dragon-name {
+    font-size: 15px;
+    font-weight: 800;
+    margin-top: 8px;
+  }
+  .dragon-score {
+    font-size: 13px;
+    color: #ffd276;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-top: 3px;
+  }
+
+  /* AYAR EKRANI */
+  .setup-box {
+    padding: 30px;
+  }
+  .btn-group-select {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px 0;
+  }
+  .group-btn {
+    background: #25164d;
+    border: 2px solid #a879e6;
+    color: #fff;
+    padding: 14px 28px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .group-btn:hover, .group-btn.selected {
+    background: #f8c044;
+    color: #111;
+    border-color: #ffe699;
+    box-shadow: 0 0 20px #f8c044;
+    transform: scale(1.08);
+  }
+
+  .start-btn {
+    background: linear-gradient(45deg, #ff4500, #ff8c00);
+    color: white;
+    font-size: 22px;
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    padding: 15px 45px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(255, 69, 0, 0.6);
+    transition: 0.3s;
+  }
+  .start-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 35px rgba(255, 140, 0, 0.9);
+  }
+
+  /* SORU EKRANI */
+  .quiz-box {
+    display: none;
+  }
+  .turn-indicator {
+    display: inline-block;
+    padding: 6px 20px;
+    background: rgba(248, 192, 68, 0.15);
+    border: 1px solid var(--gold);
+    border-radius: 30px;
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .question-text {
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.4;
+    margin-bottom: 25px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .opt-btn {
+    background: rgba(43, 26, 85, 0.8);
+    border: 2px solid #5d3ebc;
+    border-radius: 18px;
+    padding: 16px 20px;
+    color: #f1f1f1;
+    font-size: 17px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.25s all;
+    display: flex;
+    align-items: center;
+  }
+  .opt-btn:hover {
+    background: rgba(93, 62, 188, 0.9);
+    border-color: #e2b0ff;
+    transform: translateY(-3px);
+  }
+  .opt-btn.correct {
+    background: #147238 !important;
+    border-color: #44e881 !important;
+    box-shadow: 0 0 20px #44e881;
+  }
+  .opt-btn.wrong {
+    background: #7a1515 !important;
+    border-color: #ff5252 !important;
+    box-shadow: 0 0 20px #ff5252;
+  }
+
+  /* FİNAL EKRANI VE ATEŞ ANİMASYONU */
+  .flame-blast {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 140px;
+    background: radial-gradient(ellipse at center, rgba(255,230,80,0.9) 0%, rgba(255,69,0,0.8) 50%, transparent 80%);
+    z-index: 100;
+    pointer-events: none;
+    transform: scaleX(0);
+    opacity: 0;
+    transition: all 0.5s ease-out;
+  }
+
+  .ash-fade {
+    animation: disintegrate 1.8s forwards ease-in-out;
+  }
+  @keyframes disintegrate {
+    0% { filter: brightness(2) drop-shadow(0 0 30px #ff3b00); transform: scale(1); }
+    40% { filter: grayscale(1) contrast(3); transform: scale(1.1) rotate(5deg); }
+    100% { opacity: 0; transform: scale(0.1) translateY(80px); filter: blur(8px) brightness(0); }
+  }
+
+  .growth-pulse {
+    animation: growAnim 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes growAnim {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.55); filter: drop-shadow(0 0 25px #ffd700); }
+    100% { transform: scale(1); }
+  }
+
+  #final-screen {
+    display: none;
+    padding: 30px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars"></div>
+
+<div class="container">
+  <!-- EJDERHA ARENASI -->
+  <div id="arena"></div>
+
+  <!-- 1. AYAR EKRANI -->
+  <div id="setup-screen" class="setup-box">
+    <h1>KAF DAĞI'NIN EJDERHALARI</h1>
+    <p style="margin: 15px 0 25px 0; color: #d4c8ff; font-size: 18px;">
+      Masallar diyarında soruları doğru yanıtla, ejderhanı Kaf Dağı'nın en heybetli hükümdarı yap!
+    </p>
+    <h3 style="font-size: 18px; color: #fff;">OYNAYACAK GRUP SAYISINI SEÇİN:</h3>
+    <div class="btn-group-select">
+      <button class="group-btn" onclick="selectGroupCount(2)">2 Grup</button>
+      <button class="group-btn selected" onclick="selectGroupCount(3)">3 Grup</button>
+      <button class="group-btn" onclick="selectGroupCount(4)">4 Grup</button>
+      <button class="group-btn" onclick="selectGroupCount(5)">5 Grup</button>
+    </div>
+    <button class="start-btn" onclick="startGame()">Efsaneyi Başlat ⚔️</button>
+  </div>
+
+  <!-- 2. YARIŞMA EKRANI -->
+  <div id="quiz-screen" class="quiz-box">
+    <div class="turn-indicator" id="turn-indicator">Sıra: 1. Grup</div>
+    <div class="question-text" id="question-text">Soru metni buraya gelecek...</div>
+    <div class="options-grid" id="options-container"></div>
+  </div>
+
+  <!-- 3. BİTİŞ EKRANI -->
+  <div id="final-screen">
+    <h1 id="winner-title" style="font-size: 38px; color: #f8c044;">ŞAMPİYON EJDERHA!</h1>
+    <p id="winner-desc" style="font-size: 20px; margin: 20px 0; color: #ffca79;"></p>
+    <button class="start-btn" onclick="location.reload()">Yeniden Oyna 🔄</button>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   1. SES EFEKT MOTORU (Web Audio API - Ek Dosya Gerektirmez)
+========================================================== */
+const AudioEngine = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  },
+  playCorrect() {
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  },
+  playWrong() {
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  },
+  playGrow() {
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.5);
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+  },
+  playRoarAndFire() {
+    this.init();
+    const bufferSize = this.ctx.sampleRate * 2.5;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+    filter.frequency.linearRampToValueAtTime(1400, this.ctx.currentTime + 1.2);
+    filter.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 2.5);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 2.5);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start();
+  }
+};
+
+/* ==========================================================
+   2. RAPORDAKİ TÜM BİLGİLERİ KAPSAYAN SORU HAVUZU
+========================================================== */
+const questionBank = [
+  {
+    q: "Masal kelimesinin etimolojik kökeni olan ve 'ibret verici hikâye, atasözü' anlamına gelen Arapça kelime hangisidir?",
+    opts: ["Mesel", "Menkıbe", "Destan", "Rivayet"],
+    ans: 0
+  },
+  {
+    q: "Eski Türkçede ve Türk lehçelerinde masal yerine aşağıdaki terimlerden hangisi KULLANILMAZ?",
+    opts: ["Ertegi / Yomak", "Nagıl / Çöçek", "Sagu / Koşuk", "Ertek / Çöpçek"],
+    ans: 2
+  },
+  {
+    q: "Masallar kutsallık atfedilen efsanelerden ve tarihsel gerçeklik payı taşıyan destanlardan hangi yönüyle kesin olarak ayrılır?",
+    opts: ["Kafiyeli olmasıyla", "Tamamen hayal ürünü ve kurgusal olmasıyla", "Yazıya geçirilmiş olmasıyla", "Kısa olmasıyla"],
+    ans: 1
+  },
+  {
+    q: "'Bir varmış bir yokmuş... Deve tellal iken, pire berber iken' tekerlemeleri masalın hangi bölümünde (formelinde) yer alır?",
+    opts: ["Serim", "Döşeme (Giriş)", "Düğüm", "Dilek"],
+    ans: 1
+  },
+  {
+    q: "Masalda ana kahramanların tanıtıldığı ve temel problemin (çocuğun olmaması, padişahın hastalanması vb.) ortaya konduğu bölüm hangisidir?",
+    opts: ["Döşeme", "Serim (Başlangıç)", "Düğüm", "Çözüm"],
+    ans: 1
+  },
+  {
+    q: "Kahramanın sınavlara girdiği, devler ve büyülü tuzaklarla karşılaştığı masalın en heyecanlı bölümü hangisidir?",
+    opts: ["Düğüm (Gelişme)", "Döşeme", "Serim", "Dilek"],
+    ans: 0
+  },
+  {
+    q: "'Onlar ermiş muradına, biz çıkalım kerevetine...' sözü klasik Türk masallarının hangi bölümünde söylenir?",
+    opts: ["Döşeme", "Serim", "Düğüm", "Dilek (Bitiş)"],
+    ans: 3
+  },
+  {
+    q: "Olağanüstü unsurların minimumda tutulduğu; kadılar, hırsızlar ve zeki köylü kızlarının anlatıldığı masal türü hangisidir?",
+    opts: ["Sihirli Masallar", "Zincirlemeli Masallar", "Hayvan Masalları", "Gerçekçi (Sosyal) Masallar"],
+    ans: 3
+  },
+  {
+    q: "Türk masallarında dışarıdan saf, tembel ve yoksul görünmesine rağmen zekâsı ve hazırcevaplığıyla devleri yenen başkahraman kimdir?",
+    opts: ["Köroğlu", "Keloğlan", "Battal Gazi", "Dede Korkut"],
+    ans: 1
+  },
+  {
+    q: "Türk ve Doğu masallarında bilgelik ve tıp sırlarına vakıf olan 'yılanlar şahı' mitolojik figür kimdir?",
+    opts: ["Şahmeran", "Zümrüdüanka", "Tepegöz", "Alkarısı"],
+    ans: 0
+  },
+  {
+    q: "Tarihte M.Ö. kaleme alınan, dünyanın en eski hayvan masalı (fabl) ve öğüt külliyatlarından sayılan Hint eseri hangisidir?",
+    opts: ["Şehname", "Pançatantra", "Mahabharata", "Gılgamış"],
+    ans: 1
+  },
+  {
+    q: "Şehrazad'ın Şehriyar'a canını kurtarmak için anlattığı ünlü Doğu-Arap masal külliyatı hangisidir?",
+    opts: ["Binbir Gece Masalları", "Billur Köşk", "Decameron", "Kelile ve Dimne"],
+    ans: 0
+  },
+  {
+    q: "'Külkedisi' ve 'Pamuk Prenses' masallarını Alman sözlü geleneğinden derleyerek dünya edebiyatına kazandıran kimlerdir?",
+    opts: ["Hans C. Andersen", "Grimm Kardeşler", "Charles Perrault", "La Fontaine"],
+    ans: 1
+  },
+  {
+    q: "Türk edebiyatında ilk basılı Türk masalı olarak kabul edilen eser hangisidir?",
+    opts: ["Keloğlan Masalları", "Billur Köşk Masalları", "Muhayyelât", "Dede Korkut Kitabı"],
+    ans: 1
+  },
+  {
+    q: "Türk edebiyatında masalları derleyip işleyerek 'Masal Babası' unvanını alan ünlü yazarımız kimdir?",
+    opts: ["Pertev Naili Boratav", "Eflatun Cem Güney", "Cahit Uçuk", "Ziya Gökalp"],
+    ans: 1
+  }
+];
+
+/* ==========================================================
+   3. OYUN YÖNETİMİ VE EJDERHA VERİLERİ
+========================================================== */
+const dragonTemplates = [
+  { name: "Kızıl Ejder", color: "#ff4d4d", body: "#c91818", belly: "#ff9999" },
+  { name: "Gök Ejder",   color: "#38b6ff", body: "#0072b2", belly: "#a6e3e9" },
+  { name: "Zümrüt Ejder",color: "#2ed573", body: "#108542", belly: "#a8f5c4" },
+  { name: "Altın Ejder", color: "#ffa502", body: "#cc7700", belly: "#ffeaa7" },
+  { name: "Mor Ejder",   color: "#a55eea", body: "#63279c", belly: "#d9b8ff" }
+];
+
+let selectedGroupCount = 3;
+let dragons = [];
+let currentTurn = 0;
+let currentQuestionIndex = 0;
+let questions = [];
+
+function selectGroupCount(n) {
+  selectedGroupCount = n;
+  document.querySelectorAll('.group-btn').forEach((btn, idx) => {
+    btn.classList.toggle('selected', idx === (n - 2));
+  });
+}
+
+function getDragonSvg(template, scale) {
+  return `
+    <svg class="dragon-svg" width="90" height="90" viewBox="0 0 100 100">
+      <!-- Kanatlar -->
+      <path d="M45,45 Q20,10 5,30 Q15,65 48,55 Z" fill="${template.body}" opacity="0.8"/>
+      <path d="M55,45 Q80,10 95,30 Q85,65 52,55 Z" fill="${template.body}" opacity="0.8"/>
+      <!-- Gövde -->
+      <ellipse cx="50" cy="62" rx="22" ry="26" fill="${template.color}" />
+      <ellipse cx="50" cy="64" rx="14" ry="18" fill="${template.belly}" />
+      <!-- Kafa -->
+      <circle cx="50" cy="35" r="16" fill="${template.color}" />
+      <!-- Boynuzlar -->
+      <path d="M42,24 Q36,10 32,15 Q40,22 44,24 Z" fill="#fff" />
+      <path d="M58,24 Q64,10 68,15 Q60,22 56,24 Z" fill="#fff" />
+      <!-- Gözler -->
+      <ellipse cx="44" cy="34" rx="3.5" ry="5" fill="#fff" />
+      <circle cx="44" cy="34" r="2" fill="#000" />
+      <ellipse cx="56" cy="34" rx="3.5" ry="5" fill="#fff" />
+      <circle cx="56" cy="34" r="2" fill="#000" />
+      <!-- Burun Delikleri -->
+      <circle cx="48" cy="42" r="1" fill="#333" />
+      <circle cx="52" cy="42" r="1" fill="#333" />
+    </svg>
+  `;
+}
+
+function renderArena() {
+  const arena = document.getElementById('arena');
+  arena.innerHTML = '';
+  dragons.forEach((d, index) => {
+    const card = document.createElement('div');
+    card.className = `dragon-card ${index === currentTurn ? 'current-turn' : ''}`;
+    card.id = `dragon-card-${index}`;
+
+    const scaleFactor = 1 + (d.score * 0.28); // Her doğru cevapta büyür
+
+    card.innerHTML = `
+      <div class="dragon-visual" id="dragon-visual-${index}" style="transform: scale(${scaleFactor});">
+        ${getDragonSvg(d, scaleFactor)}
+      </div>
+      <div class="dragon-name" style="color: ${d.color};">${d.name}</div>
+      <div class="dragon-score">${d.score} Başarı (Boy: ${Math.round(scaleFactor*10)}m)</div>
+    `;
+    arena.appendChild(card);
+  });
+}
+
+function startGame() {
+  AudioEngine.init();
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+
+  dragons = [];
+  for (let i = 0; i < selectedGroupCount; i++) {
+    dragons.push({
+      ...dragonTemplates[i],
+      id: i,
+      score: 0
+    });
+  }
+
+  // Soruları karıştır
+  questions = [...questionBank].sort(() => Math.random() - 0.5);
+  currentQuestionIndex = 0;
+  currentTurn = 0;
+
+  renderArena();
+  showQuestion();
+}
+
+function showQuestion() {
+  if (currentQuestionIndex >= questions.length) {
+    endGame();
+    return;
+  }
+
+  renderArena();
+  const qData = questions[currentQuestionIndex];
+  const group = dragons[currentTurn];
+
+  const indicator = document.getElementById('turn-indicator');
+  indicator.innerHTML = `Sıra: <b style="color:${group.color}">${group.name}</b> (Grup ${group.id + 1})`;
+  indicator.style.borderColor = group.color;
+
+  document.getElementById('question-text').innerText = `${currentQuestionIndex + 1}. ${qData.q}`;
+
+  const optContainer = document.getElementById('options-container');
+  optContainer.innerHTML = '';
+
+  qData.opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span style="opacity:0.6; margin-right:12px;">${['A','B','C','D'][idx]})</span> ${opt}`;
+    btn.onclick = () => handleAnswer(idx);
+    optContainer.appendChild(btn);
+  });
+}
+
+function handleAnswer(chosenIdx) {
+  const qData = questions[currentQuestionIndex];
+  const allBtns = document.querySelectorAll('.opt-btn');
+  allBtns.forEach(b => b.style.pointerEvents = 'none'); // tıklamayı engelle
+
+  if (chosenIdx === qData.ans) {
+    // DOĞRU CEVAP
+    allBtns[chosenIdx].classList.add('correct');
+    AudioEngine.playCorrect();
+
+    dragons[currentTurn].score += 1;
+    setTimeout(() => {
+      AudioEngine.playGrow();
+      const vis = document.getElementById(`dragon-visual-${currentTurn}`);
+      if (vis) vis.classList.add('growth-pulse');
+    }, 400);
+
+  } else {
+    // YANLIŞ CEVAP
+    allBtns[chosenIdx].classList.add('wrong');
+    allBtns[qData.ans].classList.add('correct');
+    AudioEngine.playWrong();
+  }
+
+  // Sonraki tura geçiş
+  setTimeout(() => {
+    currentQuestionIndex++;
+    currentTurn = (currentTurn + 1) % dragons.length;
+    showQuestion();
+  }, 1600);
+}
+
+/* ==========================================================
+   4. OYUN SONU VE ATEŞ PÜSKÜRTME ANİMASYONU
+========================================================== */
+function endGame() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  const finalScreen = document.getElementById('final-screen');
+  finalScreen.style.display = 'block';
+
+  // En yüksek puanlı ejderhayı bul
+  let winner = dragons[0];
+  dragons.forEach(d => {
+    if (d.score > winner.score) winner = d;
+  });
+
+  // Eğer beraberlik varsa en azından ilkini kral ilan edelim
+  const winnerCard = document.getElementById(`dragon-card-${winner.id}`);
+  const winnerVisual = document.getElementById(`dragon-visual-${winner.id}`);
+
+  document.getElementById('winner-title').innerText = `🏆 KAF DAĞI'NIN HÂKİMİ: ${winner.name.toUpperCase()}! 🏆`;
+  document.getElementById('winner-desc').innerText = 
+    `Tüm masal sorularını aşarak en heybetli ejderhaya dönüştü! Şimdi diğer ejderhalara gerçek gücünü gösteriyor...`;
+
+  // Arenadaki sırayı temizle
+  document.querySelectorAll('.dragon-card').forEach(c => c.classList.remove('current-turn'));
+
+  // 1 Saniye sonra kazanan ejderha alev püskürtür ve diğerleri yok olur
+  setTimeout(() => {
+    AudioEngine.playRoarAndFire();
+
+    // Kazanan ejderha iki katı daha büyür ve parlar
+    winnerVisual.style.transform = `scale(${1.7 + (winner.score * 0.3)}) translateY(-15px)`;
+    winnerVisual.style.filter = "drop-shadow(0 0 30px #ff6a00)";
+
+    // Ateş Dalgası Efekti
+    const flame = document.createElement('div');
+    flame.className = 'flame-blast';
+    document.getElementById('arena').appendChild(flame);
+    setTimeout(() => {
+      flame.style.transform = 'scaleX(1)';
+      flame.style.opacity = '1';
+    }, 50);
+
+    // Diğer ejderhaların kül olup yok olması
+    dragons.forEach(d => {
+      if (d.id !== winner.id) {
+        const victimCard = document.getElementById(`dragon-card-${d.id}`);
+        if (victimCard) {
+          victimCard.classList.add('ash-fade');
+        }
+      }
+    });
+
+    setTimeout(() => {
+      flame.style.opacity = '0';
+      document.getElementById('winner-desc').innerHTML = 
+        `<b style="color:${winner.color}; font-size:24px;">${winner.name}</b> devasa alevleriyle Kaf Dağı'ndaki tüm rakiplerini kül etti ve Masallar Ülkesi'nin tek hükümdarı oldu! 🔥👑`;
+    }, 1800);
+
+  }, 1000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilmece Turnuvası v13.0 - Profesyonel Sürüm</title>
+    <style>
+        :root { --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32; --wood: #2c1b18; --bg: #121212; }
+        body {
+            background-color: var(--bg); color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: flex-start;
+            margin: 0; padding: 20px; gap: 20px; min-height: 100vh; overflow: hidden;
+        }
+
+        /* Kurulum Ekranı */
+        #setup-screen {
+            position: fixed; inset: 0; background: var(--wood); z-index: 5000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 10px solid #4e342e;
+        }
+
+        #main-container {
+            flex: 2; background: var(--wood); padding: 30px;
+            border-radius: 20px; border: 4px solid #4e342e;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); text-align: center; position: relative;
+            display: none; /* Oyun başlayınca açılacak */
+        }
+
+        #right-panel { flex: 0.8; display: flex; flex-direction: column; gap: 15px; }
+        #scoreboard { background: #1e1e1e; padding: 15px; border-radius: 15px; border: 2px solid #333; }
+
+        /* Sağ Alt Kurallar Paneli */
+        #rules-guide {
+            position: fixed; bottom: 20px; right: 20px; width: 250px;
+            background: rgba(30, 30, 30, 0.95); padding: 15px; border-radius: 12px;
+            border: 2px solid var(--gold); font-size: 0.8rem; line-height: 1.4;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); z-index: 100;
+        }
+
+        .rank-1 { background: var(--gold) !important; color: black !important; font-weight: bold; }
+        .rank-2 { background: var(--silver) !important; color: black !important; }
+        .rank-3 { background: var(--bronze) !important; color: white !important; }
+
+        .score-row { display: flex; justify-content: space-between; padding: 10px; margin: 5px 0; border-radius: 8px; background: #2a2a2a; }
+
+        #word-display { font-size: 2.2rem; letter-spacing: 8px; margin: 15px 0; color: var(--gold); text-shadow: 2px 2px 4px black; }
+        input[type="text"] { padding: 12px; font-size: 1.2rem; width: 60%; border-radius: 8px; border: 2px solid var(--gold); background: #1a0f0d; color: white; text-align: center; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; transition: 0.3s; }
+        .btn-check { background: #27ae60; color: white; }
+        .btn-joker { background: #8e44ad; color: white; }
+        .btn-start { background: var(--gold); color: black; font-size: 1.5rem; padding: 20px 40px; }
+        .btn-quit { background: #c0392b; color: white; margin-top: 20px; }
+
+        /* Efektler */
+        .chaos-emoji { position: fixed; pointer-events: none; z-index: 1001; animation: chaosFloat 3s forwards; }
+        @keyframes chaosFloat { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--mx), var(--my)) rotate(720deg) scale(2); opacity: 0; } }
+        
+        #laughing-monkey { position: absolute; font-size: 70px; top: 10px; right: 10px; display: none; animation: bounce 0.3s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .shake-ultra { animation: ultraShake 0.1s infinite; }
+        @keyframes ultraShake { 0% { transform: translate(5px, 5px); } 50% { transform: translate(-5px, -5px); } 100% { transform: translate(0, 0); } }
+
+        .party-emoji { position: fixed; z-index: 2000; font-size: 50px; left: 50%; top: 50%; animation: growAndPop 1s forwards; }
+        @keyframes growAndPop { 0% { transform: translate(-50%, -50%) scale(0); opacity:1; } 100% { transform: translate(-50%, -50%) scale(18); opacity:0; } }
+
+        #final-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.98); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 4000; }
+        
+        /* Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; margin: 10px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #e74c3c; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body>
+
+<div id="setup-screen">
+    <h1 style="color:var(--gold); font-size: 3rem; margin-bottom: 10px;">TURNUVA AYARLARI</h1>
+    <div style="margin: 20px; font-size: 1.5rem;">
+        Grup Sayısı: 
+        <select id="group-select" style="font-size: 1.2rem; padding: 5px;">
+            <option value="2">2 Grup</option>
+            <option value="3">3 Grup</option>
+            <option value="4" selected>4 Grup</option>
+            <option value="5">5 Grup</option>
+            <option value="6">6 Grup</option>
+        </select>
+    </div>
+    <div style="margin: 20px; font-size: 1.5rem; display: flex; align-items: center;">
+        Ceza Modu (Kaos): 
+        <label class="switch">
+            <input type="checkbox" id="penalty-toggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+    <button class="btn btn-start" onclick="startGame()">OYUNU BAŞLAT</button>
+</div>
+
+<div id="main-container">
+    <div id="laughing-monkey">🐒 😂</div>
+    <div id="current-turn-msg" style="font-size: 1.6rem; font-weight: bold; color: var(--gold);">Sıra Takımda</div>
+    <div id="riddle-header" style="font-size: 1.1rem; opacity: 0.8;">Bilmece 1 / 50</div>
+    <div id="timer-box" style="color: #ffeb3b; font-weight: bold;">Süre: <span id="seconds">0</span>s</div>
+    <div id="current-lives" style="font-size: 2rem; margin: 10px;">❤️❤️❤️</div>
+    
+    <div id="riddle-text" style="font-size: 1.4rem; font-style: italic; margin: 15px 0; min-height: 80px; display: flex; align-items: center; justify-content: center;">Yükleniyor...</div>
+    <div id="word-display">_ _ _ _</div>
+
+    <input type="text" id="answer-input" placeholder="Cevabı yazın ve Enter'a basın..." autocomplete="off">
+    <div id="answer-reveal" style="color: #ffeb3b; font-weight: bold; margin: 10px; height: 24px; font-size: 1.2rem;"></div>
+    
+    <div style="margin-top: 10px;">
+        <button class="btn btn-check" id="check-btn" onclick="checkAnswer()">CEVAPLA</button>
+        <button class="btn btn-joker" id="joker-btn" onclick="useJoker()">JOKER (2)</button>
+    </div>
+    <button class="btn btn-quit" onclick="endGame()">TURNUVAYI BİTİR</button>
+</div>
+
+<div id="right-panel">
+    <div id="scoreboard"><h3 style="text-align: center; margin: 0; color: var(--gold);">SIRALAMA</h3><div id="score-rows"></div></div>
+</div>
+
+<div id="rules-guide">
+    <h4 style="margin: 0 0 8px 0; color: var(--gold); border-bottom: 1px solid #444; padding-bottom: 4px;">📜 KILAVUZ & PUANLAMA</h4>
+    <b>Puanlar:</b><br>
+    ✅ Doğru Cevap: <span style="color:#2ecc71">+10 Puan</span><br>
+    ❌ Yanlış Cevap: <span style="color:#e74c3c">-1 Puan</span><br>
+    🃏 Joker: <span style="color:#8e44ad">-0.5 Puan</span><br>
+    ⚡ 0-10sn Bonus: <span style="color:#ffd700">+1 Puan</span><br>
+    ⚡ 11-20sn Bonus: <span style="color:#ffd700">+0.5 Puan</span><br>
+    <b>Kurallar:</b><br>
+    • Yakın tahminler kabul edilir.<br>
+    • Her soruda 2 joker hakkı.<br>
+    • 3 yanlışta sıra diğer gruba geçer.
+</div>
+
+<div id="final-screen">
+    <h1 style="color:var(--gold); font-size: 3.5rem;">🏆 FİNAL SKORLARI 🏆</h1>
+    <div id="podium" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+    <button class="btn btn-check" style="font-size: 1.5rem; margin-top: 30px;" onclick="location.reload()">TEKRAR OYNA</button>
+</div>
+
+<script>
+    const riddles = [
+        {q: "Kat kat katmer değil, yenir ama meyve değil.", a: "soğan"},
+        {q: "Pişirirsen aş olur, pişirmezsen kuş olur.", a: "yumurta"},
+        {q: "Ben giderim o gider, içimde tık tık eder.", a: "kalp"},
+        {q: "Gelişi aslan gibi, duruşu kaplan gibi, yayılır hasır gibi.", a: "kedi"},
+        {q: "En çok kardeşi olan meyve hangisidir?", a: "üzüm"},
+        {q: "Kuyruğu var canlı değil, konuşur ama insan değil.", a: "televizyon"},
+        {q: "Herkes yatar uyur, o uyanık oturur.", a: "saat"},
+        {q: "Ben giderim o gider, üstümde gölge eder.", a: "şemsiye"},
+        {q: "Çarşıdan aldım bir tane, eve geldim bin tane.", a: "nar"},
+        {q: "Dişim var, ağzım yok.", a: "tarak"},
+        {q: "Ağzı var odun yutar, bacası var duman tüter.", a: "soba"},
+        {q: "Ne kanı var ne canı, beş tanedir parmağı.", a: "eldiven"},
+        {q: "Yemyeşil yaprakları var, yiyenleri güçlü yapar.", a: "ıspanak"},
+        {q: "Küçücük fıçıcık, içi dolu turşucuk.", a: "limon"},
+        {q: "Açarsam dünya olur, yakarsam kül olur.", a: "harita"},
+        {q: "Akşam sayamazsın, sabah bulamazsın.", a: "yıldız"},
+        {q: "Beyazdır kağıt değil, havada gezer uçak değil.", a: "bulut"},
+        {q: "İki fener, gündüz yanar, gece söner.", a: "gözler"},
+        {q: "Kolu var eli yok, karnı yarık karnı yok.", a: "ceket"},
+        {q: "Zili var kapısı yok, rehberi var konuşan bol.", a: "telefon"},
+        {q: "Yürür yürür iz etmez, gider durur toz etmez.", a: "gemi"},
+        {q: "Yer altında dikili minare.", a: "havuç"},
+        {q: "Kanadı var kuş değil, boynuzu var koç değil.", a: "kelebek"},
+        {q: "Bir sapı var, yüz topu var.", a: "üzüm"},
+        {q: "Gökte durur paslanmaz, suya düşer ıslanmaz.", a: "güneş"},
+        {q: "Gökte gördüm köprü, rengi yedi türlü.", a: "gökkuşağı"},
+        {q: "Yarım kaşık, duvara yapışık.", a: "kulak"},
+        {q: "Dereler tepeler, şık şık küpeler.", a: "kiraz"},
+        {q: "Alçacık dallı, yemesi ballı.", a: "çilek"},
+        {q: "Evi sırtında, ayağı karnında.", a: "salyangoz"},
+        {q: "Hangi kalemle yazı yazılmaz?", a: "kontrol kalemi"},
+        {q: "Bir kızım var, kat kat çeyizi var.", a: "lahana"},
+        {q: "Yer altında sakallı dede.", a: "pırasa"},
+        {q: "Arabadan atladı, pantolonu patladı.", a: "karpuz"},
+        {q: "Hanım içeride, saçı dışarıda.", a: "mısır"},
+        {q: "İki çubuk, bir makas, hokkabaz mı hokkabaz.", a: "leylek"},
+        {q: "Daldan dala atlarım, kuyruğumdan sarkarım.", a: "maymun"},
+        {q: "Dağdan gelir arık arık, ayağında demir çarık.", a: "tren"},
+        {q: "O odanın içinde, oda onun içinde.", a: "ayna"},
+        {q: "İki kardeş birbirine sarılır.", a: "kapı"},
+        {q: "Uzun sırık, ortası kırık.", a: "diz"},
+        {q: "Siyah idi kırmızı oldu, misafire ikram edildi.", a: "çay"},
+        {q: "Tarlada biter, makine büker, sabah sabah yüzümü öper.", a: "havlu"},
+        {q: "Şişman ablam yer altında, dalları yer üstünde.", a: "patates"},
+        {q: "Ev ikiye yarılmış, etrafa boncuklar saçılmış.", a: "bezelye"},
+        {q: "Ak, kara renkli. Altmış dört yurtlu.", a: "satranç"},
+        {q: "Bir kuyum var, iki renkli su var.", a: "yumurta"},
+        {q: "Ayağı yok kaçar, kanadı yok uçar.", a: "bulut"},
+        {q: "Altı tahta üstü tahta, içinde bir sarı sofra.", a: "badem"},
+        {q: "Deniz üstünde yufka açar.", a: "dalga"}
+    ];
+
+    let groups = {};
+    let groupOrder = [];
+    let turnIndex = 0, currentRiddleIndex = 0, currentLives = 3, currentJokers = 2, seconds = 0;
+    let timerInterval, monkeyInterval, penaltyMode = true;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function startGame() {
+        const count = parseInt(document.getElementById('group-select').value);
+        penaltyMode = document.getElementById('penalty-toggle').checked;
+        
+        const names = ['A', 'B', 'C', 'D', 'E', 'F'];
+        for(let i=0; i<count; i++) {
+            groups[names[i]] = { score: 0 };
+            groupOrder.push(names[i]);
+        }
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+        loadRiddle();
+        updateScoreboard();
+    }
+
+    function isCloseEnough(s1, s2) {
+        s1 = s1.toLowerCase().trim(); s2 = s2.toLowerCase().trim();
+        if (s1 === s2) return true;
+        let costs = [];
+        for (let i = 0; i <= s1.length; i++) {
+            let lastValue = i;
+            for (let j = 0; j <= s2.length; j++) {
+                if (i == 0) costs[j] = j;
+                else if (j > 0) {
+                    let newValue = costs[j - 1];
+                    if (s1.charAt(i - 1) != s2.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                    costs[j - 1] = lastValue; lastValue = newValue;
+                }
+            }
+            if (i > 0) costs[s2.length] = lastValue;
+        }
+        return costs[s2.length] <= Math.max(1, Math.floor(s2.length * 0.25));
+    }
+
+    function playSound(freq, type, duration = 0.2, vol = 0.1) {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function checkAnswer() {
+        let activeGroup = groupOrder[turnIndex];
+        let r = riddles[currentRiddleIndex % riddles.length];
+        let input = document.getElementById('answer-input').value;
+
+        if (isCloseEnough(input, r.a)) {
+            spawnParty();
+            groups[activeGroup].score += (10 + (seconds <= 10 ? 1 : (seconds <= 20 ? 0.5 : 0)));
+            setTimeout(() => { currentRiddleIndex++; nextTurn(); loadRiddle(); }, 1200);
+        } else {
+            playSound(150, 'square', 0.4, 0.2);
+            groups[activeGroup].score -= 1;
+            currentLives--;
+            if (penaltyMode && currentLives === 1) {
+                document.getElementById('laughing-monkey').style.display = 'block';
+                monkeyInterval = setInterval(() => playSound(600 + Math.random()*500, 'sawtooth', 0.1, 0.05), 1000);
+            }
+            if (currentLives <= 0) penaltyMode ? triggerChaos() : skipTurn();
+        }
+        updateScoreboard();
+        document.getElementById('current-lives').innerText = "❤️".repeat(Math.max(0, currentLives));
+    }
+
+    function skipTurn() {
+        document.getElementById('answer-reveal').innerText = "CEVAP: " + riddles[currentRiddleIndex % riddles.length].a.toUpperCase();
+        setTimeout(() => { currentRiddleIndex++; nextTurn(); loadRiddle(); }, 2000);
+    }
+
+    function triggerChaos() {
+        clearInterval(monkeyInterval);
+        document.getElementById('laughing-monkey').style.display = 'none';
+        document.getElementById('check-btn').disabled = true;
+        document.getElementById('main-container').classList.add('shake-ultra');
+        
+        const em = ['😂', '🤨', '😡', '💀'][Math.floor(Math.random()*4)];
+        let startTime = Date.now();
+        let chaosTimer = setInterval(() => {
+            if (Date.now() - startTime > 3000) {
+                clearInterval(chaosTimer);
+                document.getElementById('main-container').classList.remove('shake-ultra');
+                document.getElementById('check-btn').disabled = false;
+                currentRiddleIndex++; nextTurn(); loadRiddle();
+                return;
+            }
+            const el = document.createElement('div');
+            el.className = 'chaos-emoji'; el.innerText = em;
+            el.style.left = '50%'; el.style.top = '50%';
+            el.style.setProperty('--mx', (Math.random() - 0.5) * 1500 + 'px');
+            el.style.setProperty('--my', (Math.random() - 0.5) * 1500 + 'px');
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2500);
+            playSound(100 + Math.random()*500, 'sawtooth', 0.1, 0.05);
+        }, 80);
+        document.getElementById('answer-reveal').innerText = "CEVAP: " + riddles[currentRiddleIndex % riddles.length].a.toUpperCase();
+    }
+
+    function spawnParty() {
+        const em = ['👑', '😎', '🧠', '❤️', '⭐', '🌈', '👏'][Math.floor(Math.random()*7)];
+        const el = document.createElement('div');
+        el.className = 'party-emoji'; el.innerText = em;
+        document.body.appendChild(el);
+        playSound(600, 'sine', 0.1, 0.1);
+        setTimeout(() => playSound(300, 'sine', 0.5, 0.2), 700);
+        setTimeout(() => el.remove(), 1100);
+    }
+
+    function loadRiddle() {
+        if(currentRiddleIndex >= 50) return endGame();
+        clearInterval(monkeyInterval);
+        document.getElementById('laughing-monkey').style.display = 'none';
+        currentLives = 3; currentJokers = 2;
+        let r = riddles[currentRiddleIndex % riddles.length];
+        document.getElementById('riddle-header').innerText = `Bilmece ${currentRiddleIndex + 1} / 50`;
+        document.getElementById('riddle-text').innerText = r.q;
+        document.getElementById('word-display').innerText = r.a.split('').map(c => c === ' ' ? ' ' : '_').join(' ');
+        document.getElementById('current-turn-msg').innerText = `Sıra ${groupOrder[turnIndex]} Takımında`;
+        document.getElementById('current-lives').innerText = "❤️".repeat(3);
+        document.getElementById('answer-input').value = "";
+        document.getElementById('answer-reveal').innerText = "";
+        document.getElementById('joker-btn').innerText = "JOKER (2)";
+        document.getElementById('joker-btn').disabled = false;
+        seconds = 0; clearInterval(timerInterval);
+        timerInterval = setInterval(() => { seconds++; document.getElementById('seconds').innerText = seconds; }, 1000);
+    }
+
+    function useJoker() {
+        if(currentJokers > 0) {
+            currentJokers--;
+            groups[groupOrder[turnIndex]].score -= 0.5;
+            let r = riddles[currentRiddleIndex % riddles.length];
+            document.getElementById('word-display').innerText = r.a.split('').map((c, i) => i < (2-currentJokers) ? c : (c===' '?' ':'_')).join(' ');
+            document.getElementById('joker-btn').innerText = `JOKER (${currentJokers})`;
+            if(currentJokers === 0) document.getElementById('joker-btn').disabled = true;
+            updateScoreboard();
+        }
+    }
+
+    function nextTurn() { turnIndex = (turnIndex + 1) % groupOrder.length; }
+
+    function updateScoreboard() {
+        let sorted = Object.keys(groups).sort((a,b) => groups[b].score - groups[a].score);
+        let html = "";
+        sorted.forEach((id, i) => {
+            let cls = (i===0)?'rank-1':(i===1)?'rank-2':(i===2)?'rank-3':'';
+            html += `<div class="score-row ${cls}"><span>Grup ${id}</span><span>${groups[id].score.toFixed(1)}</span></div>`;
+        });
+        document.getElementById('score-rows').innerHTML = html;
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        document.getElementById('final-screen').style.display = 'flex';
+        let sorted = Object.keys(groups).sort((a,b) => groups[b].score - groups[a].score);
+        let podiumHtml = "";
+        sorted.forEach((id, i) => {
+            let award = i===0 ? '👑' : i===1 ? '🥈' : i===2 ? '🥉' : '🤡';
+            let bg = i===0 ? 'var(--gold)' : i===1 ? 'var(--silver)' : i===2 ? 'var(--bronze)' : '#444';
+            podiumHtml += `<div class="podium-item" style="background:${bg}; color:${i<2?'black':'white'}; margin:10px; padding:20px; border-radius:15px; width:200px; text-align:center;">
+                <div style="font-size:3rem">${award}</div>
+                <div style="font-size:1.5rem; font-weight:bold;">Grup ${id}</div>
+                <div style="font-size:1.2rem">${groups[id].score.toFixed(1)} Puan</div>
+            </div>`;
+        });
+        document.getElementById('podium').innerHTML = podiumHtml;
+    }
+
+    document.getElementById('answer-input').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') { audioCtx.resume(); checkAnswer(); }
+    });
+</script>
+</body>
+</html>

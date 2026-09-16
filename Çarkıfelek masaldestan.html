@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masal mı? Destan mı? - Kaos Maymun Çarkı</title>
+<style>
+  :root {
+    --bg-dark: #070514;
+    --bg-mid: #16123a;
+    --gold: #ffd700;
+    --silver: #e2e8f0;
+    --accent-destan: #ff2a6d;
+    --accent-masal: #05d9e8;
+    --correct: #00ff87;
+    --wrong: #ff0055;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+  body {
+    background: radial-gradient(circle at top, var(--bg-mid), var(--bg-dark), #000);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    position: relative;
+    transition: background 0.1s;
+  }
+
+  /* KAOS MODU KIRMIZI EKRAN PARLAMASI VE TİTREME */
+  body.chaos-active {
+    background: #ff0033 !important;
+    animation: screenShake 0.1s infinite alternate;
+  }
+
+  @keyframes screenShake {
+    0% { transform: translate(-8px, 6px); }
+    50% { transform: translate(8px, -6px); }
+    100% { transform: translate(-6px, -4px); }
+  }
+
+  header {
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 2.1rem;
+    color: var(--gold);
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7), 0 0 30px rgba(255, 102, 0, 0.5);
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    color: #a5b4fc;
+    margin-top: 3px;
+  }
+
+  /* MODALLAR */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.88);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: linear-gradient(145deg, #1e1b4b, #311042);
+    border: 3px solid var(--gold);
+    border-radius: 24px;
+    padding: 28px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+  }
+
+  .modal-content h2 {
+    color: var(--gold);
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
+
+  .team-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 18px 0;
+  }
+
+  .team-select-btn {
+    background: #4338ca;
+    color: #fff;
+    border: 2px solid #818cf8;
+    padding: 12px 22px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .team-select-btn:hover, .team-select-btn.selected {
+    background: var(--gold);
+    color: #000;
+    transform: scale(1.08);
+    box-shadow: 0 0 15px var(--gold);
+  }
+
+  .start-btn {
+    background: linear-gradient(45deg, #00ff87, #60efff);
+    color: #000;
+    border: none;
+    padding: 14px 35px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 6px 20px rgba(0,255,135,0.4);
+  }
+
+  /* SKOR PANOSU */
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 10px 0;
+    width: 92%;
+    max-width: 950px;
+    flex-wrap: wrap;
+  }
+
+  .team-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(255,255,255,0.15);
+    padding: 10px 16px;
+    border-radius: 18px;
+    min-width: 140px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .team-card.active-turn {
+    border-color: var(--gold);
+    background: rgba(255, 215, 0, 0.18);
+    transform: scale(1.06);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.45);
+  }
+
+  .crown-badge {
+    position: absolute;
+    top: -14px;
+    right: 8px;
+    font-size: 1.4rem;
+    filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
+    animation: crownFloat 1.2s infinite alternate ease-in-out;
+    display: none;
+  }
+
+  .team-card.is-leader .crown-badge {
+    display: block;
+  }
+
+  .team-card.is-leader {
+    border-color: #ffd700;
+  }
+
+  @keyframes crownFloat {
+    from { transform: translateY(0) rotate(-6deg); }
+    to { transform: translateY(-5px) rotate(6deg); }
+  }
+
+  .team-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .team-score {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .badges-left {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  /* ÇARK ALANI */
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 800px;
+    z-index: 5;
+  }
+
+  .wheel-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 8px 0;
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-top: 30px solid #ff0055;
+    z-index: 20;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+  }
+
+  #wheelCanvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 35px rgba(0, 210, 255, 0.4), 0 0 10px #000;
+    transition: transform 4.5s cubic-bezier(0.1, 0.95, 0.15, 1);
+  }
+
+  .spin-center-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffe600, #ff8800);
+    border: 4px solid #fff;
+    color: #000;
+    font-weight: 900;
+    font-size: 0.95rem;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    transition: transform 0.2s;
+  }
+
+  .spin-center-btn:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+
+  /* SORU KUTUSU */
+  .question-box {
+    background: rgba(15, 23, 42, 0.92);
+    border: 2px solid #38bdf8;
+    border-radius: 20px;
+    padding: 18px 24px;
+    margin-top: 8px;
+    width: 100%;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .question-box.gold-mode {
+    border-color: #ffd700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+  }
+
+  .question-box.silver-mode {
+    border-color: #e2e8f0;
+    box-shadow: 0 0 25px rgba(226, 232, 240, 0.5);
+  }
+
+  .question-tag {
+    font-size: 0.85rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    color: var(--gold);
+  }
+
+  .question-text {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .q-counter {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 6px;
+  }
+
+  /* BUTONLAR */
+  .answer-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 14px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .ans-btn {
+    flex: 1;
+    padding: 15px;
+    font-size: 1.25rem;
+    font-weight: 900;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  }
+
+  .btn-masal { background: linear-gradient(135deg, #0284c7, #06b6d4); }
+  .btn-masal:hover:not(:disabled) { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 25px #00d2ff; }
+
+  .btn-destan { background: linear-gradient(135deg, #e11d48, #f43f5e); }
+  .btn-destan:hover:not(:disabled) { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 25px #ff3366; }
+
+  .ans-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .control-panel { margin: 14px 0; }
+  .end-game-btn {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    color: #fca5a5;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  /* GÜLEN MAYMUN KAOS POPUP */
+  .monkey-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+    z-index: 5000;
+    opacity: 0;
+    transform: scale(0.2);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .monkey-overlay.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .monkey-box {
+    font-size: 13rem;
+    animation: monkeyDance 0.35s infinite alternate ease-in-out;
+    filter: drop-shadow(0 0 40px rgba(0,0,0,0.9));
+  }
+
+  @keyframes monkeyDance {
+    0% { transform: translateY(0) rotate(-15deg) scale(1); }
+    100% { transform: translateY(-30px) rotate(15deg) scale(1.15); }
+  }
+
+  /* DOĞRU BİLİNCE AÇILAN KÜÇÜK BİLGİ KUTUSU */
+  .correct-feedback {
+    position: fixed;
+    bottom: 20px;
+    background: rgba(16, 185, 129, 0.95);
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    display: none;
+    z-index: 4000;
+  }
+
+  #confettiCanvas {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 3000;
+  }
+</style>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <header>
+    <h1>🎭 MASAL MI? DESTAN MI? ⚔️</h1>
+    <div class="subtitle">👑 60+ Soruluk Efsane Kaos Düellosu</div>
+  </header>
+
+  <!-- GRUP SEÇİMİ -->
+  <div class="modal-overlay" id="startModal">
+    <div class="modal-content">
+      <h2>Mücadele Başlıyor!</h2>
+      <p style="color:#cbd5e1;">Yarışacak takım sayısını seçin:</p>
+      <div class="team-btn-group">
+        <button class="team-select-btn selected" onclick="selectTeams(2)">2 Takım</button>
+        <button class="team-select-btn" onclick="selectTeams(3)">3 Takım</button>
+        <button class="team-select-btn" onclick="selectTeams(4)">4 Takım</button>
+      </div>
+      <div style="background:rgba(255,255,255,0.08); padding:10px; border-radius:12px; margin-bottom:15px; font-size:0.86rem; text-align:left;">
+        🔒 <strong>Kural 1:</strong> Bir takıma sorulan soru hazneden silinir, hiçbir gruba tekrar sorulmaz.<br>
+        🎯 <strong>Kural 2:</strong> Çark 12 dilimlidir; Altın (3P) ve Gümüş (2P) bulmak zordur ve her grup sadece 1'er kez kazanabilir.<br>
+        🐒 <strong>Kaos:</strong> Yanlış bilenin ekranı titrer, kırmızı parlar ve gülen maymun çıkar!
+      </div>
+      <button class="start-btn" onclick="startGame()">OYUNU BAŞLAT</button>
+    </div>
+  </div>
+
+  <!-- OYUN BİTTİ -->
+  <div class="modal-overlay" id="endModal" style="display:none;">
+    <div class="modal-content">
+      <h2>🏆 YARIŞMA BİTTİ 🏆</h2>
+      <div id="winnerAnnouncement" style="font-size:1.4rem; margin:16px 0; color:var(--gold);"></div>
+      <div id="finalScoreList" style="text-align:left; margin:15px auto; max-width:280px;"></div>
+      <button class="start-btn" onclick="location.reload()">YENİDEN BAŞLA</button>
+    </div>
+  </div>
+
+  <!-- SKOR TABLOSU -->
+  <div class="scoreboard" id="scoreBoard"></div>
+
+  <!-- OYUN ALANI -->
+  <div class="game-container">
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer"></div>
+      <canvas id="wheelCanvas" width="400" height="400"></canvas>
+      <div class="spin-center-btn" id="spinBtn" onclick="spinWheel()">ÇEVİR</div>
+    </div>
+
+    <div class="question-box" id="questionBox">
+      <div class="question-tag" id="qCategory">BİLGİ ÇARKINI ÇEVİRİN!</div>
+      <div class="question-text" id="qText">Sıradaki takım butona bassın ve çarkı döndürsün...</div>
+      <div class="q-counter" id="qCounter">Kalan Benzersiz Soru: 66</div>
+    </div>
+
+    <div class="answer-buttons">
+      <button class="ans-btn btn-masal" id="btnMasal" onclick="submitAnswer('MASAL')" disabled>🧚 MASAL</button>
+      <button class="ans-btn btn-destan" id="btnDestan" onclick="submitAnswer('DESTAN')" disabled>🛡️ DESTAN</button>
+    </div>
+
+    <div class="control-panel">
+      <button class="end-game-btn" onclick="endGame()">Oyunu Bitir & Sıralamayı Gör</button>
+    </div>
+  </div>
+
+  <!-- KAOS MAYMUN OVERLAY -->
+  <div class="monkey-overlay" id="monkeyOverlay">
+    <div class="monkey-box">🐒</div>
+  </div>
+
+  <div class="correct-feedback" id="correctFeedback">🎉 DOĞRU CEVAP!</div>
+
+<script>
+// --- SES SENTEZLEYİCİ ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(freq, type, duration, delay=0) {
+  setTimeout(() => {
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e){}
+  }, delay);
+}
+
+function soundTick() { playTone(450, 'triangle', 0.04); }
+
+function soundSuccess() {
+  playTone(523.25, 'sine', 0.12, 0);
+  playTone(659.25, 'sine', 0.12, 100);
+  playTone(783.99, 'sine', 0.2, 200);
+  playTone(1046.50,'sine', 0.35, 300);
+}
+
+// Maymun Gülüşü Sesi
+function soundMonkeyLaugh() {
+  const pitches = [500, 720, 900, 650, 850, 1050, 750, 950, 600, 800];
+  pitches.forEach((p, idx) => {
+    playTone(p, 'sawtooth', 0.09, idx * 85);
+  });
+}
+
+// --- KONFETİ ---
+const confCanvas = document.getElementById("confettiCanvas");
+const confCtx = confCanvas.getContext("2d");
+let confettiParticles = [];
+function resizeConfetti() {
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function triggerConfetti() {
+  confettiParticles = [];
+  const colors = ['#ffd700', '#ff0055', '#00ff87', '#00d2ff', '#ffffff'];
+  for (let i = 0; i < 90; i++) {
+    confettiParticles.push({
+      x: confCanvas.width / 2,
+      y: confCanvas.height / 2,
+      w: Math.random() * 10 + 6,
+      h: Math.random() * 6 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 22,
+      vy: (Math.random() - 0.7) * 24,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 12,
+      life: 1
+    });
+  }
+  animateConfetti();
+}
+
+let confAnimId = null;
+function animateConfetti() {
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  let alive = false;
+  confettiParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.45;
+    p.rot += p.rotSpeed; p.life -= 0.015;
+    if (p.life > 0) {
+      alive = true;
+      confCtx.save();
+      confCtx.translate(p.x, p.y);
+      confCtx.rotate((p.rot * Math.PI) / 180);
+      confCtx.fillStyle = p.color;
+      confCtx.globalAlpha = Math.max(p.life, 0);
+      confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confCtx.restore();
+    }
+  });
+  if (alive) confAnimId = requestAnimationFrame(animateConfetti);
+  else {
+    confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+    cancelAnimationFrame(confAnimId);
+  }
+}
+
+// --- 60+ SORULUK DEV HAVUZ (DERS NOTLARINDAN DERLENMİŞTİR) ---
+// 1) Standart Sorular (1 Puan) - 42 Soru
+let standardPool = [
+  { text: "Başında 'Bir varmış bir yokmuş, evvel zaman içinde' gibi tekerlemeler (döşeme) yer alır.", type: "MASAL" },
+  { text: "Dini ve milli kavramlara yer verilmez, tamamen evrensel ahlaki mesajlar taşır.", type: "MASAL" },
+  { text: "Döşeme, Serim, Düğüm, Çözüm ve Dilek olmak üzere tam beş kurgusal bölümden oluşur.", type: "MASAL" },
+  { text: "Olayların geçtiği yer ve zaman bütünüyle belirsizdir (Kaf Dağı, periler ülkesi gibi).", type: "MASAL" },
+  { text: "Anlatımında ağırlıklı olarak duyulan geçmiş zaman (-miş) veya geniş zaman (-r) kullanılır.", type: "MASAL" },
+  { text: "Milletlerin hayatında derin iz bırakmış göç, savaş, kıtlık gibi büyük olayları anlatan milli eserlerdir.", type: "DESTAN" },
+  { text: "Demir dağın 70 körükle eritilip Türklerin Bozkurt rehberliğinde çıktığı 21 Mart anlatısı: Ergenekon.", type: "DESTAN" },
+  { text: "400.000'den fazla mısrasıyla dünya edebiyatının en hacimli eseri kabul edilen Kırgız anlatısı: Manas.", type: "DESTAN" },
+  { text: "Kahramanları Alp Er Tunga, Attila veya Mete Han gibi tarihte yaşamış gerçek hükümdarlardır.", type: "DESTAN" },
+  { text: "Doğuşu itibarıyla manzum (şiir) formundadır ve halk önünde saz/kopuz eşliğinde söylenir.", type: "DESTAN" },
+  { text: "Kahramanları cin, peri, dev ve cüce gibi tamamen gerçek dışı ve hayal gücü ürünü varlıklardır.", type: "MASAL" },
+  { text: "Doğrudan ahlaki bir ders vermeyi ve erdemli olmayı öğütleyen (didaktik) eserlerdir.", type: "MASAL" },
+  { text: "Bir ulusun tarih sahnesine çıkışını, kökenini ve soy ağacını (şeceresini) anlatır.", type: "DESTAN" },
+  { text: "Sonunda 'Gökten üç elma düşmüş...' gibi iyi niyet tekerlemeleriyle olay sonlandırılır.", type: "MASAL" },
+  { text: "Ay Kağan'ın oğlu olarak doğan, olağanüstü hızla büyüyüp cihan fethine çıkan kağanın destanı: Oğuz Kağan.", type: "DESTAN" },
+  { text: "Batı Hun Hükümdarı'nın Avrupa seferlerini konu alan ve Cermen destanlarını etkileyen anlatı: Attila Destanı.", type: "DESTAN" },
+  { text: "Bolu Beyi'ne başkaldıran ve Çamlıbel'de mertliği simgeleyen halk kahramanının anlatısı: Köroğlu.", type: "DESTAN" },
+  { text: "Anlatıcıları halk masalı geleneğinde 'masal anası' veya meddahlar iken bu türde ozanlar/baksılardır.", type: "DESTAN" },
+  { text: "İyilerin daima ödüllendirildiği, kötülerin ise mutlaka cezalandırıldığı mutlak adalet vardır.", type: "MASAL" },
+  { text: "Tarihî zemin, coğrafya (Orta Asya, Turan, Çamlıbel) ve milli kimlik son derece belirgindir.", type: "DESTAN" },
+  { text: "Konuları son derece çeşitli olup aşk, hırs, kıskançlık, cömertlik gibi insanî halleri işler.", type: "MASAL" },
+  { text: "Konuları bir milletin var oluşu ve bekası ile sınırlı, ülkücü nitelikte eserlerdir.", type: "DESTAN" },
+  { text: "Eski Türk inancındaki rüya, aksakallı ihtiyar, kurt ve ışık motifleri bu türün ana omurgasıdır.", type: "DESTAN" },
+  { text: "Türk kültüründeki Keloğlan tiplemesi bu türün en sevilen ve zekâyı temsil eden kahramanıdır.", type: "MASAL" },
+  { text: "Makedonyalı İskender'in seferine karşı Saka hakanının stratejisini işleyen anlatı: Şu Destanı.", type: "DESTAN" },
+  { text: "Kolları ve bacakları kesilen küçük çocuğu bir dişi kurdun (Asena) büyütmesini anlatan Göktürk destanı: Bozkurt.", type: "DESTAN" },
+  { text: "Eski Yunan edebiyatında hayvanları kişileştirerek ders veren Ezop örnekleri hangi türdür?", type: "MASAL" },
+  { text: "Fransız edebiyatında La Fontaine'in hayvanları konuşturarak yazdığı eserler hangi türe girer?", type: "MASAL" },
+  { text: "Arap ve Doğu edebiyatının şahikası olan Şehrazat'ın anlattığı 'Binbir Gece' hangi edebi türdür?", type: "MASAL" },
+  { text: "Düşman pusu kurup hileyle öldürdüğünde arkasından 'Alp Er Tunga öldi mü?' sagusu yakılan anlatı: Destan.", type: "DESTAN" },
+  { text: "Yalnızca nesir (düzyazı) şeklinde halk arasında ağızdan ağıza aktarılan kurgusal anlatılardır.", type: "MASAL" },
+  { text: "Sivas, Tokat ve Çorum civarında Haçlılara karşı verilen mücadeleyi anlatan Dânişmend Gazi anlatısı.", type: "DESTAN" },
+  { text: "Malatya çevresinde Bizans'a karşı mücadele eden Seyyid Battal Gazi'nin kahramanlıkları hangi türdür?", type: "DESTAN" },
+  { text: "Mevlana'nın Mesnevi'sinde yer alan Zümrüdüanka kuşu anlatısı bu türün en bilinen motiflerindendir.", type: "MASAL" },
+  { text: "Batı edebiyatında 'Kırmızı Başlıklı Kız' ve 'Pamuk Prenses' hangi edebi türün en yaygın örnekleridir?", type: "MASAL" },
+  { text: "Eski Türk edebiyatındaki 'epope' teriminin Türk kültüründeki karşılığı hangi anlatı türüdür?", type: "DESTAN" },
+  { text: "Anadolu sahasında anlatılan 'Öksüz Kız' ve 'Üç Haylaz' anlatıları hangi halk türüne girer?", type: "MASAL" },
+  { text: "Bütün bir milletin ortak vicdanını, cihangirlik tutkusunu ve adalet anlayışını yansıtır.", type: "DESTAN" },
+  { text: "Kahramanların hayvanlardan oluştuğu ve insanlara ibret vermeyi amaçlayan fabl benzeri anlatılardır.", type: "MASAL" },
+  { text: "Tüfek icat olduktan sonra mertlik çağının kapandığını ifade eden halk anlatısı hangi türe aittir?", type: "DESTAN" },
+  { text: "Saz veya kopuz eşliğinde söylenmeyen, tamamen sözlü masal anlatıcılarının aktardığı türdür.", type: "MASAL" },
+  { text: "İslamiyet'in kabulüyle alp tipinin yerini 'gazi ve veli' tipine bıraktığı kahramanlık eserleridir.", type: "DESTAN" }
+];
+
+// 2) Gümüş Sorular (2 Puan - İleri Seviye) - 12 Soru
+let silverPool = [
+  { text: "Geri çekilmeyen 22 aileye 'Kal aç' denmesiyle Kalaç boyunun doğuşunu açıklayan anlatı hangi türe aittir?", type: "DESTAN" },
+  { text: "Tahir Alangu'nun Anadolu halk anlatılarından derlediği 'Billur Köşk' adlı eser hangi edebi türe aittir?", type: "MASAL" },
+  { text: "Uygur hakanının kızlarını insanoğluna layık görmeyip kuleye kapatması ve Bozkurt ile evlenmeleri hangi türdür?", type: "DESTAN" },
+  { text: "Şeyhi'nin 'Harname' adlı eseri Türk edebiyatında hangi anlatı türünün ilk ve en büyük örneği sayılır?", type: "MASAL" },
+  { text: "Hz. Muhammed'in Miraç gecesinde ruhunu gördüğü müjdelenen Satuk Buğra Han anlatısı hangi türe girer?", type: "DESTAN" },
+  { text: "Çinlilerin kutsal Kutlu Dağ kayasını sirke döküp parçalamasıyla canlıların 'Göç! Göç!' dediği anlatı hangi türdür?", type: "DESTAN" },
+  { text: "İl Han'ın soyundan Kıyan ve Nüküz adlı yiğitlerin sarp dağ kemerine sığındığı anlatı hangi türe aittir?", type: "DESTAN" },
+  { text: "Halk masalları, hayvan masalları ve yapma (edebi) masallar şeklinde 3 sınıfa ayrılan edebi tür hangisidir?", type: "MASAL" },
+  { text: "Uygurların Hulin Dağı'nda bir ağaca ilahi ışık inmesiyle Buğu Han ve 5 kardeşin doğuşu hangi türdür?", type: "DESTAN" },
+  { text: "Emir Timur'un savaşlarını ve Altın Ordu'yu dağıtan seferlerini konu alan Tatar-Kırım anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "Keloğlan ve Altın Bülbül Masalı, Tembel Çocuk ile Padişah Kızı hangi halk edebiyatı türüne örnektir?", type: "MASAL" },
+  { text: "Dünyada ilk örneği Beydaba tarafından yazılan ve Hint mitolojisine dayanan Kelile ve Dimne hangi türdür?", type: "MASAL" }
+];
+
+// 3) Altın Sorular (3 Puan - En Zor Seviye) - 12 Soru
+let goldPool = [
+  { text: "Uygur dönemi Budist metinlerinden 'Kalyanamkara ve Papamkara' (İyi ve Kötü Şehzade) hangi edebi türün ilk örneğidir?", type: "MASAL" },
+  { text: "Asur kaynaklarında Maduva, Herodot'ta Madyes, Firdevsî'de Efrasiyab olarak anılan Türk hakanının anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "İran sahasında ortaya çıkan ve 'Binbir Gece Masalları'na antitez (karşıt) olarak üretilen 'Binbir Gündüz' hangi türdür?", type: "MASAL" },
+  { text: "Altın Ordu Devleti'nin dağılmasını ve vezir Edige Mirza Bahadır'ın mücadelesini işleyen Şecere-i Türk anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "Jacob ve Wilhelm Grimm Kardeşlerin Alman halkından derleyip 'Çocuk ve Yuva' adıyla bastığı eser hangi edebi türdür?", type: "MASAL" },
+  { text: "Tanrı Ülgen'e Ak Ana'nın 'Yaptım oldu de!' öğüdünü verdiği ve ilk insan Erlik'in yaratıldığı Altay anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "Danimarkalı Andersen'in 1835 yılında yayımladığı ve Kibritçi Kız ile ünlenen yapıtı hangi türe örnektir?", type: "MASAL" },
+  { text: "Kaşgarlı Mahmud'un Divan ü Lûgat-it-Türk'te 'Alp Er Tunga öldi mü / Issız ajun kaldı mu' dediği sagu hangi türe aittir?", type: "DESTAN" },
+  { text: "Oğuz Kağan'ın 'Güneş bayrak, gök kurıkan (çadır) olsun!' diyerek cihan fethini başlattığı Hun anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "Ebülgazi Bahadır Han'ın Şecere-i Terâkime ve Câmiu't-Tevârih kaynaklarında korunan demir eritme anlatısı hangi türdür?", type: "DESTAN" },
+  { text: "Saka Türklerinin hükümdarı Şu'yu gören Makedonların geride kalanlara 'Türk-mânend' (Türk'e benzer) dediği anlatı hangi türdür?", type: "DESTAN" },
+  { text: "Doğu edebiyatında 'Simbad'ın Maceraları' ve Alaaddin'in Sihirli Lambası gibi anlatılar hangi halk türüne aittir?", type: "MASAL" }
+];
+
+// 12 Dilimli Çark (Altın ve Gümüş dilimleri 1'er adet yapılarak bulması çok daha zorlaştırıldı)
+const wheelSectors = [
+  { label: "SORU 1", type: "NORMAL", color: "#ff2a6d", textColor: "#fff" },
+  { label: "BİLGİ 2", type: "NORMAL", color: "#8b5cf6", textColor: "#fff" },
+  { label: "⭐ ALTIN ⭐", type: "GOLD", color: "#ffd700", textColor: "#000" },
+  { label: "SORU 3", type: "NORMAL", color: "#06b6d4", textColor: "#fff" },
+  { label: "BİLGİ 4", type: "NORMAL", color: "#10b981", textColor: "#fff" },
+  { label: "SORU 5", type: "NORMAL", color: "#f59e0b", textColor: "#fff" },
+  { label: "🥈 GÜMÜŞ 🥈", type: "SILVER", color: "#cbd5e1", textColor: "#000" },
+  { label: "SORU 6", type: "NORMAL", color: "#ec4899", textColor: "#fff" },
+  { label: "BİLGİ 7", type: "NORMAL", color: "#3b82f6", textColor: "#fff" },
+  { label: "SORU 8", type: "NORMAL", color: "#14b8a6", textColor: "#fff" },
+  { label: "BİLGİ 9", type: "NORMAL", color: "#f97316", textColor: "#fff" },
+  { label: "SORU 10", type: "NORMAL", color: "#a855f7", textColor: "#fff" }
+];
+
+let teamCount = 2;
+let teams = [];
+let currentTeamIdx = 0;
+let currentQuestion = null;
+let currentPoints = 1;
+let isSpinning = false;
+let currentRotation = 0;
+
+// ÇARK ÇİZİMİ
+const canvas = document.getElementById("wheelCanvas");
+const ctx = canvas.getContext("2d");
+
+function drawWheel() {
+  const numSlices = wheelSectors.length;
+  const arc = (2 * Math.PI) / numSlices;
+  const radius = canvas.width / 2;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < numSlices; i++) {
+    const angle = i * arc;
+    ctx.beginPath();
+    ctx.fillStyle = wheelSectors[i].color;
+    ctx.moveTo(radius, radius);
+    ctx.arc(radius, radius, radius, angle, angle + arc);
+    ctx.lineTo(radius, radius);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff";
+    ctx.stroke();
+
+    // Dilim Yazıları
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(angle + arc / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = wheelSectors[i].textColor;
+    ctx.font = "bold 13px Arial";
+    ctx.fillText(wheelSectors[i].label, radius - 15, 4);
+    ctx.restore();
+  }
+}
+drawWheel();
+
+function selectTeams(count) {
+  teamCount = count;
+  document.querySelectorAll('.team-select-btn').forEach(btn => {
+    btn.classList.remove('selected');
+    if (btn.innerText.includes(count)) btn.classList.add('selected');
+  });
+}
+
+function startGame() {
+  audioCtx.resume();
+  document.getElementById("startModal").style.display = "none";
+  teams = [];
+  for (let i = 1; i <= teamCount; i++) {
+    teams.push({
+      name: `${i}. Takım`,
+      score: 0,
+      hadGold: false,
+      hadSilver: false
+    });
+  }
+  renderScoreboard();
+  updateQuestionCounter();
+}
+
+function updateQuestionCounter() {
+  const total = standardPool.length + silverPool.length + goldPool.length;
+  document.getElementById("qCounter").innerText = `Kalan Benzersiz Soru Havuzu: ${total}`;
+}
+
+function renderScoreboard() {
+  const sb = document.getElementById("scoreBoard");
+  sb.innerHTML = "";
+  const maxScore = Math.max(...teams.map(t => t.score));
+
+  teams.forEach((t, i) => {
+    const isLeader = (maxScore > 0 && t.score === maxScore);
+    const card = document.createElement("div");
+    card.className = `team-card ${i === currentTeamIdx ? 'active-turn' : ''} ${isLeader ? 'is-leader' : ''}`;
+    card.id = `teamCard-${i}`;
+    card.innerHTML = `
+      <div class="crown-badge">👑</div>
+      <div class="team-name">${t.name}</div>
+      <div class="team-score" id="scoreVal-${i}">${t.score}</div>
+      <div class="badges-left">
+        ${t.hadGold ? '<s>⭐Altın: Alındı</s>' : '⭐Altın: Bekliyor'}<br>
+        ${t.hadSilver ? '<s>🥈Gümüş: Alındı</s>' : '🥈Gümüş: Bekliyor'}
+      </div>
+    `;
+    sb.appendChild(card);
+  });
+}
+
+function updateTurnIndicator() {
+  const maxScore = Math.max(...teams.map(t => t.score));
+  teams.forEach((t, i) => {
+    const el = document.getElementById(`teamCard-${i}`);
+    if (el) {
+      if (i === currentTeamIdx) el.classList.add('active-turn');
+      else el.classList.remove('active-turn');
+
+      if (maxScore > 0 && t.score === maxScore) el.classList.add('is-leader');
+      else el.classList.remove('is-leader');
+    }
+  });
+}
+
+// ÇARKI ÇEVİRME: Altın ve Gümüş'e denk gelme ihtimali 1/12 seviyesinde nadirdir
+function spinWheel() {
+  if (isSpinning) return;
+  isSpinning = true;
+
+  document.getElementById("btnMasal").disabled = true;
+  document.getElementById("btnDestan").disabled = true;
+  document.getElementById("spinBtn").style.pointerEvents = "none";
+
+  let tickCount = 0;
+  const tickInterval = setInterval(() => {
+    soundTick();
+    tickCount++;
+    if (tickCount > 28) clearInterval(tickInterval);
+  }, 120);
+
+  const curTeam = teams[currentTeamIdx];
+  let targetSectorType = "NORMAL";
+
+  // Altın ve Gümüş'ü bulmak daha zordur (Ağırlıklı rastgelelik)
+  const roll = Math.random() * 100;
+  if (roll < 10 && !curTeam.hadGold && goldPool.length > 0) {
+    targetSectorType = "GOLD";
+  } else if (roll < 25 && !curTeam.hadSilver && silverPool.length > 0) {
+    targetSectorType = "SILVER";
+  } else {
+    targetSectorType = "NORMAL";
+  }
+
+  // Sektörü bul
+  const matchingIndices = [];
+  wheelSectors.forEach((sec, idx) => {
+    if (sec.type === targetSectorType) matchingIndices.push(idx);
+  });
+  const chosenIndex = matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
+
+  // Hedef açı hesaplama (İbre üstte 270 derecedir)
+  const numSlices = wheelSectors.length;
+  const sliceDeg = 360 / numSlices;
+  const targetDegCenter = (chosenIndex * sliceDeg) + (sliceDeg / 2);
+  const targetCanvasRotation = (270 - targetDegCenter + 360) % 360;
+
+  const currentMod = currentRotation % 360;
+  let diff = targetCanvasRotation - currentMod;
+  if (diff < 0) diff += 360;
+
+  const extraSpins = (6 + Math.floor(Math.random() * 3)) * 360;
+  currentRotation += extraSpins + diff;
+
+  canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    isSpinning = false;
+    document.getElementById("spinBtn").style.pointerEvents = "auto";
+    activateSector(wheelSectors[chosenIndex]);
+  }, 4600);
+}
+
+// SEKTÖRE GÖRE SORU ÇEKİLİR VE SORU HAVUZUNDAN TAMAMEN SİLİNİR
+function activateSector(sector) {
+  const curTeam = teams[currentTeamIdx];
+  const qBox = document.getElementById("questionBox");
+  qBox.classList.remove("gold-mode", "silver-mode");
+
+  if (sector.type === "GOLD" && !curTeam.hadGold && goldPool.length > 0) {
+    curTeam.hadGold = true;
+    currentPoints = 3;
+    qBox.classList.add("gold-mode");
+    document.getElementById("qCategory").innerHTML = `⭐ ALTIN SORU (3 PUAN) ⭐ - SIRA: ${curTeam.name.toUpperCase()}`;
+    const randIdx = Math.floor(Math.random() * goldPool.length);
+    currentQuestion = goldPool.splice(randIdx, 1)[0]; // Havuzdan kalıcı olarak çıkar
+  } else if (sector.type === "SILVER" && !curTeam.hadSilver && silverPool.length > 0) {
+    curTeam.hadSilver = true;
+    currentPoints = 2;
+    qBox.classList.add("silver-mode");
+    document.getElementById("qCategory").innerHTML = `🥈 GÜMÜŞ SORU (2 PUAN) 🥈 - SIRA: ${curTeam.name.toUpperCase()}`;
+    const randIdx = Math.floor(Math.random() * silverPool.length);
+    currentQuestion = silverPool.splice(randIdx, 1)[0]; // Havuzdan kalıcı olarak çıkar
+  } else {
+    currentPoints = 1;
+    document.getElementById("qCategory").innerHTML = `STANDART SORU (1 PUAN) - SIRA: ${curTeam.name.toUpperCase()}`;
+    if (standardPool.length === 0) {
+      alert("Tüm standart sorular bitti!");
+      endGame();
+      return;
+    }
+    const randIdx = Math.floor(Math.random() * standardPool.length);
+    currentQuestion = standardPool.splice(randIdx, 1)[0]; // Havuzdan kalıcı olarak çıkar
+  }
+
+  updateQuestionCounter();
+  document.getElementById("qText").innerText = `"${currentQuestion.text}"`;
+  document.getElementById("btnMasal").disabled = false;
+  document.getElementById("btnDestan").disabled = false;
+  renderScoreboard();
+}
+
+// CEVAP KONTROLÜ (KAOS: SADECE EKRAN TİTREMESİ, KIRMIZI PARLAMA, MAYMUN VE GÜLME SESİ)
+function submitAnswer(userChoice) {
+  if (!currentQuestion) return;
+
+  document.getElementById("btnMasal").disabled = true;
+  document.getElementById("btnDestan").disabled = true;
+
+  const isCorrect = (userChoice === currentQuestion.type);
+
+  if (isCorrect) {
+    // Doğru: Puan ekle, konfeti patlat
+    teams[currentTeamIdx].score += currentPoints;
+    soundSuccess();
+    triggerConfetti();
+
+    const fb = document.getElementById("correctFeedback");
+    fb.innerText = `🎉 DOĞRU BİLDİNİZ! +${currentPoints} PUAN`;
+    fb.style.display = "block";
+    setTimeout(() => { fb.style.display = "none"; }, 2000);
+  } else {
+    // KAOS MODU: Kırmızı ekran, sarsıntı, gülen maymun animasyonu ve gülüş sesi (Hiçbir yazı yok)
+    document.body.classList.add("chaos-active");
+    const monkey = document.getElementById("monkeyOverlay");
+    monkey.classList.add("show");
+    soundMonkeyLaugh();
+
+    setTimeout(() => {
+      document.body.classList.remove("chaos-active");
+      monkey.classList.remove("show");
+    }, 2500);
+  }
+
+  renderScoreboard();
+
+  setTimeout(() => {
+    document.getElementById("questionBox").classList.remove("gold-mode", "silver-mode");
+    currentTeamIdx = (currentTeamIdx + 1) % teams.length;
+    updateTurnIndicator();
+
+    document.getElementById("qCategory").innerText = `SIRA: ${teams[currentTeamIdx].name.toUpperCase()}`;
+    document.getElementById("qText").innerText = "Lütfen çarkıfeleği döndürün!";
+    currentQuestion = null;
+  }, isCorrect ? 2200 : 2800);
+}
+
+function endGame() {
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+  const isDraw = sorted.length > 1 && sorted[0].score === sorted[1].score && sorted[0].score > 0;
+
+  const winDiv = document.getElementById("winnerAnnouncement");
+  if (isDraw) {
+    winDiv.innerHTML = `🤝 BERABERLİK!<br>En Yüksek Puan: <strong>${winner.score} P</strong>`;
+  } else {
+    winDiv.innerHTML = `👑 ŞAMPİYON: <strong>${winner.name}</strong><br>Toplam Skor: ${winner.score} Puan!`;
+    triggerConfetti();
+    soundSuccess();
+  }
+
+  const listDiv = document.getElementById("finalScoreList");
+  listDiv.innerHTML = "<h3 style='margin-bottom:8px; text-align:center;'>Final Sıralaması:</h3>";
+  sorted.forEach((t, i) => {
+    listDiv.innerHTML += `
+      <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <span>${i===0 ? '🥇' : (i===1 ? '🥈' : '🥉')} ${t.name}</span>
+        <strong>${t.score} Puan</strong>
+      </div>
+    `;
+  });
+
+  document.getElementById("endModal").style.display = "flex";
+}
+</script>
+</body>
+</html>

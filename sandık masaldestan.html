@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Efsaneler Sandığı: Masal ve Destan Yarışması</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --gold: #f59e0b;
+      --gold-light: #fbbf24;
+      --gold-dark: #b45309;
+      --accent: #6366f1;
+      --accent-glow: #818cf8;
+      --text: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* Üst Bar ve Skor Tablosu */
+    header {
+      width: 100%;
+      padding: 12px 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      border-bottom: 2px solid var(--gold-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .game-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .turn-indicator {
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid var(--accent-glow);
+      border-radius: 20px;
+      color: #c7d2fe;
+    }
+
+    .end-btn {
+      background: linear-gradient(135deg, #ef4444, #991b1b);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      transition: 0.2s transform;
+    }
+    .end-btn:hover { transform: scale(1.05); }
+
+    /* Skor Kartları */
+    .scoreboard {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 6px 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .team-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 130px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .team-card.active-turn {
+      border-color: var(--accent-glow);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+
+    /* 1. Olan Grubun Altın Parlama Efekti */
+    .team-card.leader {
+      border-color: var(--gold-light);
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(180, 83, 9, 0.2));
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.8), inset 0 0 10px rgba(251, 191, 36, 0.5);
+      animation: leaderPulse 2s infinite alternate;
+    }
+
+    @keyframes leaderPulse {
+      0% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); }
+      100% { box-shadow: 0 0 28px rgba(251, 191, 36, 1); }
+    }
+
+    .crown {
+      position: absolute;
+      top: -14px;
+      right: -6px;
+      font-size: 1.4rem;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      display: none;
+    }
+
+    .team-card.leader .crown {
+      display: block;
+    }
+
+    .team-name { font-size: 0.9rem; font-weight: 600; }
+    .team-score { font-size: 1.3rem; font-weight: 800; color: var(--gold-light); }
+
+    /* Sandık Alanı */
+    .chest-container {
+      max-width: 1200px;
+      width: 100%;
+      padding: 30px 20px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 16px;
+      perspective: 1000px;
+    }
+
+    @media (max-width: 1024px) { .chest-container { grid-template-columns: repeat(5, 1fr); } }
+    @media (max-width: 640px) { .chest-container { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
+
+    .chest {
+      background: linear-gradient(145deg, #78350f, #451a03);
+      border: 3px solid #b45309;
+      border-radius: 12px;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--gold-light);
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.4), inset 0 2px 4px rgba(251, 191, 36, 0.3);
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .chest::before {
+      content: '📦';
+      font-size: 2rem;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    .chest:hover:not(.opened) {
+      transform: translateY(-5px) scale(1.04);
+      box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+      border-color: var(--gold-light);
+    }
+
+    .chest.opened {
+      background: #1e293b;
+      border-color: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+    .chest.opened::before { content: '🔓'; opacity: 0.5; }
+
+    /* Sandık Açılma ve Soru Modal / Sahne */
+    .stage-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.88);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      perspective: 1200px;
+    }
+
+    .active-chest-card {
+      background: linear-gradient(135deg, #1e1b4b, #0f172a);
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 50px rgba(245, 158, 11, 0.6);
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 650px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      transform: scale(0.2) rotateX(40deg);
+      opacity: 0;
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .active-chest-card.revealed {
+      transform: scale(1) rotateX(0deg);
+      opacity: 1;
+    }
+
+    .chest-badge {
+      display: inline-block;
+      background: var(--gold-dark);
+      color: #fff;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .statement-box {
+      font-size: 1.25rem;
+      line-height: 1.55;
+      font-weight: 500;
+      color: #f1f5f9;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 15px 0 35px 0;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Altın Para Butonlar */
+    .coins-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .gold-coin-btn {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #fef08a;
+      background: radial-gradient(circle at 35% 35%, #fde047, #eab308 60%, #a16207 100%);
+      box-shadow: 0 8px 25px rgba(234, 179, 8, 0.5), inset 0 3px 6px rgba(255, 255, 255, 0.6);
+      color: #451a03;
+      font-size: 1.25rem;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .gold-coin-btn span {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      opacity: 0.85;
+    }
+
+    .gold-coin-btn:hover {
+      transform: scale(1.1) translateY(-4px);
+      box-shadow: 0 12px 30px rgba(234, 179, 8, 0.8), inset 0 4px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Uçan Altın Para Animasyonu (+1 Puan Kayması) */
+    .flying-coin {
+      position: fixed;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fde047, #eab308 60%, #a16207 100%);
+      border: 3px solid #fef08a;
+      box-shadow: 0 0 25px #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #451a03;
+      font-weight: 900;
+      font-size: 1.2rem;
+      z-index: 200;
+      pointer-events: none;
+      transition: all 0.9s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    /* Yanlış Cevap: Siyah Daireye Dönüşüp Küçülme */
+    .shrink-black-hole {
+      animation: toBlackHole 0.75s forwards cubic-bezier(0.6, -0.28, 0.735, 0.045) !important;
+      pointer-events: none;
+    }
+
+    @keyframes toBlackHole {
+      0% {
+        background: radial-gradient(circle at 35% 35%, #fde047, #eab308 60%, #a16207 100%);
+        border-color: #fef08a;
+        transform: scale(1);
+        color: #451a03;
+      }
+      40% {
+        background: radial-gradient(circle, #262626 20%, #000000 90%);
+        border-color: #171717;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.95);
+        color: transparent;
+        transform: scale(1.15) rotate(15deg);
+      }
+      100% {
+        background: #000;
+        border-color: #000;
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+        transform: scale(0) rotate(180deg);
+        opacity: 0;
+      }
+    }
+
+    /* Yağan Örümcekler */
+    .spider-particle {
+      position: fixed;
+      font-size: 2.2rem;
+      pointer-events: none;
+      z-index: 250;
+      top: -60px;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6));
+      animation: spiderFall linear forwards;
+    }
+
+    @keyframes spiderFall {
+      0% {
+        top: -60px;
+        transform: rotate(0deg);
+        opacity: 1;
+      }
+      25% {
+        transform: rotate(15deg) translateX(15px);
+      }
+      50% {
+        transform: rotate(-15deg) translateX(-15px);
+      }
+      75% {
+        transform: rotate(10deg) translateX(10px);
+      }
+      100% {
+        top: 105vh;
+        transform: rotate(0deg);
+        opacity: 0.9;
+      }
+    }
+
+    /* Başlangıç ve Bitiş Modalları */
+    .modal-center {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+
+    .dialog-card {
+      background: #1e293b;
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      padding: 35px 30px;
+      text-align: center;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .dialog-card h2 {
+      color: var(--gold-light);
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+    }
+
+    .dialog-card p {
+      color: #94a3b8;
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .group-select-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .group-num-btn {
+      background: #334155;
+      color: white;
+      border: 2px solid transparent;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .group-num-btn:hover {
+      border-color: var(--gold);
+      background: #475569;
+      transform: translateY(-2px);
+    }
+
+    .summary-list {
+      list-style: none;
+      margin: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #0f172a;
+      border-radius: 8px;
+      font-size: 1.1rem;
+    }
+
+    .restart-btn {
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+      border: none;
+      color: #451a03;
+      padding: 12px 28px;
+      font-weight: 800;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Başlangıç Grubu Seçim Modalı -->
+  <div class="modal-center" id="startModal">
+    <div class="dialog-card">
+      <h2>🏆 Efsaneler Sandığı</h2>
+      <p>Masal ve Destanlarımızın gizemli dünyasına hoş geldiniz!<br>Yarışmaya katılacak <strong>grup sayısını</strong> seçin:</p>
+      <div class="group-select-grid">
+        <button class="group-num-btn" onclick="startGame(2)">2</button>
+        <button class="group-num-btn" onclick="startGame(3)">3</button>
+        <button class="group-num-btn" onclick="startGame(4)">4</button>
+        <button class="group-num-btn" onclick="startGame(5)">5</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Oyun Bitiş Modalı -->
+  <div class="modal-center" id="endModal" style="display: none;">
+    <div class="dialog-card">
+      <h2>🎉 Yarışma Sona Erdi</h2>
+      <div id="winnerAnnounce" style="font-size: 1.3rem; margin-bottom: 15px; color: var(--gold-light);"></div>
+      <ul class="summary-list" id="finalScores"></ul>
+      <button class="restart-btn" onclick="location.reload()">Yeni Oyuna Başla</button>
+    </div>
+  </div>
+
+  <!-- Üst Bilgi Barı -->
+  <header>
+    <div class="top-controls">
+      <div class="game-title">✨ Masal & Destan Sandığı</div>
+      <div class="turn-indicator" id="turnDisplay">Sıra: 1. Grup</div>
+      <button class="end-btn" onclick="endGame()">Oyunu Bitir</button>
+    </div>
+    <div class="scoreboard" id="scoreboard"></div>
+  </header>
+
+  <!-- 40 Adet Sandık Izgarası -->
+  <main class="chest-container" id="chestContainer"></main>
+
+  <!-- Sandık Açılma ve Soru Sahnesi -->
+  <div class="stage-overlay" id="stageOverlay">
+    <div class="active-chest-card" id="activeCard">
+      <div class="chest-badge" id="cardBadge">Sandık #</div>
+      <div class="statement-box" id="cardStatement">Bilgi yükleniyor...</div>
+      
+      <!-- İki Seçenek: Doğru / Yanlış Altın Paraları -->
+      <div class="coins-wrapper">
+        <button class="gold-coin-btn" id="coinTrue" onclick="submitAnswer(true)">
+          DOĞRU
+          <span>+1 PUAN</span>
+        </button>
+        <button class="gold-coin-btn" id="coinFalse" onclick="submitAnswer(false)">
+          YANLIŞ
+          <span>+1 PUAN</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // PDF'lerde yer alan birebir bilgilerden üretilmiş 40 eşsiz Doğru/Yanlış sorusu
+    const questionBank = [
+      { id: 1, text: "Masal kelimesi dilimize Arapçadaki 'mesel' kelimesinden geçmiştir.", ans: true },
+      { id: 2, text: "Masallarda zaman ve mekân her zaman kesin, tarihî ve coğrafî olarak bellidir.", ans: false },
+      { id: 3, text: "Masalların başında yer alan tekerlemelerin bulunduğu bölüme 'döşeme' adı verilir.", ans: true },
+      { id: 4, text: "Masallar yalnızca dinî ve millî kavramları öne çıkaran yerel ürünlerdir; evrensel değildir.", ans: false },
+      { id: 5, text: "Eski Türk destanlarından günümüze bütünüyle ulaşabilen tek metin Kırgızların Manas Destanı'dır.", ans: true },
+      { id: 6, text: "Beydaba'nın yazdığı 'Kelile ve Dimne' eseri dünya edebiyatında ilk masal/fabl örneği sayılır.", ans: true },
+      { id: 7, text: "Destanlar nesir (düzyazı) olarak doğmuş, zamanla manzum (şiir) şekline dönüşmüştür.", ans: false },
+      { id: 8, text: "Alp Er Tunga Destanı ve Şu Destanı, Saka (İskit) dönemine ait Türk destanlarıdır.", ans: true },
+      { id: 9, text: "Ergenekon Destanı'nda Türkler, dağın demir madenini körüklerle eriterek vadiden çıkmışlardır.", ans: true },
+      { id: 10, text: "Uygur dönemi eseri 'Kalyanamkara ve Papamkara' masal özelliği taşıyan ilk metinlerdendir.", ans: true },
+      { id: 11, text: "Masallar saz eşliğinde söylenirken, destanlar asla saz eşliğinde söylenmez.", ans: false },
+      { id: 12, text: "Oğuz Kağan Destanı, Büyük Hun Hükümdarı Mete'nin hayatı ve fetihleri etrafında şekillenmiştir.", ans: true },
+      { id: 13, text: "Tahir Alangu, 'Billur Köşk' adlı eserini Anadolu halk masallarından derlemiştir.", ans: true },
+      { id: 14, text: "Danimarkalı Andersen, 'Kibritçi Kız' ve 'Çocuk Masalları' ile ünlenmiş bir masal yazarıdır.", ans: true },
+      { id: 15, text: "Göç Destanı'nda Uygurlar, Çinlilere kutlu 'Kutlu Dağ' kayasını verdikten sonra kıtlık yaşayıp göç etmişlerdir.", ans: true },
+      { id: 16, text: "Masallarda genellikle geniş zaman (-r) ya da duyulan geçmiş zaman (-miş) kipi kullanılır.", ans: true },
+      { id: 17, text: "Köroğlu Destanı'nda Köroğlu'nun babasının gözlerini kör eden kişi Bolu Beyi'dir.", ans: true },
+      { id: 18, text: "Alp Er Tunga, Firdevsî'nin Şehnâme eserinde 'Efrasiyab' adıyla anılmaktadır.", ans: true },
+      { id: 19, text: "Almanya'da masalları 'Çocuk ve Yuva Masalları' adıyla derleyenler Grimm Kardeşler'dir.", ans: true },
+      { id: 20, text: "Yaratılış Destanı'nda Tanrı Ülgen'e dünyayı yaratması için akıl veren varlık Ak Ana'dır.", ans: true },
+      { id: 21, text: "Bozkurt Destanı'nda Göktürkler, düşman baskınından kurtulan bir erkek çocuğu besleyen dişi kurttan çoğalmıştır.", ans: true },
+      { id: 22, text: "Masallarda olaylar iyi ve kötünün mücadelesiyle geçer; ancak masalların sonunda kötüler mutlaka kazanır.", ans: false },
+      { id: 23, text: "Satuk Buğra Han Destanı, Karahanlı döneminde İslamiyet'in kabulünü anlatan destandır.", ans: true },
+      { id: 24, text: "Türeyiş Destanı'nda Uygur hakanı, kızlarını insanlarla değil kurt suretindeki Tanrı ile evlendirmiştir.", ans: true },
+      { id: 25, text: "Destan kahramanları tamamen hayalîdir; tarihte yaşamış hiçbir gerçek kişiyi temsil etmezler.", ans: false },
+      { id: 26, text: "Şu Destanı'nda genç Saka hükümdarı Şu, Makedonyalı İskender'in seferi karşısında doğuya çekilmiştir.", ans: true },
+      { id: 27, text: "Türk edebiyatında Şeyhi'nin 'Harname' mesnevisi hayvan masallarına (fabl) örnek gösterilebilir.", ans: true },
+      { id: 28, text: "Masalların bölümleri sırasıyla; Döşeme, Serim, Düğüm, Çözüm ve Dilek şeklindedir.", ans: true },
+      { id: 29, text: "Attila Destanı, Batı Hun hükümdarı Attila'nın Avrupa seferlerini konu edinir.", ans: true },
+      { id: 30, text: "Hem masallarda hem destanlarda rüya, kırklar (3-7-40) ve ak sakallı ihtiyar gibi ortak motifler vardır.", ans: true },
+      { id: 31, text: "Manas Destanı yalnızca 1.000 mısradan oluşan dünyanın en kısa destanıdır.", ans: false },
+      { id: 32, text: "İran coğrafyasında ortaya çıkan 'Binbir Gündüz Masalları', 'Binbir Gece Masalları'na karşı çıkmış bir eserdir.", ans: true },
+      { id: 33, text: "Battal Gazi Destanı, Malatya çevresinde Bizans'a karşı verilen mücadeleleri işler.", ans: true },
+      { id: 34, text: "Masalların konusu sınırlı ve dardır; destanların konusu ise sınırsız ve çok çeşitlidir.", ans: false },
+      { id: 35, text: "Cengiznâme, Orta Asya Türk ve Moğol boyları arasında oluşan bir destandır.", ans: true },
+      { id: 36, text: "Dânişmendnâme'de Anadolu'nun fethi; Sivas, Tokat, Niksar civarındaki mücadeleler anlatılır.", ans: true },
+      { id: 37, text: "Keloğlan Masalları Türk edebiyatında en çok bilinen masallardandır.", ans: true },
+      { id: 38, text: "Edige Destanı, Altın Ordu Devleti'nin dağılmasını ve Edige Mirza Bahadır'ın mücadelesini anlatır.", ans: true },
+      { id: 39, text: "Oğuz Kağan seferlerinde ordusunun önünde gök yeleli, gök tüylü bir kurt kılavuzluk etmiştir.", ans: true },
+      { id: 40, text: "'Tüfek icat oldu mertlik bozuldu' sözü Seyyid Battal Gazi Destanı'nın ana sloganıdır.", ans: false }
+    ];
+
+    let totalTeams = 2;
+    let teams = [];
+    let currentTeamIdx = 0;
+    let currentQuestion = null;
+    let currentChestElement = null;
+
+    // Oyunu Başlatma
+    function startGame(teamCount) {
+      totalTeams = teamCount;
+      teams = [];
+      for (let i = 1; i <= teamCount; i++) {
+        teams.push({ id: i, name: `${i}. Grup`, score: 0 });
+      }
+      document.getElementById('startModal').style.display = 'none';
+      renderScoreboard();
+      createChests();
+    }
+
+    // Skor Tablosunu Güncelleme
+    function renderScoreboard() {
+      const sb = document.getElementById('scoreboard');
+      sb.innerHTML = '';
+
+      // En yüksek skoru bul
+      const maxScore = Math.max(...teams.map(t => t.score));
+      const hasLeader = maxScore > 0;
+
+      teams.forEach((t, idx) => {
+        const isLeader = hasLeader && t.score === maxScore;
+        const isActive = idx === currentTeamIdx;
+
+        const card = document.createElement('div');
+        card.className = `team-card ${isLeader ? 'leader' : ''} ${isActive ? 'active-turn' : ''}`;
+        card.id = `team-card-${idx}`;
+        card.innerHTML = `
+          <div class="crown">👑</div>
+          <div>
+            <div class="team-name">${t.name}</div>
+            <div class="team-score" id="score-val-${idx}">${t.score} P</div>
+          </div>
+        `;
+        sb.appendChild(card);
+      });
+
+      document.getElementById('turnDisplay').textContent = `Sıra: ${teams[currentTeamIdx].name}`;
+    }
+
+    // 40 Sandığı Ekrana Dizme
+    function createChests() {
+      const container = document.getElementById('chestContainer');
+      container.innerHTML = '';
+      questionBank.forEach((q, index) => {
+        const chest = document.createElement('div');
+        chest.className = 'chest';
+        chest.id = `chest-${index}`;
+        chest.textContent = `#${index + 1}`;
+        chest.onclick = () => openChest(index, chest);
+        container.appendChild(chest);
+      });
+    }
+
+    // Sandık Tıklama ve Merkeze Kayma Animasyonu
+    function openChest(qIndex, element) {
+      if (element.classList.contains('opened')) return;
+
+      currentQuestion = questionBank[qIndex];
+      currentChestElement = element;
+
+      // Para butonlarını resetle
+      const coinTrue = document.getElementById('coinTrue');
+      const coinFalse = document.getElementById('coinFalse');
+      coinTrue.className = 'gold-coin-btn';
+      coinFalse.className = 'gold-coin-btn';
+      coinTrue.disabled = false;
+      coinFalse.disabled = false;
+
+      const overlay = document.getElementById('stageOverlay');
+      const card = document.getElementById('activeCard');
+      
+      document.getElementById('cardBadge').textContent = `SANDIK #${qIndex + 1}`;
+      document.getElementById('cardStatement').textContent = currentQuestion.text;
+
+      overlay.style.display = 'flex';
+      setTimeout(() => {
+        card.classList.add('revealed');
+      }, 20);
+    }
+
+    // Seçenek Seçimi (Doğru / Yanlış)
+    function submitAnswer(userChoice) {
+      const overlay = document.getElementById('stageOverlay');
+      const card = document.getElementById('activeCard');
+      const chosenBtn = userChoice ? document.getElementById('coinTrue') : document.getElementById('coinFalse');
+      
+      // Tekrar tıklamaları önle
+      document.getElementById('coinTrue').disabled = true;
+      document.getElementById('coinFalse').disabled = true;
+
+      const isCorrect = (userChoice === currentQuestion.ans);
+
+      if (isCorrect) {
+        // Doğru Cevap: Altın Para Skor Kartına Uçar
+        animateCoinFly(chosenBtn);
+      } else {
+        // Yanlış Cevap: Altın Para Siyah Daireye Dönüşüp Yok Olur ve Örümcekler Düşer
+        triggerWrongAnswerEffects(chosenBtn);
+      }
+
+      // Geçiş Süresi: Yanlış cevapta örümceklerin akması için biraz daha süre tanınır
+      const delay = isCorrect ? 1000 : 2000;
+
+      setTimeout(() => {
+        card.classList.remove('revealed');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          currentChestElement.classList.add('opened');
+          
+          if (isCorrect) {
+            teams[currentTeamIdx].score += 1;
+          }
+
+          // Sırayı bir sonraki gruba aktar
+          currentTeamIdx = (currentTeamIdx + 1) % totalTeams;
+          renderScoreboard();
+          checkAutoEnd();
+        }, 300);
+      }, delay);
+    }
+
+    // Uçan Altın Para Animasyonu (+1 Puan Kayması)
+    function animateCoinFly(sourceBtn) {
+      const rect = sourceBtn.getBoundingClientRect();
+      const targetCard = document.getElementById(`team-card-${currentTeamIdx}`);
+      const targetRect = targetCard.getBoundingClientRect();
+
+      const flyer = document.createElement('div');
+      flyer.className = 'flying-coin';
+      flyer.textContent = '+1';
+      flyer.style.left = `${rect.left + rect.width / 2 - 35}px`;
+      flyer.style.top = `${rect.top + rect.height / 2 - 35}px`;
+      document.body.appendChild(flyer);
+
+      setTimeout(() => {
+        flyer.style.transform = 'scale(1.2)';
+        flyer.style.left = `${targetRect.left + targetRect.width / 2 - 35}px`;
+        flyer.style.top = `${targetRect.top + targetRect.height / 2 - 35}px`;
+      }, 50);
+
+      setTimeout(() => {
+        flyer.remove();
+      }, 950);
+    }
+
+    // Yanlış Cevap Efekti: Siyah Daire + Örümcek Yağmuru
+    function triggerWrongAnswerEffects(sourceBtn) {
+      // 1. Altın para siyah bir deliğe dönüşüp küçülerek kaybolur
+      sourceBtn.classList.add('shrink-black-hole');
+
+      // 2. Ekranın yukarısından aşağıya örümcekler dökülür
+      setTimeout(() => {
+        spawnSpidersRain(28);
+      }, 250);
+    }
+
+    function spawnSpidersRain(count) {
+      for (let i = 0; i < count; i++) {
+        const spider = document.createElement('div');
+        spider.className = 'spider-particle';
+        spider.textContent = '🕷️';
+        
+        // Rastgele yatay konum ve boyut
+        spider.style.left = `${Math.random() * 95}vw`;
+        const size = Math.random() * 1.5 + 1.8;
+        spider.style.fontSize = `${size}rem`;
+        
+        // Rastgele düşüş hızı ve gecikme
+        const duration = Math.random() * 1 + 1.2;
+        const delay = Math.random() * 0.4;
+        spider.style.animationDuration = `${duration}s`;
+        spider.style.animationDelay = `${delay}s`;
+
+        document.body.appendChild(spider);
+
+        setTimeout(() => {
+          spider.remove();
+        }, (duration + delay) * 1000 + 100);
+      }
+    }
+
+    // Sandıkların Tümü Biterse Otomatik Bitir
+    function checkAutoEnd() {
+      const openedCount = document.querySelectorAll('.chest.opened').length;
+      if (openedCount === questionBank.length) {
+        endGame();
+      }
+    }
+
+    // Oyunu Bitirme ve Kazananı Gösterme
+    function endGame() {
+      const modal = document.getElementById('endModal');
+      const list = document.getElementById('finalScores');
+      const winText = document.getElementById('winnerAnnounce');
+
+      // Skorları sırala
+      const sortedTeams = [...teams].sort((a, b) => b.score - a.score);
+      const topScore = sortedTeams[0].score;
+      const winners = sortedTeams.filter(t => t.score === topScore);
+
+      if (winners.length === 1) {
+        winText.innerHTML = `👑 <strong>Şampiyon: ${winners[0].name}</strong> (${winners[0].score} Puan)`;
+      } else {
+        winText.innerHTML = `🤝 <strong>Beraberlik!</strong> (${winners.map(w => w.name).join(', ')} - ${topScore} Puan)`;
+      }
+
+      list.innerHTML = '';
+      sortedTeams.forEach((team, idx) => {
+        const li = document.createElement('li');
+        li.className = 'summary-item';
+        li.innerHTML = `<span>${idx + 1}. ${team.name}</span> <strong>${team.score} Puan</strong>`;
+        list.appendChild(li);
+      });
+
+      modal.style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
