@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Türkçe dersi için eğitsel oyunlar">
+  <title>Türkçe Dersi İçin Eğitsel Oyunlar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="navbar">
+    <a class="logo" href="index.html"><span class="logo-icon">📚</span><span>Türkçe <b>Eğitsel Oyunlar</b></span></a>
+    <nav>
+      <a class="active" href="index.html">⌂ Ana Sayfa</a>
+      <a href="#oyunlar">🎮 Oyunlar</a>
+      <a href="#dersler">📚 Dersler</a>
+    </nav>
+    <div class="nav-actions">
+      <button id="soundBtn" title="Ses aç/kapat">🔊</button>
+      <button id="fullscreenBtn" title="Tam ekran">⛶</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">📚 Türkçe dersi için eğitsel oyunlar</p>
+        <h1>Öğrenirken<br><span>eğlen!</span></h1>
+        <p class="hero-text">Türkçe dersi ve Masal ve Destanlarımız seçmeli dersi için hazırlanan eğitsel oyunlarla öğrenmeyi daha eğlenceli hâle getir.</p>
+        <a class="primary-btn" href="#oyunlar">🎮 Oyunları Keşfet →</a>
+      </div>
+      <div class="hero-illustration">
+        <div class="bubble bubble-a">★</div><div class="bubble bubble-b">A</div><div class="bubble bubble-c">✎</div>
+        <div class="tablet">📖</div><div class="student student-one">👦🏻</div><div class="student student-two">👧🏻</div><div class="desk"></div>
+      </div>
+    </section>
+
+    <section id="dersler" class="section">
+      <div class="section-heading"><div><p class="eyebrow">Dersini seç</p><h2>Derslere Göre Oyunlar</h2></div><span>Bir alan seç ve oyunlara geç 👇</span></div>
+      <div class="subject-grid">
+        <a class="subject turkce" href="#turkce"><div class="subject-icon">📖</div><div><h3>Türkçe</h3><p>Deyimler ve Türkçe becerilerini destekleyen oyunlar</p></div><span class="round-arrow">→</span></a>
+        <a class="subject purple" href="#masal-destan"><div class="subject-icon">📜</div><div><h3>Masal ve Destanlarımız</h3><p>Masal ve destan konulu seçmeli ders oyunları</p></div><span class="round-arrow">→</span></a>
+        <a class="subject genel" href="#genel-kultur"><div class="subject-icon">💡</div><div><h3>Genel Kültür</h3><p>Bilmece ve düşünmeyi destekleyen eğlenceli oyunlar</p></div><span class="round-arrow">→</span></a>
+      </div>
+    </section>
+
+    <section id="oyunlar" class="section">
+      <div class="section-heading"><div><p class="eyebrow">Haydi başlayalım!</p><h2>Oyunlar</h2></div></div>
+
+      <div id="turkce" class="category-block">
+        <h2>📖 Türkçe</h2>
+        <div class="game-grid">
+          <a class="game-card" href="oyunlar/deyim%20eşleştir%203%20oyun.html">
+            <div class="game-picture blue">💬🔗</div><h3>Deyim Eşleştirme</h3><span class="tag turkce-tag">Türkçe</span>
+          </a>
+        </div>
+      </div>
+
+      <div id="masal-destan" class="category-block">
+        <h2>📜 Masal ve Destanlarımız</h2>
+        <div class="game-grid">
+          <a class="game-card" href="oyunlar/sandık%20masaldestan.html"><div class="game-picture purple">📜✨</div><h3>Efsaneler Sandığı</h3><span class="tag">Masal ve Destanlarımız</span></a>
+          <a class="game-card" href="oyunlar/Çarkıfelek%20masaldestan.html"><div class="game-picture orange">❓🏆</div><h3>Çarkıfelek: Masal &amp; Destan</h3><span class="tag">Masal ve Destanlarımız</span></a>
+          <a class="game-card" href="oyunlar/Ejderha%20masal.html"><div class="game-picture cyan">🐉📖</div><h3>Ejderha Masal</h3><span class="tag">Masal ve Destanlarımız</span></a>
+          <a class="game-card" href="oyunlar/masal_destan_dedektifleri_hazırbulunuşluk.html"><div class="game-picture pink">🔎📜</div><h3>Masal &amp; Destan Dedektifleri</h3><span class="tag">Masal ve Destanlarımız</span></a>
+        </div>
+      </div>
+
+      <div id="genel-kultur" class="category-block">
+        <h2>💡 Genel Kültür</h2>
+        <div class="game-grid">
+          <a class="game-card" href="oyunlar/Bilmece_oyun(1).html"><div class="game-picture pink">🧩❓</div><h3>Bilmece Turnuvası</h3><span class="tag genel-tag">Genel Kültür</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div><strong>🖥️ Akıllı Tahta Uyumlu</strong><small>Bilgisayar, tablet ve akıllı tahtalarda kullanılabilir</small></div>
+      <div><strong>☝️ Dokunmatik Uyumlu</strong><small>Dokunmatik ekranlarda kolay kullanım</small></div>
+      <div><strong>⚡ Hızlı ve Kolay</strong><small>Her oyun tek tıkla açılır</small></div>
+      <div><strong>🔊 Ses Aç / Kapat</strong><small>İhtiyaca göre ses kontrolü</small></div>
+      <div><strong>📚 Türkçe Odaklı</strong><small>Türkçe ve ilgili seçmeli dersler için</small></div>
+    </section>
+  </main>
+
+  <footer>Türkçe dersi için eğitsel oyunlar 🌟</footer>
+  <script src="script.js"></script>
+</body>
+</html>
