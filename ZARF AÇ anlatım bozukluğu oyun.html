@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zarf Avı - Türkçe Oyunu</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+
+        :root {
+            --bg-color: #000000;
+            --panel-bg: rgba(20, 20, 25, 0.9);
+            --neon-blue: #00f3ff;
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --danger: #ff003c;
+            --success: #00ff66;
+            --floral-pink: #ff66b2;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- BAŞLANGIÇ EKRANI --- */
+        #setup-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, #1a1a2e 0%, #000000 100%);
+            z-index: 100;
+        }
+        #setup-screen h1 {
+            font-size: 4rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue);
+            margin-bottom: 20px;
+        }
+        #setup-screen input {
+            padding: 15px;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            border: 2px solid var(--neon-blue);
+            background: #000;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            width: 150px;
+            outline: none;
+        }
+        #setup-screen button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 10px;
+            border: none;
+            background: var(--neon-blue);
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transition: transform 0.2s;
+        }
+        #setup-screen button:hover { transform: scale(1.1); }
+
+        /* --- OYUN ALANI --- */
+        #game-container {
+            display: none;
+            grid-template-columns: 350px 1fr 350px;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--neon-blue);
+            padding-bottom: 10px;
+        }
+
+        /* SOL PANEL (Öğretmen / Skor) */
+        #scoreboard {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .group-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--neon-blue);
+            transition: all 0.3s;
+        }
+        .group-row.active-turn {
+            background: rgba(0, 243, 255, 0.2);
+            box-shadow: 0 0 15px var(--neon-blue);
+            transform: scale(1.02);
+        }
+        .group-name { font-size: 1.3rem; font-weight: bold; }
+        .group-score { font-size: 1.8rem; font-weight: 900; color: var(--gold); margin: 0 15px; }
+        .teacher-controls button {
+            background: #333; color: #fff; border: 1px solid #555;
+            border-radius: 5px; width: 30px; height: 30px;
+            font-size: 1.2rem; cursor: pointer; margin-left: 5px;
+            transition: 0.2s;
+        }
+        .teacher-controls button:hover { background: var(--neon-blue); color: #000; border-color: var(--neon-blue); }
+
+        /* ORTA PANEL (Zarflar) */
+        #center-panel {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+            align-content: flex-start;
+            position: relative;
+        }
+        .envelope {
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .envelope::after {
+            content: "✉️";
+        }
+        .envelope:hover {
+            transform: translateY(-10px) scale(1.15);
+            border-color: #fff;
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.5);
+            z-index: 10;
+        }
+        .envelope.opened {
+            opacity: 0.1;
+            pointer-events: none;
+            transform: scale(0.8);
+            filter: grayscale(100%);
+        }
+
+        /* SAĞ PANEL (Sıra, Lider & Buton) */
+        #turn-display {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #555;
+        }
+        #current-group-text {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--success);
+            text-shadow: 0 0 20px var(--success);
+            margin-top: 10px;
+        }
+        
+        #leader-board {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        #leader-board h3 {
+            color: var(--floral-pink);
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+        .floral-glow {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            animation: floralPulse 2s infinite alternate;
+        }
+        @keyframes floralPulse {
+            0% { text-shadow: 0 0 10px var(--floral-pink), 0 0 20px #ff007f, 0 0 30px #ff007f; transform: scale(1); }
+            100% { text-shadow: 0 0 20px #ff99cc, 0 0 40px var(--floral-pink), 0 0 60px #ff007f; transform: scale(1.05); }
+        }
+
+        .end-game-btn {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--danger);
+            margin-top: auto;
+            transition: 0.2s;
+        }
+        .end-game-btn:hover { background: #cc0030; transform: scale(1.05); }
+
+        /* --- MODAL (Soru Ekranı) --- */
+        #question-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+            border: 3px solid var(--neon-blue);
+            box-shadow: 0 0 50px var(--neon-blue);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .modal-type-title {
+            font-size: 2rem; font-weight: 900; margin-bottom: 20px; letter-spacing: 2px;
+        }
+        .type-gold { color: var(--gold); text-shadow: 0 0 30px var(--gold); border-color: var(--gold); box-shadow: 0 0 80px rgba(255, 215, 0, 0.5); }
+        .type-silver { color: var(--silver); text-shadow: 0 0 30px var(--silver); border-color: var(--silver); box-shadow: 0 0 80px rgba(192, 192, 192, 0.5); }
+        .type-regular { color: var(--neon-blue); }
+
+        #question-text {
+            font-size: 2rem; margin-bottom: 40px; line-height: 1.4;
+        }
+
+        .modal-buttons {
+            display: flex; gap: 20px; justify-content: center;
+        }
+        .btn-correct {
+            background: var(--success); color: #000; border: none; padding: 15px 30px; border-radius: 10px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px var(--success); transition: 0.2s;
+        }
+        .btn-wrong {
+            background: var(--danger); color: #fff; border: none; padding: 15px 30px; border-radius: 10px; font-size: 1.5rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px var(--danger); transition: 0.2s;
+        }
+        .btn-correct:hover, .btn-wrong:hover { transform: scale(1.1); }
+
+        /* --- EFEKTLER & ZAFER --- */
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-10px, 0, 0); }
+            20%, 80% { transform: translate3d(15px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-20px, 15px, 0); }
+            40%, 60% { transform: translate3d(20px, -15px, 0); }
+        }
+
+        #chaos-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 500; font-size: 15rem; align-items: center; justify-content: center; text-shadow: 0 0 50px #000;
+        }
+
+        .floating-score {
+            position: fixed; font-size: 5rem; font-weight: 900; z-index: 1000; pointer-events: none;
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); text-shadow: 0 0 20px #fff;
+        }
+
+        /* OYUN BİTİŞ EKRANI */
+        .victory-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; width: 100%; text-align: center;
+            animation: popIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .victory-title { font-size: 4rem; color: #fff; text-shadow: 0 0 20px #fff; margin-bottom: 20px; }
+        .victory-winner {
+            font-size: 7rem; font-weight: 900; color: var(--gold);
+            text-shadow: 0 0 50px var(--gold), 0 0 100px #ffaa00;
+            animation: pulseGold 1.5s infinite alternate; margin-bottom: 20px;
+        }
+        @keyframes pulseGold {
+            0% { transform: scale(1); text-shadow: 0 0 30px var(--gold), 0 0 60px #ffaa00; }
+            100% { transform: scale(1.1); text-shadow: 0 0 60px var(--gold), 0 0 120px #ffaa00, 0 0 150px #fff; }
+        }
+        .victory-score { font-size: 3rem; color: var(--success); text-shadow: 0 0 20px var(--success); }
+        
+        .sparkle-emoji {
+            position: fixed; font-size: 3rem; pointer-events: none; z-index: 600;
+            animation: floatUp 3s linear forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <h1>ZARF AVI</h1>
+        <p style="margin-bottom: 20px; font-size: 1.2rem;">Kaç grup yarışacak? (A, B, C...)</p>
+        <input type="number" id="group-count" min="2" max="10" value="4">
+        <button onclick="startGame()">OYUNA BAŞLA</button>
+    </div>
+
+    <div id="game-container">
+        <div class="panel">
+            <div class="panel-title">Skor Paneli</div>
+            <div id="scoreboard"></div>
+        </div>
+
+        <div id="center-panel">
+            </div>
+
+        <div class="panel">
+            <div class="panel-title">Oyun Durumu</div>
+            <div id="turn-display">
+                <h2 style="font-size: 1.5rem; color: #aaa;">SIRA KİMDE?</h2>
+                <div id="current-group-text">Grup A</div>
+            </div>
+            
+            <div id="leader-board">
+                <h3>🌸 ANLIK LİDER 🌸</h3>
+                <div id="leader-text" class="floral-glow">Henüz Yok</div>
+            </div>
+
+            <button class="end-game-btn" onclick="endGame()">Oyunu Bitir & Sonuçlar</button>
+        </div>
+    </div>
+
+    <div id="question-modal">
+        <div class="modal-content" id="modal-box">
+            <div id="modal-type" class="modal-type-title">NORMAL SORU (+1 Puan)</div>
+            <div id="question-text">Soru metni buraya gelecek.</div>
+            <div class="modal-buttons">
+                <button class="btn-correct" onclick="evaluateAnswer(true)">Grup Doğru Bildi</button>
+                <button class="btn-wrong" onclick="evaluateAnswer(false)">Grup Yanlış Bildi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chaos-overlay">🤡😂🤪</div>
+
+<script>
+    // --- VERİTABANI (SORULAR) ---
+    const regularQuestions = [
+        "Size değer veriyor ve canı gibi seviyor.", "Kitaplarına göz kulak oluyor, kimseye vermiyordu.",
+        "Bu çiçeğe iyi bakın, asla susuz bırakmayın.", "Yaşlı adama yardım etti, evine götürdü.",
+        "Öğrencilerine her zaman güvenir ve desteklerdi.", "Evin tadilatını bitirdi, sonra da yüksek fiyata sattı.",
+        "Çocuklarına kızıyor ama çok seviyordu.", "Söylediklerine inanıyor ve her yerde anlatıyordu.",
+        "Arkadaşını çok seviyor, her konuda güveniyordu.", "İstanbul’u çok özlemişti, en kısa zamanda gidecekti.",
+        "Köyünü unutmadı, her yaz giderdi.", "Sorunları biliyor ama çözüm bulamıyordu.",
+        "Bebekle ilgileniyor, sürekli süt veriyordu.", "Okuldan nefret ediyor, bir türlü alışamıyordu.",
+        "Düşmanlarını bağışladı ama bir daha görüşmedi.", "Odasına girdi, bir daha çıkmadı.",
+        "Arabaya bindi ve anahtarı taktı.", "Derneğin inşaatı bitti ve hizmete açıldı.",
+        "Hastanın durumu düzeliyor, yakında taburcu olacak.", "Filmin çekimleri tamamlandı, haftaya vizyona girecek.",
+        "Kitabın baskısı tükendi, yeniden basılacak.", "Herkes olayı izliyor, yardım etmiyordu.",
+        "Hiçbiri ders çalışmıyor, oyun oynuyordu.", "Kimse ona inanmıyor, yalancılıkla suçluyordu.",
+        "Pantolonun boyu kısaltıldı ve temizlendi.", "Belediye binası yıkıldı, yerine park yapılacak.",
+        "Kahvaltıda peynir, zeytin ve çay içtik.", "Sigarayı az, içkiyi hiç içmem.",
+        "Ben kitap, o ise dergi okuyordu.", "Çocuklarıyla bazen çok, bazen hiç ilgilenmezdi.",
+        "O bana dert, ben ona mutluluk verdim.", "Dün akşam yemek ve sinemaya gittik.",
+        "Arkadaşlarını aradı, uzun süre sohbet etti.", "Annem yemek yapıyor, biz de yardım ediyorduk.",
+        "Yeni bir bilgisayar aldı ve oyun oynadı.", "Televizyonu açtı ve karşısına oturdu.",
+        "Bu zorluklara nasıl katlandın ve başa çıktın?", "Kardeşini yanına çağırdı, bir şeyler fısıldadı."
+    ];
+
+    const silverQuestions = [
+        "Teklifimizi değerlendirdi ve kabul etti", "Sorunu kökten çözmeli ve bir daha yaşanmamalıdır",
+        "Yanındaki adama bir şeyler sordu, sonra da tartıştılar", "Kimse suçunu kabul etmiyor, başkasının üzerine atıyordu",
+        "Bu kurala uyun, ihlal etmeyin"
+    ];
+
+    const goldQuestions = [
+        "Sorunun çözümü için herkes gayret ediyor ama bir türlü bulunamıyor",
+        "Gençlere yönelik yapılan bu düzenlemeler desteklenmeli ve sahip çıkılmalıdır",
+        "Tarlaya ekilen tohumlar henüz çimlenmedi ama yakında verecek",
+        "Kitapta anlatılanlar çok etkileyiciydi, defalarca okudum",
+        "Soruların hepsi çok zordu, çözemedim",
+        "Sanatçının eserleri çok özgün olduğu için herkes hayran kalıyor",
+        "Çiçeklerin bakımı yapıldı ve saksıları değiştirildi."
+    ];
+
+    // Renkli Zarf Paleti (Soru türünden bağımsız, rastgele atanır)
+    const envelopeColors = [
+        'linear-gradient(135deg, #ff0099, #493240)',
+        'linear-gradient(135deg, #FF416C, #FF4B2B)',
+        'linear-gradient(135deg, #00B4DB, #0083B0)',
+        'linear-gradient(135deg, #f12711, #f5af19)',
+        'linear-gradient(135deg, #8E2DE2, #4A00E0)',
+        'linear-gradient(135deg, #11998e, #38ef7d)',
+        'linear-gradient(135deg, #fc4a1a, #f7b733)'
+    ];
+
+    // --- OYUN DEĞİŞKENLERİ ---
+    let groups = [];
+    let currentTurn = 0;
+    let envelopes = [];
+    let activeEnvelopeIndex = null;
+    let gameActive = true;
+
+    // --- SES EFEKTLERİ ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration, vol=0.1) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+    }
+    function playSuccessSound() {
+        playTone(523.25, 'sine', 0.1, 0.2); 
+        setTimeout(() => playTone(659.25, 'sine', 0.15, 0.2), 100); 
+        setTimeout(() => playTone(783.99, 'sine', 0.3, 0.2), 250); 
+        setTimeout(() => playTone(1046.50, 'sine', 0.4, 0.2), 400); 
+    }
+    function playFailSound() {
+        playTone(150, 'sawtooth', 0.5, 0.3);
+        setTimeout(() => playTone(100, 'sawtooth', 0.7, 0.3), 300);
+        setTimeout(() => playTone(80, 'square', 1.0, 0.4), 600);
+    }
+    function playVictorySound() {
+        // Neşeli bir arpej
+        [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+            setTimeout(() => playTone(freq, 'sine', 0.3, 0.2), i * 150);
+        });
+        setTimeout(() => playTone(1046.50, 'sine', 0.8, 0.3), 900);
+    }
+
+    // --- BAŞLATMA ---
+    function startGame() {
+        const count = parseInt(document.getElementById('group-count').value) || 4;
+        for (let i = 0; i < count; i++) {
+            // A, B, C, D... şeklinde harf ataması (ASCII 65 = 'A')
+            const letter = String.fromCharCode(65 + i);
+            groups.push({ id: i, name: `Grup ${letter}`, score: 0 });
+        }
+        
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('game-container').style.display = 'grid';
+        
+        prepareEnvelopes();
+        updateScoreboard();
+        updateTurnDisplay();
+        updateLeader();
+    }
+
+    function prepareEnvelopes() {
+        regularQuestions.forEach(q => envelopes.push({ text: q, type: 'regular', points: 1 }));
+        silverQuestions.forEach(q => envelopes.push({ text: q, type: 'silver', points: 2 }));
+        goldQuestions.forEach(q => envelopes.push({ text: q, type: 'gold', points: 3 }));
+        
+        envelopes.sort(() => Math.random() - 0.5);
+
+        const centerPanel = document.getElementById('center-panel');
+        envelopes.forEach((env, index) => {
+            const div = document.createElement('div');
+            div.className = 'envelope';
+            div.id = `env-${index}`;
+            // Rastgele canlı arka plan rengi ata
+            div.style.background = envelopeColors[Math.floor(Math.random() * envelopeColors.length)];
+            div.onclick = () => openEnvelope(index);
+            centerPanel.appendChild(div);
+        });
+    }
+
+    // --- ARAYÜZ GÜNCELLEMELERİ ---
+    function updateScoreboard() {
+        const board = document.getElementById('scoreboard');
+        board.innerHTML = '';
+        groups.forEach((g, index) => {
+            const row = document.createElement('div');
+            // Oyun bittiyse aktif sırayı gösterme
+            const isActive = (index === currentTurn && gameActive) ? 'active-turn' : '';
+            row.className = `group-row ${isActive}`;
+            row.id = `group-row-${index}`;
+            
+            row.innerHTML = `
+                <div class="group-name">${g.name}</div>
+                <div style="display:flex; align-items:center;">
+                    <div class="group-score" id="score-text-${index}">${g.score}</div>
+                    <div class="teacher-controls">
+                        <button onclick="manualScore(${index}, 1)" title="Puan Ekle">+</button>
+                        <button onclick="manualScore(${index}, -1)" title="Puan Sil">-</button>
+                    </div>
+                </div>
+            `;
+            board.appendChild(row);
+        });
+    }
+
+    function updateTurnDisplay() {
+        if(!gameActive) return;
+        const turnText = document.getElementById('current-group-text');
+        turnText.innerText = groups[currentTurn].name;
+        turnText.style.animation = 'none';
+        setTimeout(() => turnText.style.animation = 'popIn 0.5s ease', 10);
+    }
+
+    function updateLeader() {
+        const leaderText = document.getElementById('leader-text');
+        let maxScore = Math.max(...groups.map(g => g.score));
+        
+        if (maxScore === 0) {
+            leaderText.innerHTML = "Henüz Yok";
+            return;
+        }
+
+        // Liderleri bul (Eşitlik olabilir)
+        let leaders = groups.filter(g => g.score === maxScore);
+        let leaderNames = leaders.map(l => l.name).join(" & ");
+        
+        leaderText.innerHTML = `✨ ${leaderNames} ✨`;
+    }
+
+    // --- OYUN MEKANİĞİ ---
+    function manualScore(groupIndex, amount) {
+        if(!gameActive) return;
+        groups[groupIndex].score += amount;
+        if(groups[groupIndex].score < 0) groups[groupIndex].score = 0;
+        updateScoreboard();
+        updateLeader();
+    }
+
+    function openEnvelope(index) {
+        if (!gameActive || envelopes[index].opened) return;
+        activeEnvelopeIndex = index;
+        const env = envelopes[index];
+        
+        const modal = document.getElementById('question-modal');
+        const modalBox = document.getElementById('modal-box');
+        const typeText = document.getElementById('modal-type');
+        const qText = document.getElementById('question-text');
+
+        modalBox.className = 'modal-content'; // Reset
+        if (env.type === 'gold') {
+            typeText.innerText = "🌟 GİZLİ ALTIN ZARF! (+3 PUAN) 🌟";
+            modalBox.classList.add('type-gold');
+        } else if (env.type === 'silver') {
+            typeText.innerText = "✨ GİZLİ GÜMÜŞ ZARF! (+2 PUAN) ✨";
+            modalBox.classList.add('type-silver');
+        } else {
+            typeText.innerText = "NORMAL SORU (+1 PUAN)";
+            modalBox.classList.add('type-regular');
+        }
+
+        qText.innerText = env.text;
+        modal.style.display = 'flex';
+    }
+
+    function evaluateAnswer(isCorrect) {
+        const modal = document.getElementById('question-modal');
+        const env = envelopes[activeEnvelopeIndex];
+        
+        env.opened = true;
+        document.getElementById(`env-${activeEnvelopeIndex}`).classList.add('opened');
+        modal.style.display = 'none';
+
+        if (isCorrect) {
+            playSuccessSound();
+            animateScore(env.points, currentTurn);
+            groups[currentTurn].score += env.points;
+        } else {
+            triggerChaos();
+        }
+
+        setTimeout(() => {
+            updateLeader(); // Puan eklendikten sonra lideri güncelle
+            currentTurn = (currentTurn + 1) % groups.length;
+            updateScoreboard();
+            updateTurnDisplay();
+        }, isCorrect ? 1000 : 2500); 
+    }
+
+    // --- ANİMASYONLAR VE BİTİŞ ---
+    function animateScore(points, targetGroupIndex) {
+        const floater = document.createElement('div');
+        floater.className = 'floating-score';
+        floater.innerText = `+${points}`;
+        
+        if(points === 3) floater.style.color = 'var(--gold)';
+        else if(points === 2) floater.style.color = 'var(--silver)';
+        else floater.style.color = 'var(--success)';
+
+        document.body.appendChild(floater);
+        floater.style.left = '50%';
+        floater.style.top = '50%';
+        floater.style.transform = 'translate(-50%, -50%)';
+
+        setTimeout(() => {
+            const targetEl = document.getElementById(`score-text-${targetGroupIndex}`);
+            if(!targetEl) return;
+            const rect = targetEl.getBoundingClientRect();
+            floater.style.left = `${rect.left + rect.width/2}px`;
+            floater.style.top = `${rect.top + rect.height/2}px`;
+            floater.style.transform = 'translate(-50%, -50%) scale(0.5)';
+            floater.style.opacity = '0';
+        }, 50); 
+
+        setTimeout(() => {
+            floater.remove();
+            updateScoreboard();
+        }, 1050);
+    }
+
+    function triggerChaos() {
+        playFailSound();
+        document.body.classList.add('shake');
+        
+        const chaos = document.getElementById('chaos-overlay');
+        chaos.style.display = 'flex';
+        
+        let toggle = 0;
+        const emojis = ["🤡", "😂", "🤪", "🤦‍♂️", "👎"];
+        
+        const chaosInterval = setInterval(() => {
+            chaos.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            chaos.style.transform = `scale(${1 + Math.random()})`;
+            chaos.style.color = toggle % 2 === 0 ? "red" : "yellow";
+            toggle++;
+        }, 150);
+
+        setTimeout(() => {
+            clearInterval(chaosInterval);
+            document.body.classList.remove('shake');
+            chaos.style.display = 'none';
+        }, 2000);
+    }
+
+    function endGame() {
+        gameActive = false;
+        playVictorySound();
+        updateScoreboard(); // Sıra göstergesini temizler
+
+        let maxScore = Math.max(...groups.map(g => g.score));
+        let winners = groups.filter(g => g.score === maxScore);
+        let winnerNames = winners.map(w => w.name).join(" & ");
+        
+        const centerPanel = document.getElementById('center-panel');
+        // Grid yapısını bozup zafer ekranını merkeze alıyoruz
+        centerPanel.style.display = 'block';
+        
+        centerPanel.innerHTML = `
+            <div class="victory-container">
+                <div class="victory-title">🏆 OYUN BİTTİ 🏆</div>
+                <div class="victory-winner">${winnerNames}</div>
+                <div class="victory-score">${maxScore} PUAN</div>
+                <button class="end-game-btn" onclick="location.reload()" style="margin-top: 40px; font-size: 1.5rem; padding: 20px 40px;">Yeniden Oyna</button>
+            </div>
+        `;
+
+        createVictorySparkles();
+    }
+
+    function createVictorySparkles() {
+        const emojis = ['🏆', '✨', '🎉', '🌟', '🎊', '🌸'];
+        const interval = setInterval(() => {
+            const el = document.createElement('div');
+            el.className = 'sparkle-emoji';
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            // Ekranın orta bölümünde (Center panel alanında) rastgele konumlansın
+            el.style.left = `${30 + Math.random() * 40}vw`; 
+            
+            document.body.appendChild(el);
+            
+            setTimeout(() => el.remove(), 3000);
+        }, 150);
+
+        // 5 saniye sonra emoji yağmurunu durdur
+        setTimeout(() => clearInterval(interval), 5000);
+    }
+
+</script>
+</body>
+</html>

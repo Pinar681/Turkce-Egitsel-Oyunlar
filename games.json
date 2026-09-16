@@ -54,5 +54,25 @@
     "picture": "pink",
     "tagClass": "genel-tag",
     "description": "Bilmecelerle düşün, yarış ve eğlen."
+  },
+  {
+    "category": "Türkçe",
+    "id": "turkce",
+    "file": "yazımyanlışıbalon_oyun.html",
+    "title": "Yazım Yanlışı Balon Oyunu",
+    "icon": "🎈✏️",
+    "picture": "blue",
+    "tagClass": "turkce-tag",
+    "description": "Yazım yanlışlarını balonları patlatarak eğlenceli bir şekilde pekiştir."
+  },
+  {
+    "category": "Türkçe",
+    "id": "turkce",
+    "file": "ZARF AÇ anlatım bozukluğu oyun.html",
+    "title": "Zarf Aç: Anlatım Bozukluğu",
+    "icon": "📦✏️",
+    "picture": "orange",
+    "tagClass": "turkce-tag",
+    "description": "Zarf açarak anlatım bozukluklarını bul ve Türkçe becerilerini geliştir."
   }
 ]

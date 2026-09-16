@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yanlış Kelime Avcısı v4.0</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #4facfe 0%, #00f2fe 100%);
+        }
+        #game-container { position: relative; width: 100%; height: 100vh; overflow: hidden; }
+
+        /* UI Paneli */
+        #ui-layer {
+            position: absolute; top: 15px; width: 100%; display: flex;
+            justify-content: space-between; padding: 0 25px; box-sizing: border-box;
+            z-index: 100; pointer-events: none; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stat-box { background: rgba(0,0,0,0.25); padding: 8px 15px; border-radius: 12px; font-size: 20px; }
+        
+        /* Balonlar */
+        .balloon {
+            position: absolute; bottom: -150px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            padding: 10px; font-weight: bold; color: white; cursor: pointer; user-select: none;
+            z-index: 10; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.2);
+        }
+        .special-gold { 
+            background: radial-gradient(circle, #ffd700, #f39c12) !important;
+            box-shadow: 0 0 25px #fff700; border: 3px solid gold; animation: shake 0.5s infinite;
+        }
+        @keyframes shake { 0% { transform: rotate(2deg); } 100% { transform: rotate(-2deg); } }
+
+        /* Modallar */
+        .modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px; border-radius: 25px; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); z-index: 1000; width: 320px;
+        }
+        button { background: #27ae60; border: none; color: white; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-size: 18px; margin-top: 10px;}
+        input { padding: 10px; width: 80%; margin-bottom: 10px; border: 2px solid #ddd; border-radius: 8px; }
+
+        /* Havai Fişek */
+        .firework {
+            position: absolute; width: 5px; height: 5px; border-radius: 50%;
+            z-index: 999; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="ui-layer">
+        <div>
+            <div class="stat-box">Süre: <span id="time-left">60</span>s</div>
+            <div class="stat-box" style="margin-top: 10px;">Skor: <span id="score-display">0</span></div>
+        </div>
+        <div class="stat-box" id="combo-display">Kombo: 0</div>
+    </div>
+
+    <div id="start-modal" class="modal">
+        <h2>YANLIŞ KELİME AVCISI</h2>
+        <p>Ekranda 6-8 balon olacak.<br>Sadece <b>YANLIŞ</b> yazılanları bul!</p>
+        <input type="text" id="player-name" placeholder="Adınız..." maxlength="12">
+        <button onclick="startGame()">OYUNA BAŞLA</button>
+    </div>
+
+    <div id="result-modal" class="modal" style="display:none;">
+        <div id="emoji-display" style="font-size: 60px; margin-bottom: 10px;"></div>
+        <h2 id="res-title">OYUN BİTTİ</h2>
+        <p id="res-stats"></p>
+        <h3 id="res-msg"></h3>
+        <button onclick="location.reload()">YENİDEN DENE</button>
+    </div>
+</div>
+
+<script>
+    const wrongWords = ["yanlız", "kiprik", "yalnış", "herkez", "kirbit", "eşki", "Bir kaç", "Hiç bir", "Biran", "Herbir", "Bir çok", "Herhangibir", "Herşey", "Pekçok", "Hiçbirşey", "Baş öğretmen", "Baş üstüne", "Baş hekim", "Yıl başı", "Yurtiçi", "Çevrimiçi", "Öte beri", "Ardısıra", "Aklısıra", "Fizik ötesi", "Kitap evi", "Huzur evi", "Polis evi", "Dağevi", "acaip", "bilader", "dersane", "aşofman", "espiri", "filim", "heycan", "münübüs", "maydonoz", "miğde", "pantalon", "şöför", "ropörtaj", "taktir", "seyehat", "traş", "valeybol", "yayınlamak", "zerafet", "süpriz", "tenefüs", "şevkat", "motorsiklet", "melemen", "öğe", "orjinal", "makina", "müsayit", "lavobo", "kurdela"];
+    const rightWords = ["herkes", "yalnız", "birçok", "bir şey", "bugün", "yarın", "öğretmen", "öğrenci", "kitap", "kalem", "okul", "çocuk", "arkadaş", "şehir", "güzel", "görmek", "gitmek", "gelmek", "yapmak", "düşünmek", "bilmek", "sabah", "akşam", "hikâye", "hayat", "yanlış"];
+
+    let score = 0, timeLeft = 60, combo = 0, gameActive = false;
+    let goldCount = 0, activeBalloons = 0;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Ses Efektleri
+    function playPopSound() {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.frequency.setValueAtTime(combo >= 5 ? 900 : 600, audioCtx.currentTime); // Kombo sesi daha tiz (bozuk para gibi)
+        if(combo >= 5) { // Bozuk para (Coin) efekti için ikinci bir ton
+            const osc2 = audioCtx.createOscillator();
+            osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            osc2.connect(g);
+            osc2.start(); osc2.stop(audioCtx.currentTime + 0.1);
+        }
+        osc.type = 'sine';
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playWrongSound() {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.type = 'sawtooth';
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function startGame() {
+        if(!document.getElementById('player-name').value) return alert("İsim yazın!");
+        document.getElementById('start-modal').style.display = 'none';
+        gameActive = true;
+        audioCtx.resume();
+        setInterval(() => { if(gameActive) { timeLeft--; document.getElementById('time-left').innerText = timeLeft; if(timeLeft <= 0) endGame(); }}, 1000);
+        spawnLoop();
+    }
+
+    function spawnLoop() {
+        if(!gameActive) return;
+        
+        // Hedeflenen balon sayısı (6-8 arası)
+        let targetCount = Math.floor(Math.random() * 3) + 6;
+        
+        while(activeBalloons < targetCount) {
+            let currentWrongOnScreen = document.querySelectorAll('[data-wrong="true"]').length;
+            // En az 4 yanlış kuralı
+            let isWrong = (currentWrongOnScreen < 4) ? true : (Math.random() > 0.4);
+            let isGold = (goldCount < 2 && Math.random() < 0.03);
+            if(isGold) goldCount++;
+            
+            createBalloon(isWrong, isGold);
+        }
+        
+        setTimeout(spawnLoop, 800);
+    }
+
+    function createBalloon(isWrong, isGold) {
+        activeBalloons++;
+        const b = document.createElement('div');
+        b.className = 'balloon' + (isGold ? ' special-gold' : '');
+        b.dataset.wrong = isWrong;
+        b.dataset.gold = isGold;
+
+        b.innerText = isGold ? "HEDİYE" : (isWrong ? 
+            wrongWords[Math.floor(Math.random()*wrongWords.length)] : 
+            rightWords[Math.floor(Math.random()*rightWords.length)]);
+        
+        const size = 85 + Math.random() * 15;
+        b.style.width = size + 'px';
+        b.style.height = (size * 1.2) + 'px';
+        b.style.left = (Math.random() * (window.innerWidth - 100)) + 'px';
+        b.style.backgroundColor = `hsl(${Math.random()*360}, 75%, 60%)`;
+        b.style.fontSize = "13px";
+        document.getElementById('game-container').appendChild(b);
+
+        let pos = -150;
+        let speed = 1.2 + (score * 0.02); // Daha yavaş başlangıç, skorla artan hız
+
+        const move = setInterval(() => {
+            if(!gameActive) { clearInterval(move); b.remove(); return; }
+            pos += speed;
+            b.style.bottom = pos + 'px';
+            if(pos > window.innerHeight) {
+                clearInterval(move); b.remove(); activeBalloons--;
+            }
+        }, 16);
+
+        b.onclick = () => {
+            if(!gameActive) return;
+            clearInterval(move);
+            activeBalloons--;
+            
+            if(isGold) {
+                combo++; // Altın balon komboyu bozmaz
+                if(Math.random() > 0.5) { score += 5; } else { timeLeft += 5; }
+                playPopSound();
+            } else if(isWrong) {
+                score++; combo++;
+                playPopSound();
+                if(combo >= 5) { score += 2; timeLeft += 2; }
+            } else {
+                playWrongSound();
+                combo = 0;
+            }
+            
+            updateUI();
+            b.remove();
+        };
+    }
+
+    function updateUI() {
+        document.getElementById('score-display').innerText = score;
+        document.getElementById('combo-display').innerText = "Kombo: " + combo;
+        document.getElementById('combo-display').style.color = combo >= 5 ? "#ffd700" : "white";
+    }
+
+    function createFirework() {
+        for(let i=0; i<30; i++) {
+            const f = document.createElement('div');
+            f.className = 'firework';
+            f.style.left = '50%'; f.style.top = '50%';
+            f.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+            document.body.appendChild(f);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 200 + 50;
+            f.animate([
+                { transform: 'translate(0,0)', opacity: 1 },
+                { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`, opacity: 0 }
+            ], { duration: 1000, easing: 'ease-out' }).onfinish = () => f.remove();
+        }
+    }
+
+    function endGame() {
+        gameActive = false;
+        const modal = document.getElementById('result-modal');
+        const emojiDiv = document.getElementById('emoji-display');
+        modal.style.display = 'block';
+        
+        let msg = "", emoji = "";
+        if(score >= 35) { msg = "BU İŞİN USTASI OLMUŞSUN"; emoji = "😎"; }
+        else if(score >= 26) { msg = "MUHTEŞEMSİN!"; emoji = "🚀"; }
+        else if(score >= 20) { msg = "HARİKA :))"; emoji = "👏"; }
+        else if(score >= 11) { msg = "FENA DEĞİL"; emoji = "🙂"; }
+        else { msg = "KÖTÜ"; emoji = "😟"; }
+
+        emojiDiv.innerText = emoji;
+        document.getElementById('res-msg').innerText = msg;
+        document.getElementById('res-stats').innerText = "Skorun: " + score;
+
+        // Havai fişek şöleni (Eğer skor iyiyse daha çok)
+        let fCount = score > 10 ? 5 : 1;
+        for(let i=0; i<fCount; i++) setTimeout(createFirework, i * 400);
+    }
+</script>
+</body>
+</html>
