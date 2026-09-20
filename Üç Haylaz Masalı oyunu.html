@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Masal Macerası: Üç Haylaz'ın Yolu</title>
+    <style>
+        :root {
+            --panel-bg: rgba(10, 15, 30, 0.85);
+            --text: #fff;
+            --road: rgba(255, 215, 0, 0.6);
+            --grass-glow: 0 0 30px #2a9d8f, inset 0 0 20px #2a9d8f;
+            --danger-glow: 0 0 40px #d00000, inset 0 0 30px #9d0208;
+            --fox-glow: 0 0 50px #e85d04, inset 0 0 40px #6a040f;
+            --farm-glow: 0 0 40px #ffd700, inset 0 0 30px #ffaa00;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: #050a10;
+            background-image: linear-gradient(rgba(5, 10, 20, 0.6), rgba(5, 10, 20, 0.3)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?ixlib=rb-4.0.3&auto=format&fit=crop&w=2500&q=80');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        /* Yüzen Öğretmen Paneli */
+        #teacherPanel {
+            position: fixed; top: 20px; right: 20px; width: 260px;
+            background: var(--panel-bg); border: 2px solid #ffd700;
+            border-radius: 15px; padding: 15px; z-index: 1000;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); backdrop-filter: blur(10px);
+            animation: floatUI 4s ease-in-out infinite;
+        }
+        .panel-title { text-align: center; color: #ffd700; margin-bottom: 15px; font-size: 1.3rem; border-bottom: 1px solid rgba(255,215,0,0.3); padding-bottom: 10px; text-shadow: 0 0 10px #ffd700;}
+        .score-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);}
+        .score-name { font-weight: bold; font-size: 1.1rem; }
+        .score-val { color: #00ffff; font-weight: bold; font-size: 1.3rem; text-shadow: 0 0 10px #00ffff;}
+        .btn-sm { background: #444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .btn-sm:hover { background: #ffd700; color: #000; box-shadow: 0 0 10px #ffd700;}
+        .turn-indicator { text-align: center; font-size: 1.4rem; color: #70e000; font-weight: bold; margin-top: 15px; animation: pulseText 1.5s infinite;}
+
+        /* Harita ve Oyun Alanı */
+        #gameBoard { position: relative; width: 100%; height: 2600px; overflow: hidden; }
+
+        #farmDestination {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            text-align: center; z-index: 50; cursor: pointer; transition: all 0.3s;
+        }
+        #farmDestination:hover { transform: translateX(-50%) scale(1.1); }
+        .farm-icon { font-size: 6rem; text-shadow: 0 0 40px #ffd700; animation: floatUI 3s ease-in-out infinite; }
+        .farm-text { font-size: 2.2rem; color: #ffd700; font-weight: bold; text-shadow: 2px 2px 10px #000; background: rgba(0,0,0,0.6); padding: 5px 25px; border-radius: 15px; border: 1px solid #ffd700;}
+
+        .lanes-container {
+            display: flex; justify-content: space-around; width: 85%; max-width: 1100px;
+            height: 2200px; position: absolute; top: 300px; left: 50%; transform: translateX(-50%); z-index: 10;
+        }
+        .lane { position: relative; width: 30%; height: 100%; display: flex; flex-direction: column-reverse; justify-content: space-between; align-items: center; }
+        
+        #svgRoads { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+
+        /* Düğüm Noktaları */
+        .node {
+            width: 70px; height: 70px; border-radius: 50%; background: #111;
+            border: 4px solid #555; display: flex; justify-content: center; align-items: center;
+            font-size: 2.5rem; cursor: pointer; transition: all 0.3s;
+            position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+        .node.locked { border-color: #ffd700; background: radial-gradient(circle, #e9c46a, #e76f51); animation: heartbeat 2s infinite; box-shadow: 0 0 20px rgba(255,215,0,0.5);}
+        .node.danger { border-color: #ff0000; background: radial-gradient(circle, #9d0208, #370617); font-size: 3rem; animation: dangerPulse 1.5s infinite;}
+        .node.fox { border-color: #f77f00; background: radial-gradient(circle, #ff9e00, #370617); font-size: 3.5rem; transform: scale(1.2); animation: foxPulse 2s infinite; }
+        .node.completed { background: rgba(43, 147, 72, 0.8); border-color: #004b23; filter: grayscale(20%); cursor: not-allowed; box-shadow: none; animation: none;}
+        .node.completed::after { content: '✔️'; position: absolute; font-size: 2.5rem; text-shadow: 0 0 10px #fff;}
+        .node:hover:not(.completed) { transform: scale(1.2) translateY(-10px); box-shadow: 0 15px 30px rgba(255,255,255,0.3); z-index: 100;}
+
+        /* Oyuncu Avatarları */
+        .avatar {
+            position: absolute; width: 80px; height: 80px; font-size: 3.5rem;
+            display: flex; justify-content: center; align-items: center;
+            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 20; pointer-events: none;
+            filter: drop-shadow(0px 15px 15px rgba(0,0,0,0.9));
+            animation: floatUI 2.5s ease-in-out infinite;
+        }
+        .avatar-shadow {
+            background: rgba(0,0,0,0.6); width: 50px; height: 12px; border-radius: 50%;
+            position: absolute; bottom: -15px; filter: blur(3px);
+        }
+
+        /* YENİ NESİL SORU MODALI */
+        #modalOverlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(10px);
+        }
+        #modalParticles { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 2001; }
+
+        .modal-content {
+            width: 90%; max-width: 850px; border-radius: 20px; padding: 40px; position: relative; color: #fff;
+            backdrop-filter: blur(20px); border: 2px solid rgba(255,255,255,0.2);
+            z-index: 2002; transform: scale(0.8); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-content.show { transform: scale(1); opacity: 1; }
+        
+        .theme-normal { background: linear-gradient(135deg, rgba(16, 63, 46, 0.9), rgba(10, 30, 20, 0.9)); box-shadow: var(--grass-glow); border-color: #2a9d8f;}
+        .theme-danger { background: linear-gradient(135deg, rgba(80, 10, 10, 0.9), rgba(30, 5, 5, 0.9)); box-shadow: var(--danger-glow); border-color: #ff4d4d;}
+        .theme-fox { background: linear-gradient(135deg, rgba(90, 40, 0, 0.9), rgba(40, 10, 40, 0.9)); box-shadow: var(--fox-glow); border-color: #ff9e00;}
+        .theme-farm { background: linear-gradient(135deg, rgba(100, 80, 0, 0.9), rgba(50, 40, 0, 0.9)); box-shadow: var(--farm-glow); border-color: #ffd700;}
+
+        .question-tag { text-align: center; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; animation: pulseText 2s infinite; }
+        .question-title { font-size: 2rem; font-weight: bold; margin-bottom: 30px; text-align: center; line-height: 1.4; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .opt-btn {
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); padding: 18px; border-radius: 12px;
+            font-size: 1.3rem; color: white; text-align: left; cursor: pointer; font-weight: 500;
+            transition: all 0.3s; backdrop-filter: blur(5px); opacity: 0; transform: translateY(20px); animation: slideUp 0.5s forwards;
+        }
+        .opt-btn:hover { background: rgba(255,255,255,0.25); border-color: #fff; transform: translateX(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+        
+        .text-input {
+            width: 100%; padding: 20px; font-size: 1.8rem; border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.4); color: white; border-radius: 12px; text-align: center; margin-bottom: 20px;
+            box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        .text-input:focus { border-color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+        
+        .submit-btn {
+            background: #fff; color: #000; border: none; padding: 18px 40px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 12px; cursor: pointer; width: 100%; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(255,255,255,0.4); }
+
+        /* İpucu Kutusu */
+        .hint-box {
+            background: rgba(42, 157, 143, 0.2); border: 1px solid #2a9d8f; color: #fff;
+            padding: 15px; border-radius: 10px; margin-top: 20px; font-size: 1.3rem; text-align: center;
+            display: none; font-weight: bold; text-shadow: 0 0 5px #2a9d8f;
+            animation: slideUp 0.5s forwards;
+        }
+        .theme-danger .hint-box { background: rgba(255, 77, 77, 0.2); border-color: #ff4d4d; text-shadow: 0 0 5px #ff4d4d; }
+        .theme-fox .hint-box { background: rgba(255, 158, 0, 0.2); border-color: #ff9e00; text-shadow: 0 0 5px #ff9e00; }
+
+        /* Uçuşan Simgeler */
+        .orbiter { position: absolute; font-size: 3.5rem; pointer-events: none; opacity: 0; transition: opacity 0.5s; z-index: 2003;}
+        .orb1 { animation: floatAround1 8s linear infinite; }
+        .orb2 { animation: floatAround2 10s linear infinite; font-size: 2.5rem; }
+        .orb3 { animation: floatAround3 7s linear infinite; font-size: 4rem; }
+        .show-orbiters .orbiter { opacity: 1; }
+
+        @keyframes floatUI { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-10px);} }
+        @keyframes pulseText { 0%, 100% {opacity: 1; text-shadow: 0 0 10px currentColor;} 50% {opacity: 0.7; text-shadow: 0 0 20px currentColor;} }
+        @keyframes heartbeat { 0%, 100% {transform: scale(1);} 15% {transform: scale(1.15);} 30% {transform: scale(1);} 45% {transform: scale(1.15);} }
+        @keyframes dangerPulse { 0%, 100% {transform: scale(1); box-shadow: 0 0 10px #ff0000;} 50% {transform: scale(1.2); box-shadow: 0 0 30px #ff0000;} }
+        @keyframes foxPulse { 0%, 100% {transform: scale(1.2) rotate(0deg);} 50% {transform: scale(1.3) rotate(5deg); box-shadow: 0 0 40px #ff9e00;} }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes floatAround1 { 0% { transform: translate(-300px, -200px) rotate(0deg); } 33% { transform: translate(300px, -100px) rotate(20deg); } 66% { transform: translate(100px, 200px) rotate(-20deg); } 100% { transform: translate(-300px, -200px) rotate(0deg); } }
+        @keyframes floatAround2 { 0% { transform: translate(300px, 200px) rotate(0deg); } 33% { transform: translate(-200px, 300px) rotate(-15deg); } 66% { transform: translate(-300px, -100px) rotate(15deg); } 100% { transform: translate(300px, 200px) rotate(0deg); } }
+        @keyframes floatAround3 { 0% { transform: translate(0px, 300px) scale(1); } 50% { transform: translate(-250px, -250px) scale(1.2); } 100% { transform: translate(0px, 300px) scale(1); } }
+
+        /* Yanlış/Doğru Ekran Animasyonları */
+        .result-flash {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 3000; display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+        }
+        .result-icon { font-size: 10rem; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .result-text { font-size: 4rem; font-weight: bold; text-shadow: 0 0 20px #000; color: white; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-top: 20px; text-align: center;}
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="teacherPanel">
+        <div class="panel-title">🏰 Öğretmen Paneli</div>
+        <div id="scoreBoard"></div>
+        <div class="turn-indicator" id="turnIndicator">Sıra: 🐓 Grup 1</div>
+        <button style="width: 100%; margin-top: 15px; padding: 12px; background: #e63946; color:white; font-size:1.1rem; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.3s;" onclick="location.reload()" onmouseover="this.style.background='#d00000'" onmouseout="this.style.background='#e63946'">Oyunu Yeniden Başlat</button>
+    </div>
+
+    <div id="gameBoard">
+        <div id="farmDestination" onclick="clickFarm()">
+            <div class="farm-icon">🏰🌾</div>
+            <div class="farm-text">Haylazların Çiftliği</div>
+            <div style="font-size: 1.1rem; color: #fff; text-shadow: 0 0 5px #000; margin-top: 5px;">(Bitiş Noktası - Ekstra Puanlar)</div>
+        </div>
+        <svg id="svgRoads"></svg>
+        <div class="lanes-container" id="lanesContainer"></div>
+    </div>
+
+    <div id="modalOverlay">
+        <canvas id="modalParticles"></canvas>
+        <div id="orb1" class="orbiter orb1">🦋</div>
+        <div id="orb2" class="orbiter orb2">🕊️</div>
+        <div id="orb3" class="orbiter orb3">✨</div>
+        <div class="modal-content" id="modalBox">
+            <div class="question-tag" id="modalTag">Soru Türü</div>
+            <div class="question-title" id="questionText">Soru metni...</div>
+            <div id="questionBody"></div>
+            <!-- İpucu Kutusu Eklendi -->
+            <div class="hint-box" id="hintBox"></div>
+        </div>
+    </div>
+
+    <div id="resultFlash" class="result-flash">
+        <div class="result-icon" id="resultIcon">✅</div>
+        <div class="result-text" id="resultText">DOĞRU CEVAP!</div>
+    </div>
+
+    <script>
+        /* ---------------------------------------------------------
+           1. GENİŞLETİLMİŞ SORU HAVUZLARI (Tekrar Etmeyi Önler)
+           --------------------------------------------------------- */
+        // 25 Normal Soru (3 Grup * 7 Normal Engel = 21 gerekiyordu, 25 ile hiç tekrar etmez)
+        const baseNormalQuestions = [
+            { q: "Masal kelimesi dilimize hangi dilden ve kelimeden geçmiştir?", opts: ["Arapça 'mesel'", "Farsça 'destan'", "Eski Türkçe 'sav'", "Latince 'fabula'"], ans: 0 },
+            { q: "Aşağıdakilerden hangisi masalların özelliklerinden biri DEĞİLDİR?", opts: ["Anonim olmaları", "Didaktik (öğretici) olmaları", "Millî ve dinî unsurlar içermeleri", "Zaman ve mekânın belirsiz olması"], ans: 2 },
+            { q: "Masallarda dinleyicinin dikkatini çekmek için en başta söylenen tekerleme bölümüne ne ad verilir?", opts: ["Serim", "Düğüm", "Döşeme", "Dilek"], ans: 2 },
+            { q: "Masallarda kahramanlar genellikle kimlerdir?", opts: ["Tarihi şahsiyetler", "Devler, periler, hayvanlar veya Keloğlan gibi tipler", "Günümüz insanları", "Uzaylılar"], ans: 1 },
+            { q: "Masallarda genellikle hangi zaman kipleri kullanılır?", opts: ["Şimdiki zaman", "Gelecek zaman", "Öğrenilen geçmiş zaman (-miş) veya Geniş zaman (-r)", "Görülen geçmiş zaman (-di)"], ans: 2 },
+            { q: "Üç Haylaz Masalı'nda çiftlikten kaçan kafadarlar kimlerdir?", opts: ["At, eşek, köpek", "Horoz, hindi, ördek", "Kedi, köpek, fare", "Koyun, inek, tavuk"], ans: 1 },
+            { q: "Olayların karmaşıklaştığı ve merak unsurunun zirveye çıktığı masal bölümü hangisidir?", opts: ["Çözüm", "Serim", "Düğüm", "Dilek"], ans: 2 },
+            { q: "Masalların ana teması genellikle ne üzerinedir?", opts: ["İyilik-kötülük gibi zıtlıkların mücadelesi", "Doğa tasvirleri", "Tarihi savaşlar", "Bilimsel gelişmeler"], ans: 0 },
+            { q: "Masalların sonunda kötüler ne olur?", opts: ["Affedilirler", "Ödüllendirilirler", "Kahraman olurlar", "Mutlaka cezalandırılırlar"], ans: 3 },
+            { q: "Üç Haylaz Masalı'nda hayvanlar neden çiftlikten kaçmak isterler?", opts: ["Sahipleri kötü davrandığı için", "Can sıkıntısından ve kırda özgür yaşama hayalinden", "Çiftlik yandığı için", "Korktukları için"], ans: 1 },
+            { q: "Hangisi 'Dilek' bölümünde söylenen kalıp sözlerden biridir?", opts: ["Evvel zaman içinde", "Bir varmış bir yokmuş", "Gökten üç elma düşmüş", "Az gitmiş uz gitmiş"], ans: 2 },
+            { q: "Üç Haylaz Masalı ne tür bir masaldır?", opts: ["Peri Masalı", "Efsanevi Masal", "Hayvan Masalı", "Tarihi Masal"], ans: 2 },
+            { q: "Masallardaki olayların geçtiği zaman dilimi için hangisi söylenebilir?", opts: ["Tarihi kesindir.", "Geçmişte kalan hayali, belirsiz bir zamandır.", "Günümüzde geçer.", "Gelecekte geçer."], ans: 1 },
+            { q: "Hangisi masallardaki hayali mekânlara bir örnektir?", opts: ["İstanbul", "Kaf Dağı", "Anadolu", "Hindistan (Gerçek coğrafya)"], ans: 1 },
+            { q: "Masalların yazarı belli midir?", opts: ["Evet bellidir.", "Hayır, masallar anonimdir (halkın ortak ürünüdür).", "Sadece Türk masallarında bellidir.", "Hepsinin yazarı ezoptur."], ans: 1 },
+            { q: "Masalların kahramanları arasında aşağıdakilerden hangisi yer almaz?", opts: ["Cadılar", "Ejderhalar", "Robotlar", "Periler"], ans: 2 },
+            { q: "Masallarda anlatılan olaylar için hangisi doğrudur?", opts: ["Gerçekleşmesi imkansız olaylardır.", "Günlük hayatta sıkça yaşanır.", "Gazete haberlerinden alınmıştır.", "Tarihi belgelere dayanır."], ans: 0 },
+            { q: "Üç Haylaz masalında kafadarların en büyük hatası nedir?", opts: ["Yüzme bilmemeleri", "Kötü insanlara güvenmeleri", "Ellerindekinin kıymetini bilmemeleri", "Yolu kaybetmeleri"], ans: 2 },
+            { q: "Masallarda genellikle hangi zıtlık İŞLENMEZ?", opts: ["İyilik - Kötülük", "Teknoloji - Doğa", "Doğruluk - Yalancılık", "Alçakgönüllülük - Kibir"], ans: 1 },
+            { q: "Masal kişilerinin karakter özellikleri genellikle nasıldır?", opts: ["Sürekli değişir", "İyiler hep iyi, kötüler hep kötüdür.", "İyiler sonradan kötü olur.", "Kötüler her zaman haklıdır."], ans: 1 },
+            { q: "Üç Haylaz başlangıçta nerede yaşamaktadır?", opts: ["Karanlık ormanda", "Büyük bir sarayda", "Güvenli bir çiftlikte", "Yeraltı mağarasında"], ans: 2 },
+            { q: "Masalların sonunda iyilere ne olur?", opts: ["Zindanlara atılırlar", "Sürgüne gönderilirler", "Unutulurlar", "Ödüllendirilirler"], ans: 3 },
+            { q: "'Kalbur saman içinde' sözü masalın neresinde yer alır?", opts: ["En sonunda", "Masalın başında (Tekerleme bölümünde)", "Sadece kötülerin konuştuğu yerde", "Olaylar çözülürken"], ans: 1 },
+            { q: "Hint mitolojisinden gelen, hayvan masallarının ünlü kaynağı nedir?", opts: ["Ezop Masalları", "Dede Korkut", "Kelile ve Dimne", "Uyuyan Güzel"], ans: 2 },
+            { q: "Masalın yazım biçimi nedir?", opts: ["Sadece şiir", "Sadece tekerleme", "Düzyazı (Nesir)", "Mektup"], ans: 2 }
+        ];
+
+        // 8 Tehlike Sorusu (3 Grup * 2 Tehlike Engel = 6 gerekiyordu, 8 ile tekrar etmez)
+        const baseDangerQuestions = [
+            { q: "Masallarda kahramanların ve olayın tanıtıldığı başlangıç bölümünün adı nedir?", type: "text", ans: ["serim"] },
+            { q: "Üç Haylaz Masalı'nda üç kafadar Hindistan'a gidip ne yaparak para kazanmışlardır?", type: "text", ans: ["hokkabazlık", "hokkabazlik", "gösteri"] },
+            { q: "Masallarda dili kapalı ve süslü müdür yoksa ..... ve duru mudur? (Boşluğa ne gelmeli?)", type: "text", ans: ["yalın", "yalin", "sade"] },
+            { q: "İnsan karakterlerinin ve zaaflarının başka canlılar üzerinden sembolize edildiği masal türü nedir?", type: "text", ans: ["hayvan", "hayvan masalı", "hayvan masali"] },
+            { q: "Masallarda belirli bir millete özgü detay bulunmaz. Tüm insanlığı ilgilendirdiği için masallar nasıldır?", type: "text", ans: ["evrensel", "evrenseldir"] },
+            { q: "Masalların girişinde söylenen mantık dışı tekerlemelerin yer aldığı bölümün adı nedir?", type: "text", ans: ["döşeme"] },
+            { q: "Olayların karıştığı, düğümlendiği ve merakın arttığı gelişme bölümüne ne ad verilir?", type: "text", ans: ["düğüm", "dugum"] },
+            { q: "Masal sözcüğü dilimize Arapçada 'ibret verici söz' anlamına gelen hangi kelimeden geçmiştir?", type: "text", ans: ["mesel"] }
+        ];
+
+        // 5 Tilki Sorusu (3 Grup * 1 Tilki = 3 gerekiyordu, 5 ile tekrar etmez)
+        const baseFoxQuestions = [
+            { q: "Üç Haylaz Masalı'nın 'Çözüm' bölümünde, açgözlülük yapan haylazlar devin mağarasında kimin avı olmuşlardır?", type: "text", ans: ["tilki", "tilkinin", "kurnaz tilki"] },
+            { q: "Masalın bittiğini ilan eden, iyi dileklerin bulunduğu son bölümün adı nedir?", type: "text", ans: ["dilek", "dilek bölümü"] },
+            { q: "Üç Haylaz Masalı'nın bize verdiği ana ders nedir? (Tek kelime: ... olmamalıyız)", type: "text", ans: ["açgözlü", "aç gözlü", "doyumsuz", "kibirli"] },
+            { q: "Masallarda iyiler ödüllendirilirken kötüler ne yapılır?", type: "text", ans: ["cezalandırılır", "ceza alır", "cezalandirilir"] },
+            { q: "Olayların çözüldüğü, düğümün açıldığı ve iyilerin kazandığı bölüme ne ad verilir?", type: "text", ans: ["çözüm", "cozum"] }
+        ];
+
+        const baseFarmQuestions = [
+            { q: "Masallar gerçek mi yoksa hayal ürünü müdür?", opts: ["Tamamen gerçektir.", "Hayal ürünüdür."], ans: 1 },
+            { q: "Masalların amacı nedir?", opts: ["Sadece uyutmak", "Doğru davranış aşılamak (Didaktik)"], ans: 1 },
+            { q: "Keloğlan hangi tür bir kahramandır?", opts: ["Olağanüstü varlık", "Sıradan, gerçeğe uygun tip"], ans: 1 },
+            { q: "Masallarda millî özellikler bulunur mu?", opts: ["Evet, Türk masalları Türkleri anlatır.", "Hayır, evrenseldir."], ans: 1 },
+            { q: "Masallarda dil nasıldır?", opts: ["Çok süslü ve ağırdır.", "Sade, yalın ve anlaşılırdır."], ans: 1 }
+        ];
+
+        // Soruları Çeken Yapı (Havuzdan silerek çeker)
+        let pools = {
+            normal: [...baseNormalQuestions],
+            danger: [...baseDangerQuestions],
+            fox: [...baseFoxQuestions],
+            farm: [...baseFarmQuestions]
+        };
+
+        function getQuestion(type) {
+            let pool = pools[type];
+            return pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+        }
+
+        /* ---------------------------------------------------------
+           2. OYUN SİSTEMİ 
+           --------------------------------------------------------- */
+        const groups = [
+            { id: 0, name: "Grup 1", icon: "🐓", score: 0, pos: 0, finished: false, nodeData: [] },
+            { id: 1, name: "Grup 2", icon: "🦃", score: 0, pos: 0, finished: false, nodeData: [] },
+            { id: 2, name: "Grup 3", icon: "🦆", score: 0, pos: 0, finished: false, nodeData: [] }
+        ];
+        
+        let currentTurn = 0;
+        let activeQuestionObj = null; 
+        const totalNodes = 10; 
+        
+        function initBoard() {
+            const container = document.getElementById('lanesContainer');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 3; i++) {
+                let laneHTML = `<div class="lane" id="lane-${i}">`;
+                laneHTML += `<div class="avatar" id="avatar-${i}">${groups[i].icon}<div class="avatar-shadow"></div></div>`;
+                
+                for (let j = 0; j < totalNodes; j++) {
+                    let offset = Math.sin(j * 1.5) * 45; 
+                    let isDanger = (j === 3 || j === 6); 
+                    let isFox = (j === 9); 
+                    
+                    let nodeClass = "node";
+                    let icon = "🔒";
+                    let type = 'normal';
+
+                    if (isFox) {
+                        nodeClass += " fox locked"; icon = "🦊"; type = 'fox';
+                    } else if (isDanger) {
+                        nodeClass += " danger locked"; 
+                        let dangers = ["👹", "🧙‍♀️", "🦇", "🐉"];
+                        icon = dangers[Math.floor(Math.random() * dangers.length)];
+                        type = 'danger';
+                    } else {
+                        nodeClass += " locked";
+                    }
+                    
+                    // Node verisini oyun başında oluşturuyoruz. "failedAttempts" İpucu sistemi için 0 başlar.
+                    groups[i].nodeData[j] = {
+                        type: type,
+                        qData: getQuestion(type),
+                        failedAttempts: 0
+                    };
+                    
+                    laneHTML += `<div class="${nodeClass}" id="node-${i}-${j}" 
+                                      style="transform: translateX(${offset}px);"
+                                      onclick="handleNodeClick(${i}, ${j})">
+                                      ${icon}
+                                 </div>`;
+                }
+                laneHTML += `</div>`;
+                container.innerHTML += laneHTML;
+            }
+
+            updatePanel();
+            setTimeout(drawSvgPaths, 500); 
+            window.scrollTo(0, document.body.scrollHeight);
+            setTimeout(moveAvatarsToCurrentPos, 100);
+        }
+
+        function drawSvgPaths() {
+            const svg = document.getElementById('svgRoads');
+            const container = document.getElementById('gameBoard');
+            svg.setAttribute('width', container.offsetWidth);
+            svg.setAttribute('height', container.offsetHeight);
+            
+            let svgHTML = '';
+            for (let i = 0; i < 3; i++) {
+                let pathD = "";
+                let prevX = 0, prevY = 0;
+                
+                for (let j = 0; j < totalNodes; j++) {
+                    let node = document.getElementById(`node-${i}-${j}`);
+                    if(!node) continue;
+                    let rect = node.getBoundingClientRect();
+                    let containerRect = container.getBoundingClientRect();
+                    let cx = rect.left - containerRect.left + rect.width / 2;
+                    let cy = rect.top - containerRect.top + rect.height / 2;
+
+                    if (j === 0) pathD += `M ${cx} ${cy + 120} Q ${cx} ${cy}, ${cx} ${cy}`; 
+                    else pathD += ` S ${cx} ${(cy + prevY)/2}, ${cx} ${cy}`;
+                    prevX = cx; prevY = cy;
+                }
+                
+                let farm = document.getElementById('farmDestination').getBoundingClientRect();
+                let contRect = container.getBoundingClientRect();
+                let fx = farm.left - contRect.left + farm.width / 2;
+                let fy = farm.top - contRect.top + farm.height - 20;
+                pathD += ` Q ${fx} ${(fy + prevY)/2}, ${fx} ${fy}`;
+
+                svgHTML += `<path d="${pathD}" stroke="rgba(255, 255, 255, 0.2)" stroke-width="30" stroke-linecap="round" fill="none"/>`;
+                svgHTML += `<path d="${pathD}" stroke="var(--road)" stroke-width="15" stroke-dasharray="25,15" fill="none" opacity="0.9"/>`;
+            }
+            svg.innerHTML = svgHTML;
+        }
+
+        function updatePanel() {
+            let html = '';
+            groups.forEach(g => {
+                html += `<div class="score-row">
+                            <span class="score-name">${g.icon} ${g.name}</span>
+                            <div>
+                                <button class="btn-sm" onclick="manualScore(${g.id}, -1)">-</button>
+                                <span class="score-val" id="score-${g.id}">${g.score}</span>
+                                <button class="btn-sm" onclick="manualScore(${g.id}, 1)">+</button>
+                            </div>
+                         </div>`;
+            });
+            document.getElementById('scoreBoard').innerHTML = html;
+            let activeG = groups[currentTurn];
+            document.getElementById('turnIndicator').innerHTML = `Sıra: ${activeG.icon} ${activeG.name}`;
+        }
+
+        function manualScore(id, val) {
+            groups[id].score += val;
+            document.getElementById(`score-${id}`).innerText = groups[id].score;
+        }
+
+        function moveAvatarsToCurrentPos() {
+            groups.forEach(g => {
+                let avatar = document.getElementById(`avatar-${g.id}`);
+                if (g.finished) {
+                    let farm = document.getElementById('farmDestination');
+                    avatar.style.top = (farm.offsetTop + 40) + 'px';
+                    avatar.style.left = (farm.offsetLeft + (g.id * 40) - 20) + 'px';
+                    return;
+                }
+                let node = document.getElementById(`node-${g.id}-${g.pos}`);
+                if(node) {
+                    avatar.style.top = (node.offsetTop - 15) + 'px';
+                    avatar.style.left = (node.offsetLeft + node.offsetWidth/2 - 40) + 'px';
+                }
+            });
+        }
+
+        function handleNodeClick(laneIndex, nodeIndex) {
+            if (laneIndex !== currentTurn) {
+                showFlashResult("❌", "SIRA SENDE DEĞİL!", "rgba(255,0,0,0.7)");
+                return;
+            }
+            let group = groups[currentTurn];
+            if (nodeIndex !== group.pos) {
+                showFlashResult("🔒", "ÖNCE SIRADAKİ KİLİDİ AÇ!", "rgba(255,165,0,0.8)");
+                return;
+            }
+            let nodeEl = document.getElementById(`node-${laneIndex}-${nodeIndex}`);
+            if (nodeEl.classList.contains('completed')) return;
+
+            let nodeData = group.nodeData[nodeIndex];
+            openModal(nodeEl, nodeData);
+        }
+
+        function clickFarm() {
+            let g = groups[currentTurn];
+            if (!g.finished) {
+                showFlashResult("🏰", "ÖNCE YOLU BİTİRMELİSİN!", "rgba(255,215,0,0.7)");
+                return;
+            }
+            activeQuestionObj = { 
+                nodeData: { type: 'farm', qData: getQuestion('farm'), failedAttempts: 0 }, 
+                node: null, pts: 0.5 
+            };
+            renderModalContent();
+        }
+
+        function passTurn() {
+            currentTurn = (currentTurn + 1) % 3;
+            if (groups.every(g => g.finished)) {
+                showFlashResult("🏆", "OYUN BİTTİ!", "rgba(255,215,0,0.9)");
+                return;
+            }
+            updatePanel();
+        }
+
+        /* ---------------------------------------------------------
+           5. MODAL & İPUCU SİSTEMİ
+           --------------------------------------------------------- */
+        function openModal(nodeEl, nodeData) {
+            let pts = nodeData.type === 'fox' ? 5 : (nodeData.type === 'danger' ? 3 : 1);
+            activeQuestionObj = { nodeData: nodeData, node: nodeEl, pts: pts };
+            renderModalContent();
+        }
+
+        function renderModalContent() {
+            let overlay = document.getElementById('modalOverlay');
+            let box = document.getElementById('modalBox');
+            let tag = document.getElementById('modalTag');
+            let title = document.getElementById('questionText');
+            let body = document.getElementById('questionBody');
+            let hintBox = document.getElementById('hintBox');
+            
+            let obj = activeQuestionObj;
+            let type = obj.nodeData.type;
+            let qData = obj.nodeData.qData;
+            
+            overlay.style.display = 'flex';
+            setTimeout(() => { box.classList.add('show'); }, 10);
+            
+            overlay.classList.add('show-orbiters');
+            
+            if (type === 'danger') {
+                box.className = 'modal-content theme-danger show';
+                document.getElementById('orb1').innerText = '🦇'; document.getElementById('orb2').innerText = '👻'; document.getElementById('orb3').innerText = '🔥';
+                tag.style.color = '#ff4d4d'; tag.innerText = "KORKUNÇ TEHLİKE! (3 Puan)";
+                startCanvasParticles('#ff4d4d');
+            } else if (type === 'fox') {
+                box.className = 'modal-content theme-fox show';
+                document.getElementById('orb1').innerText = '🦊'; document.getElementById('orb2').innerText = '🔮'; document.getElementById('orb3').innerText = '✨';
+                tag.style.color = '#ff9e00'; tag.innerText = "SON PATRON: KURNAZ TİLKİ (5 Puan)";
+                startCanvasParticles('#ff9e00');
+            } else if (type === 'farm') {
+                box.className = 'modal-content theme-farm show';
+                document.getElementById('orb1').innerText = '🌾'; document.getElementById('orb2').innerText = '☀️'; document.getElementById('orb3').innerText = '🕊️';
+                tag.style.color = '#ffd700'; tag.innerText = "ÇİFTLİK BİLGİSİ (0.5 Puan)";
+                startCanvasParticles('#ffd700');
+            } else {
+                box.className = 'modal-content theme-normal show';
+                document.getElementById('orb1').innerText = '🦋'; document.getElementById('orb2').innerText = '🕊️'; document.getElementById('orb3').innerText = '✨';
+                tag.style.color = '#2a9d8f'; tag.innerText = "MASALIN SIRRI (1 Puan)";
+                startCanvasParticles('#2a9d8f');
+            }
+
+            title.innerText = qData.q;
+            body.innerHTML = '';
+
+            // Akıllı İpucu Sistemi (Sadece yazılı sorularda ve en az 1 kez yanlış bilindiyse)
+            if (obj.nodeData.failedAttempts > 0 && !qData.opts) {
+                let firstAns = qData.ans[0];
+                let firstChar = firstAns.charAt(0).toUpperCase();
+                let len = firstAns.length;
+                hintBox.innerHTML = `💡 <b>İPUCU:</b> Cevap <b>${len} harfli</b> ve <b>"${firstChar}"</b> harfiyle başlıyor!`;
+                hintBox.style.display = 'block';
+            } else {
+                hintBox.style.display = 'none';
+            }
+
+            if (qData.opts) {
+                let grid = document.createElement('div');
+                grid.className = 'options-grid';
+                let delay = 0.1;
+                qData.opts.forEach((opt, idx) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'opt-btn';
+                    btn.style.animationDelay = `${delay}s`;
+                    btn.innerText = String.fromCharCode(65 + idx) + ") " + opt;
+                    btn.onclick = () => checkAnswer(idx === qData.ans);
+                    grid.appendChild(btn);
+                    delay += 0.15;
+                });
+                body.appendChild(grid);
+            } else {
+                let input = document.createElement('input');
+                input.type = 'text'; input.className = 'text-input'; input.placeholder = "Cevabı buraya yaz...";
+                
+                let btn = document.createElement('button');
+                btn.className = 'submit-btn'; btn.innerText = "Cevabı Gönder ➔";
+                btn.onclick = () => {
+                    let val = input.value.trim().toLowerCase();
+                    let correct = qData.ans.includes(val);
+                    checkAnswer(correct);
+                };
+                
+                body.appendChild(input); body.appendChild(btn);
+                setTimeout(() => input.focus(), 300);
+            }
+        }
+
+        function closeModal() {
+            let box = document.getElementById('modalBox');
+            box.classList.remove('show');
+            setTimeout(() => {
+                document.getElementById('modalOverlay').style.display = 'none';
+                stopCanvasParticles();
+            }, 400);
+        }
+
+        function checkAnswer(isCorrect) {
+            closeModal();
+            let g = groups[currentTurn];
+            
+            if (isCorrect) {
+                manualScore(currentTurn, activeQuestionObj.pts);
+                showFlashResult("✨", "DOĞRU BİLDİNİZ!", "rgba(43, 147, 72, 0.85)");
+                
+                if (activeQuestionObj.nodeData.type !== 'farm') {
+                    activeQuestionObj.node.classList.remove('locked', 'danger', 'fox');
+                    activeQuestionObj.node.classList.add('completed');
+                    activeQuestionObj.node.innerHTML = "";
+                    g.pos++; 
+                    
+                    if (g.pos >= totalNodes) {
+                        g.finished = true;
+                        setTimeout(() => { showFlashResult("🏰", `${g.name} ÇİFTLİĞE ULAŞTI!`, "rgba(255,215,0,0.9)"); }, 1500);
+                    }
+                    setTimeout(moveAvatarsToCurrentPos, 500);
+                }
+                setTimeout(passTurn, 1000);
+            } else {
+                // Yanlış cevap verilince ipucunu devreye sokmak için sayacı artırıyoruz
+                activeQuestionObj.nodeData.failedAttempts++; 
+                showFlashResult("🦊", "YANLIŞ CEVAP! SIRA GEÇTİ.", "rgba(208, 0, 0, 0.85)");
+                setTimeout(passTurn, 1000);
+            }
+        }
+
+        /* ---------------------------------------------------------
+           6. GÖRSEL EFEKTLER (Particle Canvas & Flash)
+           --------------------------------------------------------- */
+        function showFlashResult(icon, text, bgColor) {
+            let flash = document.getElementById('resultFlash');
+            let iEl = document.getElementById('resultIcon');
+            let tEl = document.getElementById('resultText');
+            
+            flash.style.background = bgColor;
+            iEl.innerText = icon;
+            tEl.innerText = text;
+            
+            flash.style.display = 'flex';
+            
+            iEl.style.animation = 'none'; tEl.style.animation = 'none';
+            void iEl.offsetWidth; 
+            iEl.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            tEl.style.animation = 'popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            
+            setTimeout(() => { flash.style.display = 'none'; }, 1500);
+        }
+
+        let particleTimer;
+        function startCanvasParticles(colorHex) {
+            const canvas = document.getElementById('modalParticles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            
+            let particles = [];
+            for(let i=0; i<40; i++){
+                particles.push({
+                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                    r: Math.random() * 3 + 1, vx: (Math.random() - 0.5) * 2, vy: Math.random() * -2 - 1
+                });
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = colorHex;
+                particles.forEach(p => {
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.shadowBlur = 10; ctx.shadowColor = colorHex; ctx.fill();
+                    p.y += p.vy; p.x += p.vx;
+                    if(p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+                });
+                particleTimer = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        function stopCanvasParticles() { cancelAnimationFrame(particleTimer); }
+
+        window.onload = initBoard;
+        window.onresize = drawSvgPaths; 
+
+    </script>
+</body>
+</html>
