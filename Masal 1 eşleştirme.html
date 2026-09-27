@@ -193,9 +193,6 @@
     </div>
 
     <script>
-        /* -------------------------------------------------------------
-           SES EFEKTLERİ (Web Audio API)
-           ------------------------------------------------------------- */
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playTone(freq, type, vol, duration, delay = 0) {
@@ -228,9 +225,6 @@
             playTone(150, 'sawtooth', 0.4, 0.6, 0.6);
         }
 
-        /* -------------------------------------------------------------
-           BİLGİ HAVUZU
-           ------------------------------------------------------------- */
         const simplePool = [
             [{l:"Mesel", r:"Masal kelimesinin kökeni (İbret verici söz)"}, {l:"Düzyazı", r:"Masalın yazım biçimi"}, {l:"Sözlü Gelenek", r:"Masalların nesilden nesile aktarılma yolu"}],
             [{l:"Devler ve Periler", r:"Olağanüstü kahramanlar"}, {l:"Keloğlan", r:"Halkın içinden, gerçeğe uygun tip"}, {l:"Konuşan Hayvanlar", r:"Simgesel karakterler"}],
@@ -257,7 +251,6 @@
             [{l:"Kibir", r:"Masallarda genelde cezalandırılan özellik"}, {l:"Çalışkanlık", r:"Masallarda genelde ödüllendirilen özellik"}, {l:"Uzun betimlemeler", r:"Masallarda hiç bulunmayan öge"}, {l:"Kalıp sözler", r:"Geçişlerde kullanılan zengin tekerlemeler"}],
             [{l:"Olay Kurgusu", r:"Gerçekleşmesi imkânsız olaylar zinciri"}, {l:"Duyulan Geçmiş", r:"Mış/miş kullanımı"}, {l:"Geniş Zaman", r:"R/ar kullanımı"}, {l:"Masal Amacı", r:"Doğru davranış biçimi aşılamak"}],
             [{l:"Keloğlan ile Fare", r:"Hayvan masalına örnek"}, {l:"Külkedisi", r:"Peri masalına örnek"}, {l:"Kral Arthur", r:"Efsanevi masala örnek"}, {l:"Zaaflar", r:"İnsan zaaflarını işleyen hayvan masalı motifleri"}],
-            // Düzeltilmiş Soru Paketi: Mantıksal çakışma (bulunmaz/yer almaz) giderildi.
             [{l:"Dinî İnançlar", r:"Belirli bir inanca özgü kurallar yer almaz"}, {l:"Milliyet Unsurları", r:"Belirli bir millete ait özellikler bulunmaz"}, {l:"Ortak Duygular", r:"Evrenselliği sağlayan temel yapı"}, {l:"Hayal Gücü", r:"Masalın var olma kaynağı"}],
             [{l:"Döşeme Amacı", r:"Dikkat çekmek"}, {l:"Serim Amacı", r:"Mekân ve şahsı tanıtmak"}, {l:"Düğüm Amacı", r:"Merak unsurunu zirveye taşımak"}, {l:"Çözüm Amacı", r:"Çatışmayı sonlandırmak"}]
         ];
@@ -286,9 +279,6 @@
 
         const animals = ["🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐙","🐵","🐧","🦉","🦄","🐝", "🐢", "🦕", "🦚"];
 
-        /* -------------------------------------------------------------
-           OYUN SİSTEMİ
-           ------------------------------------------------------------- */
         let groups = [];
         let currentGroupIndex = 0;
         let totalGroups = 0;
@@ -336,8 +326,6 @@
                 
                 for (let j = 0; j < 10; j++) {
                     let tier, pts, qData;
-                    
-                    // Düzeltme: qData paketlemesi tamamen sorunsuz hâle getirildi. Çifte sarma (double wrap) sorunu çözüldü.
                     if (j < 3) { 
                         tier = 1; pts = 1; 
                         qData = { type: 'match', data: popRandom(sPool) }; 
@@ -392,9 +380,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-           SORU ARAYÜZÜ (MODAL) VE MEKANİKLER
-           ------------------------------------------------------------- */
         let activeGroupIndex = 0;
         let activeQuestionTier = 1;
 
@@ -415,7 +400,6 @@
             modalHeader.style.color = color;
             modalHeader.innerText = activeQuestionTier === 1 ? "Gümüş Soru (1 Puan)" : (activeQuestionTier === 2 ? "Altın Soru (2 Puan)" : "Elmas Soru (3 Puan)");
 
-            // İpucu Gösterimi
             let hintBox = document.getElementById('hintBox');
             if (qObj.failedAttempts > 0) {
                 let hintTxt = "";
@@ -471,9 +455,6 @@
             `;
         }
 
-        /* -------------------------------------------------------------
-           KONTROL MEKANİZMASI (TAMAM BUTONU)
-           ------------------------------------------------------------- */
         function checkMatchSubmit() {
             let zones = document.querySelectorAll('.drop-zone');
             let isComplete = true;
@@ -560,9 +541,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-           SÜRÜKLE BIRAK MANTIKLARI 
-           ------------------------------------------------------------- */
         function allowDrop(ev) { ev.preventDefault(); }
         function drag(ev) { ev.dataTransfer.setData("text", ev.target.getAttribute('data-id')); }
         function drop(ev) {
@@ -594,7 +572,6 @@
             if(dragEl) dragEl.style.display = 'block';
         }
 
-        /* Dokunmatik Ekran Desteği */
         let draggedElement = null;
         let ghost = document.getElementById('dragGhost');
         function handleTouchStart(e) {
@@ -619,9 +596,6 @@
             ghost.style.left = (touch.clientX - 50) + 'px'; ghost.style.top = (touch.clientY - 30) + 'px';
         }
 
-        /* -------------------------------------------------------------
-           CANVAS EFEKTLERİ
-           ------------------------------------------------------------- */
         const canvas = document.getElementById('particlesCanvas');
         const ctx = canvas.getContext('2d');
         let particles = [];

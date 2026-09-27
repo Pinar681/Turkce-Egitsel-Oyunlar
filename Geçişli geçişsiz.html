@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Geçişli / Geçişsiz Yarışması</title>
+<style>
+body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #ffecd2, #fcb69f, #ff9a9e);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+#kutu {
+    background: #fff3e6;
+    width: 600px;
+    margin: 20px auto;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.2);
+    transition: opacity 0.5s;
+    opacity: 1;
+}
+
+button {
+    width: 180px;
+    margin: 10px;
+    padding: 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+#gecisliBtn { background:#FF7F50; color:white; }
+#gecisizBtn { background:#6495ED; color:white; }
+
+#puanlar {
+    margin-top: 25px;
+}
+
+#puanTablo {
+    margin:auto;
+    border-collapse: collapse;
+    width: 400px;
+    background: #fff0f5;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#puanTablo th, #puanTablo td {
+    border: 1px solid #000;
+    padding: 10px;
+    font-size: 18px;
+}
+
+#puanTablo th { background:#ffa07a; }
+#puanTablo td { background:#f0e68c; }
+
+#kazanan {
+    font-size: 30px;
+    font-weight: bold;
+    color: #32CD32;
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 1s;
+}
+</style>
+</head>
+<body>
+
+<h1>Geçişli / Geçişsiz Fiil Yarışması</h1>
+<p>Sıradaki Grup: <span id="grup">A</span></p>
+
+<div id="kutu">
+<h3 id="soru"></h3>
+<button id="gecisliBtn" onclick="cevapVer('Geçişli')">Geçişli</button>
+<button id="gecisizBtn" onclick="cevapVer('Geçişsiz')">Geçişsiz</button>
+</div>
+
+<div id="puanlar">
+<h3>Anlık Puan Tablosu</h3>
+<table id="puanTablo">
+<tr>
+<th>Grup</th><th>Puan</th><th>Amblem</th>
+</tr>
+<tr><td>A</td><td id="puanA">0</td><td>🦁</td></tr>
+<tr><td>B</td><td id="puanB">0</td><td>🐵</td></tr>
+<tr><td>C</td><td id="puanC">0</td><td>🐯</td></tr>
+<tr><td>D</td><td id="puanD">0</td><td>🐼</td></tr>
+</table>
+</div>
+
+<div id="kazanan">🏆 Kazanan Grup: <span id="kazananGrup"></span> 🏆</div>
+
+<audio id="sesDogru">
+<source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+</audio>
+<audio id="sesYanlis">
+<source src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" type="audio/ogg">
+</audio>
+
+<script>
+let gruplar = ['A','B','C','D'];
+let puanlar = {A:0,B:0,C:0,D:0};
+let aktifGrup = 0;
+
+let sorular = [
+{cumle:"O da bizimle geldi.", cevap:"Geçişsiz"},
+{cumle:"Otobüs az ileride durdu.", cevap:"Geçişsiz"},
+{cumle:"Saatlerdir kuşlar gibi uçuyoruz.", cevap:"Geçişsiz"},
+{cumle:"Anlattığı fıkraya tüm sınıf güldü.", cevap:"Geçişsiz"},
+{cumle:"Bebek mışıl mışıl uyuyor.", cevap:"Geçişsiz"},
+{cumle:"Dışarıda lapa lapa kar yağıyor.", cevap:"Geçişsiz"},
+{cumle:"Çocuk sürekli ağlıyor.", cevap:"Geçişsiz"},
+{cumle:"Soğuk su içip serinledim.", cevap:"Geçişsiz"},
+{cumle:"Bahçede oturuyoruz.", cevap:"Geçişsiz"},
+{cumle:"İftara kadar çok acıktım.", cevap:"Geçişsiz"},
+{cumle:"Ekmek sıcakta küflenmiş.", cevap:"Geçişsiz"},
+{cumle:"Çiçekler susuzluktan solmuş.", cevap:"Geçişsiz"},
+{cumle:"Kardeşimin şakasına çok güldüm.", cevap:"Geçişsiz"},
+{cumle:"Babam kumandaya uzandı.", cevap:"Geçişsiz"},
+
+{cumle:"Anlattığı fıkrayla tüm sınıfı güldürdü.", cevap:"Geçişli"},
+{cumle:"Yaptığı şaka hepimizi korkuttu.", cevap:"Geçişli"},
+{cumle:"Az önce pişirdim.", cevap:"Geçişli"},
+{cumle:"Bebeği uyutmuş.", cevap:"Geçişli"},
+{cumle:"Her sene yüzlerce fakiri doyuruyor.", cevap:"Geçişli"},
+{cumle:"Bize tavşankanı çayından içirdi.", cevap:"Geçişli"},
+{cumle:"Kirlenen yerleri temizletti.", cevap:"Geçişli"},
+{cumle:"Hesabı arkadaşına ödetti.", cevap:"Geçişli"},
+{cumle:"İlerleyen saatlerde fırtına başlamıştı.", cevap:"Geçişli"},
+{cumle:"Kitap, ikinci dünya savaşında yaşananları anlatıyor.", cevap:"Geçişli"},
+{cumle:"Sabah erkenden yürüyüşe çıktım.", cevap:"Geçişli"}
+];
+
+sorular = sorular.sort(()=>Math.random()-0.5);
+
+let aktifSoru = 0;
+
+function soruGoster(){
+    if(aktifSoru < sorular.length){
+        let kutu = document.getElementById("kutu");
+        kutu.style.opacity = 0;
+        setTimeout(()=>{
+            document.getElementById("soru").innerText = sorular[aktifSoru].cumle;
+            document.getElementById("grup").innerText = gruplar[aktifGrup];
+            kutu.style.opacity = 1;
+        }, 500);
+    } else {
+        let maxPuan = Math.max(...Object.values(puanlar));
+        let kazananGruplar = [];
+        for(let g in puanlar){
+            if(puanlar[g] === maxPuan) kazananGruplar.push(g);
+        }
+        let kazananMetin = kazananGruplar.join(", ");
+        document.getElementById("kutu").innerHTML = "<h2>Oyun bitti!</h2>";
+        document.getElementById("grup").innerText = "-";
+        document.getElementById("kazananGrup").innerText = kazananMetin;
+        document.getElementById("kazanan").style.opacity = 1;
+    }
+}
+
+function cevapVer(secim){
+    let grup = gruplar[aktifGrup];
+    let dogruSes = document.getElementById("sesDogru");
+    let yanlisSes = document.getElementById("sesYanlis");
+    
+    if(secim === sorular[aktifSoru].cevap){
+        puanlar[grup]++;
+        document.getElementById("puan"+grup).innerText = puanlar[grup];
+        dogruSes.play();
+    } else {
+        yanlisSes.play();
+    }
+    
+    sorular.splice(aktifSoru,1);
+    aktifGrup = (aktifGrup+1)%gruplar.length;
+    
+    if(sorular.length>0){
+        aktifSoru = aktifSoru % sorular.length;
+        soruGoster();
+    } else {
+        soruGoster();
+    }
+}
+
+soruGoster();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Köstebek Vurmaca - Fiil Oyunu</title>
+<style>
+body {
+    margin:0;
+    padding:0;
+    font-family: 'Comic Sans MS', cursive;
+    background: linear-gradient(#D2B48C, #A0522D);
+    overflow:hidden;
+}
+
+h1 { text-align:center; color:white; text-shadow:2px 2px #000; }
+
+#oyunAlani {
+    display:grid;
+    grid-template-columns: repeat(5, 90px);
+    grid-template-rows: repeat(5, 90px);
+    gap:5px;
+    width: 475px;
+    margin: 30px auto;
+}
+
+.kostebek {
+    background: brown;
+    border-radius: 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    color:white;
+    cursor:pointer;
+    font-size:14px;
+    opacity:0;
+    transform: translateY(20px);
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.kostebek.show {
+    opacity:1;
+    transform: translateY(0);
+}
+
+#puanSüre {
+    text-align:center;
+    font-size:22px;
+    margin-top:10px;
+    color:white;
+    text-shadow:1px 1px #000;
+}
+</style>
+</head>
+<body>
+
+<h1>Köstebek Vurmaca - Geçişsiz Fiiller</h1>
+<div id="puanSüre">
+    Puan: <span id="puan">0</span> | Combo: <span id="combo">0</span> | Süre: <span id="timer">60</span>s
+</div>
+
+<div id="oyunAlani"></div>
+
+<audio id="sesDogru" src="https://actions.google.com/sounds/v1/cartoon/crying_baby.ogg"></audio>
+<audio id="sesYanlis" src="https://actions.google.com/sounds/v1/cartoon/laughing.ogg"></audio>
+
+<script>
+let dogruFiiller = ["uyu","gel","git","yürü","otur","ağla","sararmak","solmak","bitmek","büyümek","uyanmak","kaçmak","yuvarlanmak","küflenmek","ölmek","gülmek","yaşamak","hastalanmak","doğmak","esmek","oynamak","uçmak","kızmak","susamak","dolmak","acıkmak"];
+let yanlisFiiller = ["yıkamak","dağıtmak","yuvarlamak","yıkamak","toplamak","çıkarmak","söylemek","sevmek","doğurmak","çağırmak","çıkarmak","kızdırmak","uzatmak","çevirmek","gitmek","bitirmek","doldurmak","kurmak","bozmak","kesmek","yazmak","silmek","okumak","sevmek","sevdirmek","büyütmek","korumak","sürmek","içmek"];
+
+let oyunAlani = document.getElementById("oyunAlani");
+let puan = 0;
+let combo = 0;
+let sure = 60;
+
+let hucreler=[];
+for(let i=0;i<25;i++){
+    let k = document.createElement('div');
+    k.classList.add('kostebek');
+    oyunAlani.appendChild(k);
+    hucreler.push(k);
+}
+
+function kostebekGoster(h){
+    if(h.classList.contains('show')) return;
+    let dogruMu = Math.random()<0.5;
+    let kelime = dogruMu ? dogruFiiller[Math.floor(Math.random()*dogruFiiller.length)]
+                          : yanlisFiiller[Math.floor(Math.random()*yanlisFiiller.length)];
+    h.innerText = kelime;
+    h.dataset.dogru = dogruMu?'true':'false';
+    h.classList.add('show');
+    
+    setTimeout(()=>{
+        h.classList.remove('show');
+        h.innerText='';
+    },4000);
+}
+
+let kosSayilari = [1,2];
+let kosIdx = 0;
+
+function kosDongusu(){
+    let sayi = kosSayilari[kosIdx];
+    kosIdx = (kosIdx+1) % kosSayilari.length;
+    
+    let aktif = hucreler.filter(h=>h.classList.contains('show')).length;
+    let ekle = Math.min(sayi - aktif, 2 - aktif);
+    let secilen = [];
+    while(secilen.length < ekle){
+        let r = Math.floor(Math.random()*25);
+        if(!hucreler[r].classList.contains('show') && !secilen.includes(r)) secilen.push(r);
+    }
+    secilen.forEach(idx=>{
+        kostebekGoster(hucreler[idx]);
+    });
+    
+    setTimeout(kosDongusu, 2000);
+}
+
+oyunAlani.addEventListener('click', function(e){
+    if(e.target.classList.contains('kostebek') && e.target.classList.contains('show')){
+        let dogruSes = document.getElementById("sesDogru");
+        let yanlisSes = document.getElementById("sesYanlis");
+        if(e.target.dataset.dogru==='true'){
+            puan +=1;
+            combo +=1;
+            if(combo>0 && combo%5===0) puan+=2; 
+            if(combo%4===0) sure+=1;
+            document.getElementById("puan").innerText = puan;
+            document.getElementById("combo").innerText = combo;
+            dogruSes.play();
+        } else {
+            combo=0;
+            document.getElementById("combo").innerText = combo;
+            yanlisSes.play();
+        }
+        e.target.classList.remove('show');
+        e.target.innerText='';
+    }
+});
+
+function zamanlayici(){
+    sure--;
+    document.getElementById("timer").innerText = sure;
+    if(sure<=0){
+        alert("Oyun bitti! Toplam puan: "+puan);
+        clearInterval(timerInterval);
+    }
+}
+
+let timerInterval = setInterval(zamanlayici,1000);
+kosDongusu();
+</script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kelime Ormanı v4.0 - Final</title>
+    <style>
+        :root { 
+            --emerald: #004d40;
+            --bark: #3e2723;
+            --light-bark: #5d4037;
+            --sky: #b2ebf2;
+            --gold: #ffd700;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--emerald); color: white; overflow: hidden; }
+        
+        #setup { position: fixed; inset: 0; background: var(--emerald); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+        .rules-container { background: rgba(0,0,0,0.4); padding: 25px; border-radius: 20px; border: 2px solid var(--gold); max-width: 600px; margin-bottom: 20px; }
+        
+        #game-container { display: none; flex-direction: column; height: 100vh; }
+        #forest-world { flex: 1.2; display: flex; background: var(--sky); padding: 10px; gap: 15px; border-bottom: 15px solid #2e1a16; position: relative; }
+        .team-forest { flex: 1; position: relative; background: rgba(255,255,255,0.1); border-radius: 20px 20px 0 0; display: flex; flex-wrap: wrap; align-content: flex-end; padding: 15px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.2); }
+        .team-forest.active { background: rgba(255,255,255,0.35); border: 4px solid var(--gold); box-shadow: 0 0 30px var(--gold); }
+        
+        #ui-panel { height: 380px; background: var(--bark); display: flex; padding: 25px; gap: 30px; border-top: 5px solid #2e1a16; }
+        #question-area { flex: 2; text-align: center; }
+        #options-area { flex: 1; display: flex; flex-direction: column; gap: 10px; background: var(--light-bark); padding: 20px; border-radius: 15px; }
+        
+        .opt-btn { padding: 12px; background: #795548; color: white; border: 1px solid #a1887f; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s; }
+        .opt-btn:hover { background: #8d6e63; transform: scale(1.03); }
+
+        #ruler-box { margin-top: 15px; }
+        #timer-bg { height: 15px; background: #222; border-radius: 10px; overflow: hidden; position: relative; }
+        #timer-fill { height: 100%; width: 100%; background: #2ecc71; transition: 0.1s linear; }
+        .ruler-marks { display: flex; justify-content: space-between; font-size: 11px; color: #d7ccc8; margin-top: 5px; font-weight: bold; }
+
+        .tree { display: inline-block; transform-origin: bottom; animation: grow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .tree-giant { font-size: 85px; filter: drop-shadow(0 0 10px var(--gold)); z-index: 5; }
+        .tree-large { font-size: 55px; }
+        .tree-normal { font-size: 30px; }
+
+        .btn-finish { position: fixed; top: 20px; right: 20px; background: #c62828; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 1100; box-shadow: 0 4px 0 #8e0000; }
+        
+        @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-12px); } 75% { transform: translateX(12px); } }
+        
+        .flash-emoji { position: absolute; font-size: 50px; animation: flashUp 2s forwards; pointer-events: none; }
+        @keyframes flashUp { 0% { transform: scale(0) translateY(0); opacity: 1; } 100% { transform: scale(2) translateY(-200px); opacity: 0; } }
+        
+        .final-animal { position: absolute; font-size: 40px; animation: wander 5s infinite alternate ease-in-out; }
+        @keyframes wander { from { transform: translateX(0); } to { transform: translateX(40px); } }
+    </style>
+</head>
+<body>
+
+<div id="setup">
+    <h1 style="font-size: 3.5rem; color: var(--gold); margin-bottom: 10px;">🌲 KELİME ORMANI v4.0</h1>
+    <div class="rules-container">
+        <h3>📜 NASIL OYNANIR?</h3>
+        <p>Gruplar sırayla gelen cümledeki bozukluğu teşhis eder.</p>
+        <p>⏱️ <b>0-5 Sn:</b> DEV SEKQUOYA (Hızlı ve Net!)</p>
+        <p>⏱️ <b>5-10 Sn:</b> BÜYÜK AĞAÇ (Güzel Hamle!)</p>
+        <p>⏱️ <b>10+ Sn:</b> NORMAL FİDAN (Yavaş ama Doğru.)</p>
+        <p>❌ Yanlış cevapta ağaç dikilmez, orman sarsılır!</p>
+    </div>
+    <div style="margin-bottom: 20px;">
+        GRUP SAYISI: <select id="teamCountSelect" style="padding: 10px; font-size: 1.2rem; border-radius: 8px;"><option value="2">2 GRUP</option><option value="3">3 GRUP</option><option value="4" selected>4 GRUP</option></select>
+    </div>
+    <button onclick="initGame()" style="padding: 15px 60px; font-size: 1.5rem; background: #fb8c00; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 5px 0 #b35900;">BAŞLAT</button>
+</div>
+
+<button class="btn-finish" onclick="endGame()">OYUNU BİTİR</button>
+
+<div id="game-container">
+    <div id="forest-world"></div>
+    <div id="ui-panel">
+        <div id="question-area">
+            <h2 id="turn-label" style="color:var(--gold); margin-top:0;">Grup 1 Hazırlan!</h2>
+            <div id="sentence-box" style="font-size: 1.7rem; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 15px; border: 2px dashed #8d6e63; min-height: 60px;">Cümleler Yükleniyor...</div>
+            <div id="ruler-box">
+                <div id="timer-bg"><div id="timer-fill"></div></div>
+                <div class="ruler-marks">
+                    <span style="color:#2ecc71">0s (DEV)</span>
+                    <span style="color:#f1c40f">5s (BÜYÜK)</span>
+                    <span style="color:#e74c3c">10s (FİDAN)</span>
+                </div>
+            </div>
+            <p id="timer-text" style="font-weight:bold; color: #d7ccc8;">Süre: 0.0s</p>
+        </div>
+        <div id="options-area"></div>
+    </div>
+</div>
+
+<script>
+    const rawData = [
+        ["Ben ve Ayşe yarın kütüphaneye gidecek.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hiç kimse yerinden kıpırdamasın, kapıya baksın.", "Özne Eksikliği"],
+        ["Sen ve o bu işi hemen bitirmelisin.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Herkes maçın sonucunu bekliyor, sessiz kalmıyordu.", "Özne Eksikliği"],
+        ["Düşüncelerim artık eskisi gibi beni heyecanlandırmıyorlar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ne sen ne de kardeşin bu konuda haklı değilsiniz.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Kimse ona inanmıyor, yalancılıkla suçluyordu.", "Nesne Eksikliği"],
+        ["Ağaçların yaprakları sarardılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hiçbiri ders çalışmıyor, oyun oynuyordu.", "Özne Eksikliği"],
+        ["Kediler damda kavga ediyorlar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hayallerim bir bir suya düştüler.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ayhan ve sen bu raporu hazırlayacak.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Kimse konuşmuyor, dışarıyı seyrediyordu.", "Özne Eksikliği"],
+        ["Masadaki tabaklar yere düşüp kırıldılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Herkes onu seviyor, üzmüyordu.", "Nesne Eksikliği"],
+        ["Köpekler sabaha kadar havladılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ne annesi ne babası bu duruma itiraz etmedi.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Arkadaşına yardım etti ve çok sevdi.", "Nesne Eksikliği"],
+        ["Kitaba baktı ama okumadı.", "Nesne Eksikliği"],
+        ["Size her zaman güveniyor ve destekliyoruz.", "Nesne Eksikliği"],
+        ["Eskişehir’i çok seviyor, her yaz gidiyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Sorunu hemen anladı ve çözüm buldu.", "Dolaylı Tümleç Eksikliği"],
+        ["Çocuklara masal okudu, uyuttu.", "Nesne Eksikliği"],
+        ["Evin inşaatı bitti, taşındılar.", "Dolaylı Tümleç Eksikliği"],
+        ["Seni hiç unutmadım, her gün mektup yazdım.", "Dolaylı Tümleç Eksikliği"],
+        ["Okula gelmiyor, telefonla arıyordu.", "Nesne Eksikliği"],
+        ["Yaz tatilinde İzmir’e gidecek, tatil yapacaktı.", "Dolaylı Tümleç Eksikliği"],
+        ["Onu hem dövdü hem de ağır sözler söyledi.", "Dolaylı Tümleç Eksikliği"],
+        ["İstanbul’u gezmeyi çok istiyor ama hiç gidemiyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Kardeşine hediye aldı ve mutlu etti.", "Nesne Eksikliği"],
+        ["Bu hatayı ben, o ise hiçbir zaman kabul etmedi.", "Yüklem Eksikliği"],
+        ["Arkadaşını yanına çağırdı ve bir şeyler fısıldadı.", "Dolaylı Tümleç Eksikliği"],
+        ["Balıkları akvaryuma koydu, yem verdi.", "Dolaylı Tümleç Eksikliği"],
+        ["Sinemayı çok seviyor ama vakit bulamıyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Televizyonun sesi çok çıkıyor, rahatsız ediyordu.", "Nesne Eksikliği"],
+        ["Hiçbiri okula gitmemiş, evde kalmıştı.", "Özne Eksikliği"],
+        ["Arkadaşına sarıldı ve tebrik etti.", "Nesne Eksikliği"],
+        ["Şiiri herkes okudu ama anlamadı.", "Nesne Eksikliği"],
+        ["Hepsi toplantıya katıldı, geç kalmadı.", "Özne Eksikliği"],
+        ["Kardeşini özledi ve mektup yazdı.", "Dolaylı Tümleç Eksikliği"],
+        ["Kimse sorumluluk almıyor, kaçıyordu.", "Özne Eksikliği"],
+        ["Kuşun kanadı kırılmış, uçamıyordu.", "Özne Eksikliği"],
+        ["Çayını tazeledi, bir yudum aldı.", "Dolaylı Tümleç Eksikliği"],
+        ["Masayı sildi, örtüsünü serdi.", "Tamlayan Eksikliği"],
+        ["Onu hiç sevmiyor, nefret ediyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Herkes ödevini yaptı, unutmadı.", "Özne Eksikliği"],
+        ["Ağacı dikti, can suyunu verdi.", "Dolaylı Tümleç Eksikliği"],
+        ["Anneme yardım ettim, mutlu oldu.", "Özne Eksikliği"],
+        ["Derslerine çalışıyor, ihmal etmiyordu.", "Nesne Eksikliği"],
+        ["Şehri çok beğendiler, ayrılmak istemediler.", "Dolaylı Tümleç Eksikliği"],
+        ["Sorunları dinledi, çözüm üretti.", "Dolaylı Tümleç Eksikliği"],
+        ["Hediye paketini açtı, baktı.", "Dolaylı Tümleç Eksikliği"],
+        ["Resme baktı, çok beğendi.", "Nesne Eksikliği"],
+        ["Kimse dinlemiyor, konuşuyordu.", "Özne Eksikliği"],
+        ["Onu bekledik ama gelmedi.", "Özne Eksikliği"],
+        ["Resim yapmayı severim ama zaman ayıramam.", "Dolaylı Tümleç Eksikliği"],
+        ["Hikayeyi dinledi, çok etkilendi.", "Dolaylı Tümleç Eksikliği"]
+    ];
+
+    const categories = ["Özne-Yüklem Uyumsuzluğu", "Özne Eksikliği", "Nesne Eksikliği", "Dolaylı Tümleç Eksikliği", "Yüklem Eksikliği", "Tamlayan Eksikliği"];
+    
+    let teams = [], currentTurn = 0, questionIdx = 0, startTime, timer;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function initGame() {
+        const count = document.getElementById('teamCountSelect').value;
+        const world = document.getElementById('forest-world');
+        for(let i=0; i<count; i++) {
+            teams.push({id: i, score: 0, name: (i+1) + ". Grup"});
+            world.innerHTML += `<div class="team-forest" id="f-${i}"><div style="position:absolute; top:5px; left:50%; transform:translateX(-50%); font-size:12px; background:rgba(0,0,0,0.6); padding:2px 10px; border-radius:10px;">GRUP ${i+1}</div></div>`;
+        }
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('game-container').style.display = 'flex';
+        loadNext();
+    }
+
+    function loadNext() {
+        if(questionIdx >= rawData.length) { endGame(); return; }
+        document.querySelectorAll('.team-forest').forEach(f => f.classList.remove('active'));
+        document.getElementById(`f-${currentTurn}`).classList.add('active');
+        document.getElementById('turn-label').innerText = teams[currentTurn].name + " Hamlesi!";
+        document.getElementById('sentence-box').innerText = rawData[questionIdx][0];
+        
+        const area = document.getElementById('options-area');
+        area.innerHTML = '';
+        categories.forEach(cat => {
+            const b = document.createElement('button'); b.className = 'opt-btn'; b.innerText = cat;
+            b.onclick = () => check(cat); area.appendChild(b);
+        });
+        
+        startTime = Date.now();
+        clearInterval(timer);
+        timer = setInterval(() => {
+            let s = (Date.now() - startTime) / 1000;
+            document.getElementById('timer-text').innerText = "Süre: " + s.toFixed(1) + "s";
+            let p = Math.max(0, 100 - (s * 6.6));
+            document.getElementById('timer-fill').style.width = p + "%";
+            document.getElementById('timer-fill').style.background = s < 5 ? "#2ecc71" : (s < 10 ? "#f1c40f" : "#e74c3c");
+        }, 50);
+    }
+
+    function check(choice) {
+        clearInterval(timer);
+        const duration = (Date.now() - startTime) / 1000;
+        if(choice === rawData[questionIdx][1]) {
+            playSfx(600, 900); spawnReward(currentTurn); addTree(currentTurn, duration);
+            teams[currentTurn].score += (duration < 5 ? 3 : (duration < 10 ? 2 : 1));
+        } else {
+            playSfx(150, 100); 
+            document.getElementById('ui-panel').classList.add('shake');
+            setTimeout(() => document.getElementById('ui-panel').classList.remove('shake'), 400);
+        }
+        questionIdx++;
+        currentTurn = (currentTurn + 1) % teams.length;
+        setTimeout(loadNext, 700);
+    }
+
+    function addTree(tid, time) {
+        const forest = document.getElementById(`f-${tid}`);
+        const tree = document.createElement('span');
+        tree.className = 'tree ' + (time < 5 ? 'tree-giant' : (time < 10 ? 'tree-large' : 'tree-normal'));
+        tree.innerText = ['🌳', '🌲', '🌴'][Math.floor(Math.random()*3)];
+        forest.appendChild(tree);
+    }
+
+    function spawnReward(tid) {
+        const forest = document.getElementById(`f-${tid}`);
+        const emojis = ['🦋', '🐦', '🐿️', '🌸', '✨'];
+        for(let i=0; i<4; i++) {
+            const e = document.createElement('div'); e.className = 'flash-emoji';
+            e.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+            e.style.left = Math.random() * 80 + "%";
+            e.style.bottom = "20%";
+            forest.appendChild(e);
+            setTimeout(() => e.remove(), 2000);
+        }
+    }
+
+    function playSfx(startF, endF) {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(startF, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(endF, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function endGame() {
+        clearInterval(timer);
+        let winner = teams.reduce((p, c) => (p.score > c.score) ? p : c);
+        document.getElementById('ui-panel').innerHTML = `<div style="width:100%; text-align:center;"><h1 style="color:var(--gold); font-size:3rem;">🏆 ŞAMPİYON ORMAN: ${winner.name}</h1><button onclick="location.reload()" style="padding:15px 40px; cursor:pointer; font-weight:bold; border-radius:10px;">YENİDEN BAŞLAT</button></div>`;
+        
+        const winForest = document.getElementById(`f-${winner.id}`);
+        winForest.style.background = "#2ecc71";
+        const animals = ['🦌', '🦊', '🐇', '🐿️', '🐦', '🦋'];
+        for(let i=0; i<25; i++) {
+            const a = document.createElement('div');
+            a.className = 'final-animal';
+            a.innerText = animals[i % animals.length];
+            a.style.left = Math.random() * 85 + "%";
+            a.style.top = Math.random() * 80 + "%";
+            winForest.appendChild(a);
+        }
+    }
+</script>
+</body>
+</html>

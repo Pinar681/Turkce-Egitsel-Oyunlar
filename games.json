@@ -1,96 +1,92 @@
 [
   {
-    "category": "Türkçe",
-    "id": "turkce",
-    "file": "deyim-i 3 oyun.html",
-    "title": "Deyim Eşleştirme",
-    "icon": "💬🔗",
-    "picture": "blue",
-    "tagClass": "turkce-tag",
-    "description": "Deyimleri eşleştirerek Türkçe becerilerini pekiştir."
+    "id": "masal-1-eslestirme",
+    "title": "Masal Eşleştirme Oyunu",
+    "category": "Masal / Metin Türleri",
+    "category_id": "masal",
+    "description": "Masal unsurlarını, bölümlerini ve kavramlarını eşleştirme oyunu.",
+    "icon": "✨",
+    "file": "Masal 1 eşleştirme.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "sandık masaldestan.html",
-    "title": "Efsaneler Sandığı",
-    "icon": "📜✨",
-    "picture": "purple",
-    "description": "Masal ve destan konularını eğlenceli bir yarışmayla keşfet."
+    "id": "uc-haylaz-masali",
+    "title": "Üç Haylaz'ın Yolu",
+    "category": "Masal / Metin Türleri",
+    "category_id": "masal",
+    "description": "Masal yolculuğu boyunca soruları çözerek çiftliğe ulaşma macerası.",
+    "icon": "🏰",
+    "file": "Üç Haylaz Masalı oyunu.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "Çarkıfelek masaldestan.html",
-    "title": "Çarkıfelek: Masal & Destan",
-    "icon": "❓🏆",
-    "picture": "orange",
-    "description": "Masal ve destan sorularıyla çarkıfelek yarışmasına katıl."
+    "id": "etken-edilgen",
+    "title": "Etken / Edilgen Yarışması",
+    "category": "Fiilde Çatı",
+    "category_id": "fiilde-cati",
+    "description": "Cümlelerdeki etken ve edilgen çatı özelliklerini bulma yarışması.",
+    "icon": "⚡",
+    "file": "Etken edilgen.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "Ejderha masal.html",
-    "title": "Ejderha Masal",
-    "icon": "🐉📖",
-    "picture": "cyan",
-    "description": "Masal dünyasında eğlenceli bir maceraya çık."
+    "id": "gecisli-gecissiz",
+    "title": "Geçişli / Geçişsiz Fiil Yarışması",
+    "category": "Fiilde Çatı",
+    "category_id": "fiilde-cati",
+    "description": "Nesne alabilen (geçişli) ve alamayan (geçişsiz) fiilleri ayırt etme oyunu.",
+    "icon": "🎯",
+    "file": "Geçişli geçişsiz.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "masal_destan_dedektifleri_hazırbulunuşluk.html",
-    "title": "Masal & Destan Dedektifleri",
-    "icon": "🔎📜",
-    "picture": "pink",
-    "description": "Masal ve destan ipuçlarını bulup dedektiflik yap."
+    "id": "gecissiz-fiil-kostebek",
+    "title": "Köstebek Vurmaca: Geçişsiz Fiiller",
+    "category": "Fiilde Çatı",
+    "category_id": "fiilde-cati",
+    "description": "Doğru geçişsiz fiillere sahip köstebekleri yakalayarak puan toplama oyunu.",
+    "icon": "🔨",
+    "file": "geçişsiz fiil köstebek.html"
   },
   {
-    "category": "Genel Kültür",
-    "id": "genel-kultur",
-    "file": "Bilmece_oyun(1).html",
-    "title": "Bilmece Turnuvası",
-    "icon": "🧩❓",
-    "picture": "pink",
-    "tagClass": "genel-tag",
-    "description": "Bilmecelerle düşün, yarış ve eğlen."
+    "id": "kelime-ormani",
+    "title": "Kelime Ormanı (Anlatım Bozukluğu)",
+    "category": "Anlatım Bozuklukları",
+    "category_id": "anlatim-bozuklugu",
+    "description": "Anlatım bozukluklarını hızlıca tespit ederek ormanı ağaçlarla büyütme oyunu.",
+    "icon": "🌲",
+    "file": "3anlatım bozukluğu ormanı oyun.html"
   },
   {
-    "category": "Türkçe",
-    "id": "turkce",
-    "file": "yazımyanlışıbalon_oyun.html",
-    "title": "Yazım Yanlışı Balon Oyunu",
-    "icon": "🎈✏️",
-    "picture": "blue",
-    "tagClass": "turkce-tag",
-    "description": "Yazım yanlışlarını balonları patlatarak eğlenceli bir şekilde pekiştir."
+    "id": "kelime-hazinesi",
+    "title": "Kelime Hazinesi: Sandık Oyunu",
+    "category": "Anlatım Bozuklukları",
+    "category_id": "anlatim-bozuklugu",
+    "description": "Anlatım bozukluğu sorularını çözerek ganimet ve hazineleri toplama oyunu.",
+    "icon": "👑",
+    "file": "Anlatım bozukluğu sandık oyun.html"
   },
   {
-    "category": "Türkçe",
-    "id": "turkce",
-    "file": "ZARF AÇ anlatım bozukluğu oyun.html",
-    "title": "Zarf Aç: Anlatım Bozukluğu",
-    "icon": "📦✏️",
-    "picture": "orange",
-    "tagClass": "turkce-tag",
-    "description": "Zarf açarak anlatım bozukluklarını bul ve Türkçe becerilerini geliştir."
+    "id": "cark-anlatim-bozuklugu-5",
+    "title": "Mega Çarkıfelek (Pro Edition)",
+    "category": "Anlatım Bozuklukları",
+    "category_id": "anlatim-bozuklugu",
+    "description": "Çarkı çevirip puanları toplayarak sınıfta tatlı bir rekabet yaşatan anlatım bozukluğu oyunu.",
+    "icon": "🎡",
+    "file": "çark anlatım bozukluğu 5.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "Masalın Yapı unsurları Çarkıfelek.html",
-    "title": "Masalın Yapı Unsurları Çarkıfelek",
-    "icon": "🎡📜",
-    "picture": "purple",
-    "description": "Masalın yapı unsurlarını çarkıfelek oyunu ile pekiştir."
+    "id": "cark-anlatim-bozuklugu-6",
+    "title": "Mega Çarkıfelek (Grup İsimli)",
+    "category": "Anlatım Bozuklukları",
+    "category_id": "anlatim-bozuklugu",
+    "description": "Özel grup isimleri belirleyerek oynanabilen çarkıfelek anlatım bozukluğu oyunu.",
+    "icon": "🏆",
+    "file": "çark anlatım bozukluğu 6.html"
   },
   {
-    "category": "Masal ve Destanlarımız",
-    "id": "masal-destan",
-    "file": "masalın yapı unsurları kart oyunu.html",
-    "title": "Masalın Yapı Unsurları Kart Oyunu",
-    "icon": "🃏📜",
-    "picture": "cyan",
-    "description": "Masalın yapı unsurlarını kartlarla keşfet ve soruları yanıtla."
+    "id": "zarf-aci-oyunu",
+    "title": "Zarf Avı: Anlatım Bozukluğu",
+    "category": "Anlatım Bozuklukları",
+    "category_id": "anlatim-bozuklugu",
+    "description": "Gizemli zarfları seçerek anlatım bozukluklarını düzeltme ve sürpriz puanlar kazanma oyunu.",
+    "icon": "✉️",
+    "file": "ZARF AÇ anlatım bozukluğu oyun.html"
   }
 ]

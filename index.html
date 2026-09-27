@@ -1,67 +1,271 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Türkçe dersi için eğitsel oyunlar">
-  <title>Türkçe Dersi İçin Eğitsel Oyunlar</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkçe Eğitsel Oyunlar Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(23, 32, 54, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --accent: #ec4899;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 18px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 9999px;
+            color: #818cf8;
+            font-weight: 600;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        p.subtitle {
+            color: var(--text-sub);
+            font-size: 1.15rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Kategori Filtre Butonları */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-sub);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+        }
+
+        /* Oyun Kartları Grid */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(99, 102, 241, 0.15);
+        }
+
+        .game-icon {
+            font-size: 2.75rem;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .game-tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .game-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+
+        .game-desc {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: white;
+            padding: 13px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.25s ease;
+        }
+
+        .play-btn:hover {
+            background: linear-gradient(135deg, #4338ca, #4f46e5);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transform: scale(1.02);
+        }
+
+        footer {
+            margin-top: 60px;
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 0.875rem;
+        }
+    </style>
 </head>
 <body>
-  <header class="navbar">
-    <a class="logo" href="index.html"><span class="logo-icon">📚</span><span>Türkçe <b>Eğitsel Oyunlar</b></span></a>
-    <nav>
-      <a class="active" href="index.html">⌂ Ana Sayfa</a>
-      <a href="#oyunlar">🎮 Oyunlar</a>
-      <a href="#dersler">📚 Dersler</a>
-    </nav>
-    <div class="nav-actions">
-      <button id="soundBtn" title="Ses aç/kapat">🔊</button>
-      <button id="fullscreenBtn" title="Tam ekran">⛶</button>
+
+    <div class="container">
+        <header>
+            <span class="badge">Eğitsel İçerik Portalı</span>
+            <h1>Türkçe Eğitsel Oyunlar</h1>
+            <p class="subtitle">İnteraktif, eğlenceli ve öğretici sınıf içi yarışma ve etkinlik oyunları</p>
+        </header>
+
+        <div class="filters" id="filters">
+            <button class="filter-btn active" onclick="filterGames('all')">Tüm Oyunlar</button>
+            <button class="filter-btn" onclick="filterGames('masal')">Masal / Metin Türleri</button>
+            <button class="filter-btn" onclick="filterGames('fiilde-cati')">Fiilde Çatı</button>
+            <button class="filter-btn" onclick="filterGames('anlatim-bozuklugu')">Anlatım Bozuklukları</button>
+        </div>
+
+        <div class="games-grid" id="gamesGrid">
+            <!-- Oyun kartları dinamik olarak games.json üzerinden yüklenir -->
+        </div>
+
+        <footer>
+            <p>Türkçe Eğitsel Oyunlar © 2026 • GitHub Pages ile Yayında</p>
+        </footer>
     </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <div class="hero-content">
-        <p class="eyebrow">📚 Türkçe dersi için eğitsel oyunlar</p>
-        <h1>Öğrenirken<br><span>eğlen!</span></h1>
-        <p class="hero-text">Türkçe dersi ve Masal ve Destanlarımız seçmeli dersi için hazırlanan eğitsel oyunlarla öğrenmeyi daha eğlenceli hâle getir.</p>
-        <a class="primary-btn" href="#oyunlar">🎮 Oyunları Keşfet →</a>
-      </div>
-      <div class="hero-illustration">
-        <div class="bubble bubble-a">★</div><div class="bubble bubble-b">A</div><div class="bubble bubble-c">✎</div>
-        <div class="tablet">📖</div><div class="student student-one">👦🏻</div><div class="student student-two">👧🏻</div><div class="desk"></div>
-      </div>
-    </section>
+    <script>
+        let allGames = [];
 
-    <section id="dersler" class="section">
-      <div class="section-heading"><div><p class="eyebrow">Dersini seç</p><h2>Derslere Göre Oyunlar</h2></div><span>Bir alan seç ve oyunlara geç 👇</span></div>
-      <div class="subject-grid">
-        <a class="subject turkce" href="#turkce"><div class="subject-icon">📖</div><div><h3>Türkçe</h3><p>Deyimler ve Türkçe becerilerini destekleyen oyunlar</p></div><span class="round-arrow">→</span></a>
-        <a class="subject purple" href="#masal-destan"><div class="subject-icon">📜</div><div><h3>Masal ve Destanlarımız</h3><p>Masal ve destan konulu seçmeli ders oyunları</p></div><span class="round-arrow">→</span></a>
-        <a class="subject genel" href="#genel-kultur"><div class="subject-icon">💡</div><div><h3>Genel Kültür</h3><p>Bilmece ve düşünmeyi destekleyen eğlenceli oyunlar</p></div><span class="round-arrow">→</span></a>
-      </div>
-    </section>
+        async function loadGames() {
+            try {
+                const response = await fetch('games.json');
+                allGames = await response.json();
+                renderGames(allGames);
+            } catch (error) {
+                console.error("games.json yüklenemedi:", error);
+            }
+        }
 
-    <section id="oyunlar" class="section">
-      <div class="section-heading"><div><p class="eyebrow">Haydi başlayalım!</p><h2>Oyunlar</h2></div></div>
-      <div id="gameSections"></div>
-      <div id="gameError" class="game-load-error" hidden>
-        Oyun listesi yüklenemedi. Lütfen sayfayı yenileyin.
-      </div>
-    </section>
+        function renderGames(games) {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.setAttribute('data-category', game.category_id);
+                card.innerHTML = `
+                    <div>
+                        <div class="game-icon">${game.icon}</div>
+                        <div><span class="game-tag">${game.category}</span></div>
+                        <h2 class="game-title">${game.title}</h2>
+                        <p class="game-desc">${game.description}</p>
+                    </div>
+                    <a href="${encodeURIComponent(game.file)}" class="play-btn">
+                        Oyunu Başlat ➔
+                    </a>
+                `;
+                grid.appendChild(card);
+            });
+        }
 
-    <section class="features">
-      <div><strong>🖥️ Akıllı Tahta Uyumlu</strong><small>Bilgisayar, tablet ve akıllı tahtalarda kullanılabilir</small></div>
-      <div><strong>☝️ Dokunmatik Uyumlu</strong><small>Dokunmatik ekranlarda kolay kullanım</small></div>
-      <div><strong>⚡ Hızlı ve Kolay</strong><small>Her oyun tek tıkla açılır</small></div>
-      <div><strong>🔊 Ses Aç / Kapat</strong><small>İhtiyaca göre ses kontrolü</small></div>
-      <div><strong>📚 Türkçe Odaklı</strong><small>Türkçe ve ilgili seçmeli dersler için</small></div>
-    </section>
-  </main>
+        function filterGames(category) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
 
-  <footer>Türkçe dersi için eğitsel oyunlar 🌟</footer>
-  <script src="script.js"></script>
+            if (category === 'all') {
+                renderGames(allGames);
+            } else {
+                const filtered = allGames.filter(g => g.category_id === category);
+                renderGames(filtered);
+            }
+        }
+
+        loadGames();
+    </script>
 </body>
 </html>

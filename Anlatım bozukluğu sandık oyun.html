@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kelime Hazinesi - Ganimet Avcısı</title>
+    <style>
+        :root { 
+            --bordo: #4a0010; 
+            --dark-bordo: #260008;
+            --gold: #ffd700;
+            --panel: #1a1a1a;
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bordo); color: white; overflow: hidden; }
+        
+        #setup { position: fixed; inset: 0; background: var(--bordo); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; }
+        .rules-container { background: rgba(0,0,0,0.5); padding: 25px; border-radius: 15px; border: 2px solid var(--gold); max-width: 600px; margin-bottom: 20px; font-size: 1.1rem; }
+        
+        #game-container { display: none; flex-direction: column; height: 100vh; }
+        #treasure-room { flex: 1.2; display: flex; padding: 20px; gap: 20px; background: radial-gradient(circle, var(--bordo) 0%, var(--dark-bordo) 100%); position: relative; }
+        
+        .team-vault { 
+            flex: 1; position: relative; background: rgba(0,0,0,0.5); border-radius: 15px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+            padding: 20px; border: 2px solid #444; transition: 0.4s all; overflow: hidden;
+        }
+        .team-vault.active { border-color: white; background: rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .team-vault.leader { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); box-shadow: inset 0 0 30px rgba(255,215,0,0.2); }
+        
+        .team-vault::before {
+            content: '👑'; position: absolute; font-size: 180px; top: 40%; left: 50%;
+            transform: translate(-50%, -50%); opacity: 0; transition: 0.5s; pointer-events: none;
+        }
+        .team-vault.leader::before { opacity: 0.15; filter: drop-shadow(0 0 20px var(--gold)); }
+        
+        .vault-label { position: absolute; top: 15px; font-weight: bold; font-size: 1.1rem; background: #222; padding: 8px 15px; border-radius: 10px; border: 1px solid #555; z-index: 10; text-align: center; }
+        .leader .vault-label { color: var(--gold); border-color: var(--gold); }
+        
+        .chest-box { font-size: 70px; position: relative; z-index: 5; transition: 0.2s; }
+        .gold-area { position: absolute; bottom: 80px; width: 100%; height: 60%; pointer-events: none; z-index: 4; }
+        .loot-item { position: absolute; font-size: 30px; animation: dropIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        #ui-panel { height: 380px; background: var(--panel); display: flex; padding: 25px; gap: 30px; border-top: 5px solid var(--gold); box-shadow: 0 -10px 30px rgba(0,0,0,0.7); position: relative; z-index: 50; }
+        #question-area { flex: 2; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        #options-area { flex: 1; display: flex; flex-direction: column; gap: 10px; background: #2a2a2a; padding: 15px; border-radius: 15px; border: 1px solid #444; }
+        
+        .opt-btn { padding: 12px; background: #333; color: white; border: 1px solid #666; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s; }
+        .opt-btn:hover { background: var(--gold); color: black; transform: scale(1.02); }
+
+        #ruler-box { margin: 15px 0; width: 80%; mx-auto; align-self: center; }
+        #timer-bg { height: 12px; background: #222; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
+        #timer-fill { height: 100%; width: 100%; background: #00bcd4; transition: 0.1s linear; }
+        .ruler-marks { display: flex; justify-content: space-between; font-size: 12px; margin-top: 5px; font-weight: bold; }
+
+        .btn-finish { position: fixed; top: 15px; right: 15px; background: #222; color: var(--gold); border: 2px solid var(--gold); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; z-index: 1100; transition: 0.2s; }
+        .btn-finish:hover { background: var(--gold); color: black; }
+        
+        @keyframes dropIn { 0% { transform: translateY(-50px) scale(1.5); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px); } 75% { transform: translateX(15px); } }
+        
+        .float-text { position: absolute; color: #2ecc71; font-weight: bold; font-size: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); animation: floatUp 1s forwards; pointer-events: none; z-index: 100; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="setup">
+    <h1 style="font-size: 3.5rem; color: var(--gold); margin-bottom: 10px;">👑 KELİME HAZİNESİ</h1>
+    <div class="rules-container">
+        <h3>📜 GANİMET KURALLARI</h3>
+        <p>⏱️ <b>0-5 Saniye:</b> Elmas (💎) +3 Puan</p>
+        <p>⏱️ <b>5-10 Saniye:</b> Altın Taç (👑) +2 Puan</p>
+        <p>⏱️ <b>10+ Saniye:</b> Normal Altın (🪙) +1 Puan</p>
+        <p>Lider olan grubun kasasında <b>Dev Altın Taç Filigranı</b> belirir!</p>
+    </div>
+    <div style="margin-bottom: 20px;">
+        GRUP SAYISI: <select id="teamCountSelect" style="padding: 10px; font-size: 1.2rem; border-radius: 8px; background: #222; color: var(--gold); border: 1px solid var(--gold);"><option value="2">2 GRUP</option><option value="3">3 GRUP</option><option value="4" selected>4 GRUP</option></select>
+    </div>
+    <button onclick="initGame()" style="padding: 15px 60px; font-size: 1.5rem; background: var(--gold); color: black; border: none; border-radius: 50px; cursor: pointer; font-weight: bold;">HAZİNE AVINI BAŞLAT</button>
+</div>
+
+<button class="btn-finish" onclick="endGame()">OYUNU BİTİR</button>
+
+<div id="game-container">
+    <div id="treasure-room"></div>
+    <div id="ui-panel">
+        <div id="question-area">
+            <h2 id="turn-label" style="color:var(--gold); margin-top:0;">Grup 1 Hamlesi</h2>
+            <div id="sentence-box" style="font-size: 1.6rem; background: #222; padding: 25px; border-radius: 12px; border: 1px solid #444; min-height: 60px; display:flex; align-items:center; justify-content:center;">Cümleler Yükleniyor...</div>
+            
+            <div id="ruler-box">
+                <div id="timer-bg"><div id="timer-fill"></div></div>
+                <div class="ruler-marks">
+                    <span style="color:#00bcd4">💎 Elmas (3p)</span>
+                    <span style="color:#f1c40f">👑 Taç (2p)</span>
+                    <span style="color:#e67e22">🪙 Altın (1p)</span>
+                </div>
+            </div>
+            <div id="time-display" style="color:#aaa; font-size:0.9rem;">Süre: 0.0s</div>
+        </div>
+        <div id="options-area"></div>
+    </div>
+</div>
+
+<script>
+    const rawData = [
+        ["Ben ve Ayşe yarın kütüphaneye gidecek.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hiç kimse yerinden kıpırdamasın, kapıya baksın.", "Özne Eksikliği"],
+        ["Sen ve o bu işi hemen bitirmelisin.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Herkes maçın sonucunu bekliyor, sessiz kalmıyordu.", "Özne Eksikliği"],
+        ["Düşüncelerim artık eskisi gibi beni heyecanlandırmıyorlar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ne sen ne de kardeşin bu konuda haklı değilsiniz.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Kimse ona inanmıyor, yalancılıkla suçluyordu.", "Nesne Eksikliği"],
+        ["Ağaçların yaprakları sarardılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hiçbiri ders çalışmıyor, oyun oynuyordu.", "Özne Eksikliği"],
+        ["Kediler damda kavga ediyorlar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Hayallerim bir bir suya düştüler.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ayhan ve sen bu raporu hazırlayacak.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Kimse konuşmuyor, dışarıyı seyrediyordu.", "Özne Eksikliği"],
+        ["Masadaki tabaklar yere düşüp kırıldılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Herkes onu seviyor, üzmüyordu.", "Nesne Eksikliği"],
+        ["Köpekler sabaha kadar havladılar.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Ne annesi ne babası bu duruma itiraz etmedi.", "Özne-Yüklem Uyumsuzluğu"],
+        ["Arkadaşına yardım etti ve çok sevdi.", "Nesne Eksikliği"],
+        ["Kitaba baktı ama okumadı.", "Nesne Eksikliği"],
+        ["Size her zaman güveniyor ve destekliyoruz.", "Nesne Eksikliği"],
+        ["Eskişehir’i çok seviyor, her yaz gidiyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Sorunu hemen anladı ve çözüm buldu.", "Dolaylı Tümleç Eksikliği"],
+        ["Çocuklara masal okudu, uyuttu.", "Nesne Eksikliği"],
+        ["Evin inşaatı bitti, taşındılar.", "Dolaylı Tümleç Eksikliği"],
+        ["Seni hiç unutmadım, her gün mektup yazdım.", "Dolaylı Tümleç Eksikliği"],
+        ["Okula gelmiyor, telefonla arıyordu.", "Nesne Eksikliği"],
+        ["Yaz tatilinde İzmir’e gidecek, tatil yapacaktı.", "Dolaylı Tümleç Eksikliği"],
+        ["Onu hem dövdü hem de ağır sözler söyledi.", "Dolaylı Tümleç Eksikliği"],
+        ["İstanbul’u gezmeyi çok istiyor ama hiç gidemiyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Kardeşine hediye aldı ve mutlu etti.", "Nesne Eksikliği"],
+        ["Bu hatayı ben, o ise hiçbir zaman kabul etmedi.", "Yüklem Eksikliği"],
+        ["Arkadaşını yanına çağırdı ve bir şeyler fısıldadı.", "Dolaylı Tümleç Eksikliği"],
+        ["Balıkları akvaryuma koydu, yem verdi.", "Dolaylı Tümleç Eksikliği"],
+        ["Sinemayı çok seviyor ama vakit bulamıyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Televizyonun sesi çok çıkıyor, rahatsız ediyordu.", "Nesne Eksikliği"],
+        ["Hiçbiri okula gitmemiş, evde kalmıştı.", "Özne Eksikliği"],
+        ["Arkadaşına sarıldı ve tebrik etti.", "Nesne Eksikliği"],
+        ["Şiiri herkes okudu ama anlamadı.", "Nesne Eksikliği"],
+        ["Hepsi toplantıya katıldı, geç kalmadı.", "Özne Eksikliği"],
+        ["Kardeşini özledi ve mektup yazdı.", "Dolaylı Tümleç Eksikliği"],
+        ["Kimse sorumluluk almıyor, kaçıyordu.", "Özne Eksikliği"],
+        ["Kuşun kanadı kırılmış, uçamıyordu.", "Özne Eksikliği"],
+        ["Çayını tazeledi, bir yudum aldı.", "Dolaylı Tümleç Eksikliği"],
+        ["Masayı sildi, örtüsünü serdi.", "Tamlayan Eksikliği"],
+        ["Onu hiç sevmiyor, nefret ediyordu.", "Dolaylı Tümleç Eksikliği"],
+        ["Herkes ödevini yaptı, unutmadı.", "Özne Eksikliği"],
+        ["Ağacı dikti, can suyunu verdi.", "Dolaylı Tümleç Eksikliği"],
+        ["Anneme yardım ettim, mutlu oldu.", "Özne Eksikliği"],
+        ["Derslerine çalışıyor, ihmal etmiyordu.", "Nesne Eksikliği"],
+        ["Şehri çok beğendiler, ayrılmak istemediler.", "Dolaylı Tümleç Eksikliği"],
+        ["Sorunları dinledi, çözüm üretti.", "Dolaylı Tümleç Eksikliği"],
+        ["Hediye paketini açtı, baktı.", "Dolaylı Tümleç Eksikliği"],
+        ["Resme baktı, çok beğendi.", "Nesne Eksikliği"],
+        ["Kimse dinlemiyor, konuşuyordu.", "Özne Eksikliği"],
+        ["Onu bekledik ama gelmedi.", "Özne Eksikliği"],
+        ["Resim yapmayı severim ama zaman ayıramam.", "Dolaylı Tümleç Eksikliği"],
+        ["Hikayeyi dinledi, çok etkilendi.", "Dolaylı Tümleç Eksikliği"]
+    ];
+
+    const categories = ["Özne-Yüklem Uyumsuzluğu", "Özne Eksikliği", "Nesne Eksikliği", "Dolaylı Tümleç Eksikliği", "Yüklem Eksikliği", "Tamlayan Eksikliği"];
+    let teams = [], currentTurn = 0, questionIdx = 0, startTime, timer;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function initGame() {
+        const count = document.getElementById('teamCountSelect').value;
+        const room = document.getElementById('treasure-room');
+        for(let i=0; i<count; i++) {
+            teams.push({id: i, score: 0, name: (i+1) + ". Grup"});
+            room.innerHTML += `
+                <div class="team-vault" id="v-${i}">
+                    <div class="vault-label" id="label-${i}">GRUP ${i+1} (0p)</div>
+                    <div class="gold-area" id="gold-${i}"></div>
+                    <div class="chest-box" id="chest-${i}">🧰</div>
+                </div>
+            `;
+        }
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('game-container').style.display = 'flex';
+        loadNext();
+    }
+
+    function loadNext() {
+        if(questionIdx >= rawData.length) { endGame(); return; }
+        
+        document.querySelectorAll('.team-vault').forEach(v => v.classList.remove('active'));
+        document.getElementById(`v-${currentTurn}`).classList.add('active');
+        document.getElementById('turn-label').innerText = teams[currentTurn].name + " Sırası";
+        document.getElementById('sentence-box').innerText = rawData[questionIdx][0];
+        
+        const area = document.getElementById('options-area');
+        area.innerHTML = '';
+        categories.forEach(cat => {
+            const b = document.createElement('button'); b.className = 'opt-btn'; b.innerText = cat;
+            b.onclick = () => check(cat); area.appendChild(b);
+        });
+
+        startTime = Date.now();
+        clearInterval(timer);
+        timer = setInterval(() => {
+            let s = (Date.now() - startTime) / 1000;
+            document.getElementById('time-display').innerText = `Süre: ${s.toFixed(1)}s`;
+            let p = Math.max(0, 100 - (s * 6.6));
+            document.getElementById('timer-fill').style.width = p + "%";
+            document.getElementById('timer-fill').style.background = s <= 5 ? "#00bcd4" : (s <= 10 ? "#f1c40f" : "#e67e22");
+        }, 50);
+    }
+
+    function check(choice) {
+        clearInterval(timer);
+        let duration = (Date.now() - startTime) / 1000;
+        let points = 0, symbol = '';
+
+        if(choice === rawData[questionIdx][1]) {
+            if(duration <= 5) { points = 3; symbol = '💎'; }
+            else if(duration <= 10) { points = 2; symbol = '👑'; }
+            else { points = 1; symbol = '🪙'; }
+            
+            teams[currentTurn].score += points;
+            document.getElementById(`label-${currentTurn}`).innerText = `${teams[currentTurn].name} (${teams[currentTurn].score}p)`;
+            
+            playWinSound();
+            shootLoot(symbol, points, currentTurn);
+            
+            questionIdx++;
+            let nextTurn = (currentTurn + 1) % teams.length;
+            setTimeout(() => {
+                updateLeader();
+                currentTurn = nextTurn;
+                loadNext();
+            }, 1200);
+
+        } else {
+            playWrongSound(); 
+            document.getElementById('ui-panel').classList.add('shake');
+            setTimeout(() => document.getElementById('ui-panel').classList.remove('shake'), 400);
+            
+            questionIdx++;
+            currentTurn = (currentTurn + 1) % teams.length;
+            setTimeout(loadNext, 800);
+        }
+    }
+
+    function shootLoot(symbol, pts, tid) {
+        const ptText = document.createElement('div');
+        ptText.className = 'float-text';
+        ptText.innerText = `+${pts} PUAN`;
+        ptText.style.left = "50%"; ptText.style.top = "50%"; ptText.style.transform = "translate(-50%, -50%)";
+        document.body.appendChild(ptText);
+        setTimeout(() => ptText.remove(), 1000);
+
+        const loot = document.createElement('div');
+        loot.innerText = symbol;
+        loot.style.position = 'fixed';
+        loot.style.fontSize = '80px';
+        loot.style.left = '50%';
+        loot.style.top = '60%';
+        loot.style.transform = 'translate(-50%, -50%)';
+        loot.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+        loot.style.zIndex = '9999';
+        document.body.appendChild(loot);
+
+        const target = document.getElementById(`v-${tid}`);
+        const rect = target.getBoundingClientRect();
+        
+        const chest = document.getElementById(`chest-${tid}`);
+        chest.innerText = '✨';
+        
+        setTimeout(() => {
+            loot.style.left = (rect.left + rect.width / 2) + 'px';
+            loot.style.top = (rect.bottom - 60) + 'px';
+            loot.style.fontSize = '30px';
+            loot.style.opacity = '0.3';
+        }, 50);
+
+        setTimeout(() => {
+            loot.remove();
+            chest.innerText = '🧰';
+            
+            const goldArea = document.getElementById(`gold-${tid}`);
+            const item = document.createElement('div');
+            item.className = 'loot-item';
+            item.innerText = symbol;
+            item.style.left = (Math.random() * 80 + 10) + "%";
+            item.style.bottom = (Math.random() * 40) + "px";
+            goldArea.appendChild(item);
+        }, 850);
+    }
+
+    function updateLeader() {
+        let maxScore = Math.max(...teams.map(t => t.score));
+        document.querySelectorAll('.team-vault').forEach(v => v.classList.remove('leader'));
+        
+        if (maxScore > 0) {
+            teams.forEach(t => {
+                if(t.score === maxScore) document.getElementById(`v-${t.id}`).classList.add('leader');
+            });
+        }
+    }
+
+    function playWinSound() {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(2500, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function playWrongSound() {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function endGame() {
+        clearInterval(timer);
+        let maxScore = Math.max(...teams.map(t => t.score));
+        let winners = teams.filter(t => t.score === maxScore);
+        let winnerText = winners.map(w => w.name).join(" & ");
+        
+        document.getElementById('ui-panel').innerHTML = `
+            <div style="width:100%; text-align:center; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                <h1 style="color:var(--gold); font-size:3rem; margin:0;">👑 KRALLIĞIN SAHİBİ: ${winnerText}</h1>
+                <p style="font-size:1.5rem; color:#ccc;">Toplam ${maxScore} Puanlık Hazine Toplandı!</p>
+                <button onclick="location.reload()" style="padding:15px 40px; background:var(--gold); color:black; cursor:pointer; font-weight:bold; border-radius:10px; border:none; font-size:1.2rem; margin-top:10px;">YENİ BİR MACERA</button>
+            </div>
+        `;
+    }
+</script>
+</body>
+</html>

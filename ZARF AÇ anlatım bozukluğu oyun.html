@@ -27,7 +27,6 @@
             user-select: none;
         }
 
-        /* --- BAŞLANGIÇ EKRANI --- */
         #setup-screen {
             position: absolute;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -70,7 +69,6 @@
         }
         #setup-screen button:hover { transform: scale(1.1); }
 
-        /* --- OYUN ALANI --- */
         #game-container {
             display: none;
             grid-template-columns: 350px 1fr 350px;
@@ -102,7 +100,6 @@
             padding-bottom: 10px;
         }
 
-        /* SOL PANEL (Öğretmen / Skor) */
         #scoreboard {
             flex-grow: 1;
             overflow-y: auto;
@@ -133,7 +130,6 @@
         }
         .teacher-controls button:hover { background: var(--neon-blue); color: #000; border-color: var(--neon-blue); }
 
-        /* ORTA PANEL (Zarflar) */
         #center-panel {
             background: transparent;
             border: none;
@@ -173,7 +169,6 @@
             filter: grayscale(100%);
         }
 
-        /* SAĞ PANEL (Sıra, Lider & Buton) */
         #turn-display {
             text-align: center;
             margin-bottom: 20px;
@@ -227,7 +222,6 @@
         }
         .end-game-btn:hover { background: #cc0030; transform: scale(1.05); }
 
-        /* --- MODAL (Soru Ekranı) --- */
         #question-modal {
             display: none;
             position: fixed;
@@ -273,7 +267,6 @@
         }
         .btn-correct:hover, .btn-wrong:hover { transform: scale(1.1); }
 
-        /* --- EFEKTLER & ZAFER --- */
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
             10%, 90% { transform: translate3d(-10px, 0, 0); }
@@ -291,7 +284,6 @@
             transition: all 1s cubic-bezier(0.25, 1, 0.5, 1); text-shadow: 0 0 20px #fff;
         }
 
-        /* OYUN BİTİŞ EKRANI */
         .victory-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100%; width: 100%; text-align: center;
@@ -367,7 +359,6 @@
     <div id="chaos-overlay">🤡😂🤪</div>
 
 <script>
-    // --- VERİTABANI (SORULAR) ---
     const regularQuestions = [
         "Size değer veriyor ve canı gibi seviyor.", "Kitaplarına göz kulak oluyor, kimseye vermiyordu.",
         "Bu çiçeğe iyi bakın, asla susuz bırakmayın.", "Yaşlı adama yardım etti, evine götürdü.",
@@ -406,7 +397,6 @@
         "Çiçeklerin bakımı yapıldı ve saksıları değiştirildi."
     ];
 
-    // Renkli Zarf Paleti (Soru türünden bağımsız, rastgele atanır)
     const envelopeColors = [
         'linear-gradient(135deg, #ff0099, #493240)',
         'linear-gradient(135deg, #FF416C, #FF4B2B)',
@@ -417,14 +407,12 @@
         'linear-gradient(135deg, #fc4a1a, #f7b733)'
     ];
 
-    // --- OYUN DEĞİŞKENLERİ ---
     let groups = [];
     let currentTurn = 0;
     let envelopes = [];
     let activeEnvelopeIndex = null;
     let gameActive = true;
 
-    // --- SES EFEKTLERİ ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTone(freq, type, duration, vol=0.1) {
         if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -449,18 +437,15 @@
         setTimeout(() => playTone(80, 'square', 1.0, 0.4), 600);
     }
     function playVictorySound() {
-        // Neşeli bir arpej
         [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
             setTimeout(() => playTone(freq, 'sine', 0.3, 0.2), i * 150);
         });
         setTimeout(() => playTone(1046.50, 'sine', 0.8, 0.3), 900);
     }
 
-    // --- BAŞLATMA ---
     function startGame() {
         const count = parseInt(document.getElementById('group-count').value) || 4;
         for (let i = 0; i < count; i++) {
-            // A, B, C, D... şeklinde harf ataması (ASCII 65 = 'A')
             const letter = String.fromCharCode(65 + i);
             groups.push({ id: i, name: `Grup ${letter}`, score: 0 });
         }
@@ -486,20 +471,17 @@
             const div = document.createElement('div');
             div.className = 'envelope';
             div.id = `env-${index}`;
-            // Rastgele canlı arka plan rengi ata
             div.style.background = envelopeColors[Math.floor(Math.random() * envelopeColors.length)];
             div.onclick = () => openEnvelope(index);
             centerPanel.appendChild(div);
         });
     }
 
-    // --- ARAYÜZ GÜNCELLEMELERİ ---
     function updateScoreboard() {
         const board = document.getElementById('scoreboard');
         board.innerHTML = '';
         groups.forEach((g, index) => {
             const row = document.createElement('div');
-            // Oyun bittiyse aktif sırayı gösterme
             const isActive = (index === currentTurn && gameActive) ? 'active-turn' : '';
             row.className = `group-row ${isActive}`;
             row.id = `group-row-${index}`;
@@ -535,14 +517,12 @@
             return;
         }
 
-        // Liderleri bul (Eşitlik olabilir)
         let leaders = groups.filter(g => g.score === maxScore);
         let leaderNames = leaders.map(l => l.name).join(" & ");
         
         leaderText.innerHTML = `✨ ${leaderNames} ✨`;
     }
 
-    // --- OYUN MEKANİĞİ ---
     function manualScore(groupIndex, amount) {
         if(!gameActive) return;
         groups[groupIndex].score += amount;
@@ -561,7 +541,7 @@
         const typeText = document.getElementById('modal-type');
         const qText = document.getElementById('question-text');
 
-        modalBox.className = 'modal-content'; // Reset
+        modalBox.className = 'modal-content';
         if (env.type === 'gold') {
             typeText.innerText = "🌟 GİZLİ ALTIN ZARF! (+3 PUAN) 🌟";
             modalBox.classList.add('type-gold');
@@ -594,14 +574,13 @@
         }
 
         setTimeout(() => {
-            updateLeader(); // Puan eklendikten sonra lideri güncelle
+            updateLeader();
             currentTurn = (currentTurn + 1) % groups.length;
             updateScoreboard();
             updateTurnDisplay();
         }, isCorrect ? 1000 : 2500); 
     }
 
-    // --- ANİMASYONLAR VE BİTİŞ ---
     function animateScore(points, targetGroupIndex) {
         const floater = document.createElement('div');
         floater.className = 'floating-score';
@@ -659,14 +638,13 @@
     function endGame() {
         gameActive = false;
         playVictorySound();
-        updateScoreboard(); // Sıra göstergesini temizler
+        updateScoreboard();
 
         let maxScore = Math.max(...groups.map(g => g.score));
         let winners = groups.filter(g => g.score === maxScore);
         let winnerNames = winners.map(w => w.name).join(" & ");
         
         const centerPanel = document.getElementById('center-panel');
-        // Grid yapısını bozup zafer ekranını merkeze alıyoruz
         centerPanel.style.display = 'block';
         
         centerPanel.innerHTML = `
@@ -687,19 +665,13 @@
             const el = document.createElement('div');
             el.className = 'sparkle-emoji';
             el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-            
-            // Ekranın orta bölümünde (Center panel alanında) rastgele konumlansın
             el.style.left = `${30 + Math.random() * 40}vw`; 
-            
             document.body.appendChild(el);
-            
             setTimeout(() => el.remove(), 3000);
         }, 150);
 
-        // 5 saniye sonra emoji yağmurunu durdur
         setTimeout(() => clearInterval(interval), 5000);
     }
-
 </script>
 </body>
 </html>

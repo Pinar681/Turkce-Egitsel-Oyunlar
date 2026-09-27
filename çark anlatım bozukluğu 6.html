@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mega Çarkıfelek - Grup İsimli</title>
+    <style>
+        :root { --bordo: #4a0010; --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32; --dark: #0a0a0a; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bordo); color: white; overflow: hidden; height: 100vh; transition: background 0.5s; }
+        
+        .lightning { animation: flash 0.2s infinite; }
+        @keyframes flash { 0%, 100% { background: #000; } 50% { background: #444; } }
+
+        #fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+        #setup { position: fixed; inset: 0; background: var(--bordo); display: flex; align-items: center; justify-content: center; z-index: 2000; overflow-y: auto; }
+        .setup-box { background: var(--dark); padding: 30px; border-radius: 30px; border: 4px solid var(--gold); text-align: center; width: 400px; box-shadow: 0 0 50px black; }
+        .name-input { background: #222; border: 1px solid var(--gold); color: white; padding: 10px; margin: 5px 0; border-radius: 8px; width: 80%; font-size: 1rem; text-align: center; }
+
+        #game-container { display: none; height: 100vh; grid-template-columns: 250px 1fr 200px; gap: 15px; padding: 15px; box-sizing: border-box; position: relative; z-index: 20; }
+        
+        #score-board { background: rgba(0,0,0,0.7); border-radius: 20px; padding: 20px; border: 2px solid var(--gold); }
+        .team-card { padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; transition: all 0.5s; text-align: center; font-weight: bold; }
+        .rank-0 { background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728); color: #000; box-shadow: 0 0 15px var(--gold); }
+        .rank-1 { background: linear-gradient(45deg, #959595, #e0e0e0, #707070); color: #000; }
+        .rank-2 { background: linear-gradient(45deg, #804a00, #b08d57, #663d00); color: #fff; }
+        .team-card.active { outline: 4px solid white; outline-offset: 2px; }
+
+        #main-play { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #wheel-container { position: relative; width: 400px; height: 400px; border: 8px solid #222; border-radius: 50%; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        #wheelCanvas { border-radius: 50%; width: 100%; height: 100%; transition: transform 5s cubic-bezier(0.1, 0, 0.1, 1); }
+        #pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 35px; height: 50px; background: #fff; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 100; filter: drop-shadow(0 0 5px black); }
+
+        .overlay-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(10,10,10,0.95); padding: 30px; border-radius: 25px; border: 4px solid var(--gold); width: 80%; text-align: center; display: none; flex-direction: column; gap: 20px; z-index: 500; }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: black; font-size: 1.2rem; }
+        .btn-green { background: #27ae60; color: white; }
+        .btn-red { background: #c0392b; color: white; }
+        .btn-pas { background: #000; color: var(--gold); border: 1px solid var(--gold); margin: 5px; }
+
+        #teacher-panel { background: rgba(0,0,0,0.8); border-radius: 20px; padding: 15px; border: 1px solid #444; }
+        .emoji-fx { position: absolute; font-size: 2.5rem; animation: fall 2.5s linear forwards; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+    </style>
+</head>
+<body id="bg">
+
+<div id="fx-layer"></div>
+<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
+
+<div id="setup">
+    <div class="setup-box">
+        <h2 style="color: var(--gold)">🏆 GRUPLARI OLUŞTUR</h2>
+        <p>Grup Sayısı:</p>
+        <select id="teamCountSelect" onchange="generateInputs()" style="padding:10px; border-radius:5px; width: 100px;">
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4" selected>4</option><option value="5">5</option>
+        </select>
+        <hr style="border:0.5px solid #333; margin: 20px 0;">
+        <div id="name-inputs-container"></div>
+        <br>
+        <button class="btn btn-gold" onclick="initGame()">OYUNU BAŞLAT 🚀</button>
+    </div>
+</div>
+
+<div id="game-container">
+    <div id="score-board">
+        <h2 style="color:var(--gold); text-align:center; border-bottom:1px solid #555; padding-bottom:10px;">PODYUM</h2>
+        <div id="teams-list"></div>
+    </div>
+
+    <div id="main-play">
+        <div id="wheel-container">
+            <div id="pointer"></div>
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+        </div>
+        <button id="spin-btn" class="btn btn-gold" onclick="spinWheel()">ÇARKI DÖNDÜR 🎡</button>
+
+        <div id="question-display" class="overlay-box">
+            <div id="q-header" style="color: var(--gold); font-size: 1.4rem; font-weight: bold;"></div>
+            <div id="sentence-text" style="font-size: 1.7rem; background:#1a1a1a; padding:25px; border-radius:15px; border-left: 5px solid var(--gold);"></div>
+            <div id="normal-controls" style="display: flex; gap: 20px; justify-content: center;">
+                <button class="btn btn-green" onclick="answer(true)">Doğru bildi ✅</button>
+                <button class="btn btn-red" onclick="answer(false)">Yanlış bildi ❌</button>
+            </div>
+            <div id="pas-controls" style="display: none; flex-direction: column; gap: 10px;">
+                <h3 style="color:#e74c3c">⚡ KİME PASLIYORSUNUZ?</h3>
+                <div id="pas-teams-row" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="teacher-panel">
+        <p style="text-align:center; font-size:0.7rem; color:var(--gold);">JÜRİ PANELİ</p>
+        <div id="teacher-controls"></div>
+        <button class="btn btn-red" style="font-size:0.6rem; padding:4px; margin-top:10px; width:100%" onclick="location.reload()">OYUNU SIFIRLA</button>
+    </div>
+</div>
+
+<script>
+    const sentences = ["Sana her zaman inanıyor ve destekliyoruz.", "Düşüncelerim beni artık eskisi kadar heyecanlandırmıyorlar.", "Öğrencilerin hiçbiri sınıfta yok, bahçede geziyordu.", "Bu sabah ben ve sen mutlaka idareye gitmeli.", "Annemi çok seviyor, her konuda güveniyordum.", "Kitaba uzun uzun baktı, sonra masaya bıraktı.", "Herkes maçın sonucunu bekliyor, yerinden ayrılmıyordu.", "Ayşe ve sen bu projeyi yarına kadar tamamlamalı.", "Köpekler sabaha kadar kapının önünde havladılar.", "Kardeşine gülümsedi ve tebrik etti.", "Hiçbiri anlatılanları anlamamış, boş boş bakmıştı.", "Arkadaşını hem seviyor hem de bazen kızıyordu.", "Seni asla unutmadık, her zaman hatırlayacağız.", "Dışarıda fırtına koptu ve ağaçların dalları kırıldılar.", "Kimse sorumluluk almıyor, sürekli şikayet ediyordu.", "Ona mektup yazdım ama göndermedim.", "Ayhan ve sen bu şiiri okuyacak.", "Hediye paketini açtı ve merakla baktı.", "Hiç kimse ödevini yapmamış, oyun oynuyordu.", "Kediler bütün gece çatıda miyavladılar.", "Eskişehir'i çok özledim, her yaz gidiyorum.", "Dersi herkes dinliyor ama hiçbir şey anlamıyordu.", "Hayallerim bir bir suya düştüler.", "Televizyonun sesi çok çıkıyor, rahatsız ediyordu.", "Müdürün odasına girdi, dertlerini bir bir anlattı.", "Ağaçların yaprakları sonbaharda sarardılar.", "Okula hiç gelmiyor, telefonla haber veriyordu.", "Resme baktı, çok beğendiğini söyledi.", "Sen ve o bu raporu hazırlayacak.", "Hiç birisi okula gelmemiş, evde kalmıştı.", "Ona hediye aldı ve mutlu etti.", "Bu hatayı ben, o ise hiçbir zaman kabul etmedi.", "Çayını tazeledi, bir yudum aldı.", "Kardeşini yanına çağırdı, bir şeyler fısıldadı.", "Şehri çok beğendiler, ayrılmak istemediler.", "Sorunu hemen anladı ve çözüm buldu.", "Masadaki bardaklar bir bir devrildiler.", "Herkes ödevini teslim etti, unutmadı.", "Onu hem dövdü hem de ağır sözler söyledi.", "İstanbul'u gezmek istiyor ama hiç gidemiyordu.", "Size her zaman saygı duyuyor ve seviyoruz.", "Hediye paketini aldı ve açtı.", "Kuşun kanadı kırılmış, uçamıyordu."];
+    
+    const slices = [
+        { label: "+1", color: "#d35400", type: "score", value: 1 },
+        { label: "🥈 GÜMÜŞ", color: "#7f8c8d", type: "score", value: 2 },
+        { label: "⚡ PAS ⚡", color: "#000000", type: "pas", value: 0 },
+        { label: "+1", color: "#2980b9", type: "score", value: 1 },
+        { label: "🏆 ALTIN", color: "#f1c40f", type: "score", value: 5 },
+        { label: "+1", color: "#27ae60", type: "score", value: 1 },
+        { label: "⚡ PAS ⚡", color: "#000000", type: "pas", value: 0 },
+        { label: "+1", color: "#8e44ad", type: "score", value: 1 }
+    ];
+
+    let teams = [], currentTurn = 0, usedQ = [], isSpinning = false, currentResult = null, solverTurn = 0;
+
+    function generateInputs() {
+        const count = document.getElementById('teamCountSelect').value;
+        const container = document.getElementById('name-inputs-container');
+        container.innerHTML = '';
+        for(let i=0; i<count; i++) {
+            container.innerHTML += `<input type="text" class="name-input" id="name-${i}" placeholder="${i+1}. Grup İsmi (opsiyonel)">`;
+        }
+    }
+    generateInputs();
+
+    function initGame() {
+        const count = document.getElementById('teamCountSelect').value;
+        for(let i=0; i<count; i++) {
+            let customName = document.getElementById(`name-${i}`).value || (i+1) + ". Grup";
+            teams.push({ id: i, name: customName.toUpperCase(), score: 0 });
+        }
+        drawWheel();
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('game-container').style.display = 'grid';
+        updateUI();
+    }
+
+    function drawWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const sliceAngle = (2 * Math.PI) / slices.length;
+        ctx.clearRect(0,0,500,500);
+        slices.forEach((s, i) => {
+            const grad = ctx.createRadialGradient(250,250,0,250,250,250);
+            grad.addColorStop(0, s.color); grad.addColorStop(1, '#000');
+            ctx.beginPath(); ctx.fillStyle = grad; ctx.moveTo(250,250);
+            ctx.arc(250,250,245, i*sliceAngle, (i+1)*sliceAngle); ctx.fill();
+            ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.stroke();
+            ctx.save(); ctx.translate(250,250); ctx.rotate(i*sliceAngle + sliceAngle/2);
+            ctx.textAlign="right"; ctx.fillStyle=(s.color==="#000000"?"#ffd700":"white");
+            ctx.font="bold 24px Arial"; ctx.fillText(s.label, 230, 10); ctx.restore();
+        });
+    }
+
+    function spinWheel() {
+        if(isSpinning) return;
+        isSpinning = true;
+        document.body.className = '';
+        document.getElementById('spin-btn').style.visibility = 'hidden';
+        const deg = Math.floor(Math.random() * 360) + 2880;
+        const canvas = document.getElementById('wheelCanvas');
+        canvas.style.transform = `rotate(${deg}deg)`;
+
+        const clickSound = document.getElementById('clickSound');
+        let lastAngle = 0;
+        const si = setInterval(() => {
+            const m = window.getComputedStyle(canvas).transform;
+            if(m !== 'none'){
+                const v = m.split('(')[1].split(')')[0].split(',');
+                const a = Math.round(Math.atan2(v[1], v[0]) * (180/Math.PI));
+                if(Math.abs(a - lastAngle) > 45) { clickSound.currentTime = 0; clickSound.play(); lastAngle = a; }
+            }
+        }, 70);
+
+        setTimeout(() => {
+            clearInterval(si);
+            const actualDeg = deg % 360;
+            const sliceIdx = Math.floor(((360 - actualDeg + 90) % 360) / (360 / slices.length));
+            currentResult = slices[sliceIdx];
+            if(currentResult.type === 'pas') document.body.className = 'lightning';
+            else if(currentResult.value === 5) spawnEmojis('💰');
+            else if(currentResult.value === 2) spawnEmojis('🥈');
+            
+            setTimeout(prepareRound, 800);
+            isSpinning = false;
+        }, 5100);
+    }
+
+    function spawnEmojis(emoji) {
+        for(let i=0; i<30; i++) {
+            const el = document.createElement('div');
+            el.className = 'emoji-fx'; el.innerText = emoji;
+            el.style.left = Math.random() * 100 + 'vw';
+            el.style.top = '-50px';
+            el.style.animationDelay = Math.random() * 2 + 's';
+            document.getElementById('fx-layer').appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+    }
+
+    function prepareRound() {
+        let q; if(usedQ.length >= sentences.length) usedQ = [];
+        do { q = Math.floor(Math.random()*sentences.length); } while(usedQ.includes(q));
+        usedQ.push(q);
+        
+        document.getElementById('sentence-text').innerText = sentences[q];
+        document.getElementById('question-display').style.display = 'flex';
+
+        if(currentResult.type === "pas") {
+            document.getElementById('q-header').innerText = `🕵️ ${teams[currentTurn].name} PAS ATIYOR!`;
+            document.getElementById('normal-controls').style.display = 'none';
+            document.getElementById('pas-controls').style.display = 'flex';
+            const pasRow = document.getElementById('pas-teams-row');
+            pasRow.innerHTML = '';
+            teams.forEach(t => { if(t.id !== currentTurn) pasRow.innerHTML += `<button class="btn btn-pas" onclick="activatePas(${t.id})">${t.name}</button>`; });
+        } else {
+            solverTurn = currentTurn;
+            document.getElementById('q-header').innerText = `🎯 ${teams[currentTurn].name} | ${currentResult.label}`;
+            document.getElementById('normal-controls').style.display = 'flex';
+            document.getElementById('pas-controls').style.display = 'none';
+        }
+    }
+
+    function activatePas(tid) {
+        solverTurn = tid;
+        document.getElementById('q-header').innerText = `🎯 SORU ŞİMDİ ${teams[tid].name} GRUBUNDA!`;
+        document.getElementById('pas-controls').style.display = 'none';
+        document.getElementById('normal-controls').style.display = 'flex';
+    }
+
+    function answer(correct) {
+        if(correct) adj(solverTurn, currentResult.type === "pas" ? 1 : currentResult.value);
+        document.getElementById('question-display').style.display = 'none';
+        document.getElementById('spin-btn').style.visibility = 'visible';
+        document.body.className = '';
+        currentTurn = (currentTurn + 1) % teams.length;
+        updateUI();
+        resetWheel();
+    }
+
+    function resetWheel() {
+        const canvas = document.getElementById('wheelCanvas');
+        canvas.style.transition = 'none'; canvas.style.transform = 'rotate(0deg)';
+        setTimeout(() => { canvas.style.transition = 'transform 5s cubic-bezier(0.1, 0, 0.1, 1)'; }, 50);
+    }
+
+    function adj(id, v) { teams[id].score += v; updateUI(); }
+
+    function updateUI() {
+        const sorted = [...teams].sort((a,b) => b.score - a.score);
+        const tList = document.getElementById('teams-list');
+        const tCtrl = document.getElementById('teacher-controls');
+        tList.innerHTML = ''; tCtrl.innerHTML = '';
+
+        teams.forEach((t) => {
+            const rank = sorted.findIndex(s => s.id === t.id);
+            const activeClass = (t.id === currentTurn) ? 'active' : '';
+            tList.innerHTML += `<div class="team-card rank-${rank} ${activeClass}">${t.name}<br><span class="score-val">${t.score}</span></div>`;
+            tCtrl.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#222; padding:5px; border-radius:5px;"><span style="font-size:0.6rem">${t.name}</span><div><button class="btn btn-red" style="padding:1px 5px; font-size:0.6rem;" onclick="adj(${t.id},-1)">-</button><button class="btn btn-green" style="padding:1px 5px; font-size:0.6rem;" onclick="adj(${t.id},1)">+</button></div></div>`;
+        });
+    }
+</script>
+</body>
+</html>

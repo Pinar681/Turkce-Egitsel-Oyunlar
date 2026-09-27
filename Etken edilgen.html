@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Etken / Edilgen Yarışması</title>
+<style>
+body { font-family: Arial; text-align:center; background:#f5f5f5; }
+#kutu { background:white; width:600px; margin:auto; padding:20px; border-radius:10px; margin-top:20px;}
+button { width:150px; margin:10px; padding:10px; font-size:16px; }
+#puanlar { margin-top:20px; }
+#puanTablo { margin-top:20px; border-collapse: collapse; width:300px; margin:auto; }
+#puanTablo td, #puanTablo th { border: 1px solid black; padding: 8px; }
+</style>
+</head>
+<body>
+
+<h2>Etken / Edilgen Yarışması</h2>
+<p>Sıradaki Grup: <span id="grup">A</span></p>
+
+<div id="kutu">
+<h3 id="soru"></h3>
+<button onclick="cevapVer('Etken')">Etken</button>
+<button onclick="cevapVer('Edilgen')">Edilgen</button>
+</div>
+
+<div id="puanlar">
+<h3>Anlık Puan Tablosu</h3>
+<table id="puanTablo">
+<tr><th>Grup</th><th>Puan</th></tr>
+<tr><td>A</td><td id="puanA">0</td></tr>
+<tr><td>B</td><td id="puanB">0</td></tr>
+<tr><td>C</td><td id="puanC">0</td></tr>
+<tr><td>D</td><td id="puanD">0</td></tr>
+</table>
+</div>
+
+<!-- Sesler -->
+<audio id="sesDogru">
+<source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+</audio>
+<audio id="sesYanlis">
+<source src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" type="audio/ogg">
+</audio>
+
+<script>
+let gruplar = ['A','B','C','D'];
+let puanlar = {A:0,B:0,C:0,D:0};
+let aktifGrup = 0;
+
+let sorular = [
+{cumle:"Tüm raporlar genel müdüre sunuldu.", cevap:"Edilgen"},
+{cumle:"Ahmet sinavi basariyla gecti", cevap:"Etken"},
+{cumle:"Ara sokaklardaki olaylara müdahale edildi.", cevap:"Edilgen"},
+{cumle:"Babam bu yil isten ayrilacak.", cevap:"Etken"},
+{cumle:"Yangın kısa sürede söndü.", cevap:"Edilgen"},
+{cumle:"Mehmet kendine yeni araba aldi.", cevap:"Etken"},
+{cumle:"Kitaptaki yanlışlar düzeltildi.", cevap:"Edilgen"},
+{cumle:"Annem evi temizledi.", cevap:"Etken"},
+{cumle:"Duvarlar itinayla tamir edildi.", cevap:"Edilgen"},
+{cumle:"Kiz kardesim bu yil universite sinavini kazandi", cevap:"Etken"},
+{cumle:"Bahçemizdeki ağaçlar makasla budandı.", cevap:"Edilgen"},
+{cumle:"Dedem rahatsizlandi.", cevap:"Etken"},
+{cumle:"Bayram için odanın her yeri süslendi.", cevap:"Edilgen"},
+{cumle:"Ayse ders calisiyor.", cevap:"Etken"},
+{cumle:"Bu kişiler polis tarafından aranıyor.", cevap:"Edilgen"},
+{cumle:"Bu hafta sonu alisveris yapmaya gidecegim.", cevap:"Etken"},
+{cumle:"Törenden sonra masalar kenara çekildi.", cevap:"Edilgen"},
+{cumle:"Arkadaslarla piknige gittik.", cevap:"Etken"},
+{cumle:"Sınavın iptal edileceği söylendi.", cevap:"Edilgen"},
+{cumle:"Bu hafta sonu sinemaya gidecegiz.", cevap:"Etken"},
+{cumle:"Çalındı umutların en güzeli benden.", cevap:"Edilgen"},
+{cumle:"Bütün sokaklar temizlendi.", cevap:"Edilgen"},
+{cumle:"Aniden kapı hızlı hızlı vuruldu.", cevap:"Edilgen"},
+{cumle:"Fırından yüz adet ekmek alındı", cevap:"Edilgen"}
+];
+
+sorular = sorular.sort(()=>Math.random()-0.5);
+
+let aktifSoru = 0;
+
+function soruGoster(){
+    if(aktifSoru < sorular.length){
+        document.getElementById("soru").innerText = sorular[aktifSoru].cumle;
+        document.getElementById("grup").innerText = gruplar[aktifGrup];
+    } else {
+        document.getElementById("kutu").innerHTML = "<h3>Oyun bitti!</h3>";
+        document.getElementById("grup").innerText = "-";
+    }
+}
+
+function cevapVer(secim){
+    let grup = gruplar[aktifGrup];
+    let dogruSes = document.getElementById("sesDogru");
+    let yanlisSes = document.getElementById("sesYanlis");
+    
+    if(secim === sorular[aktifSoru].cevap){
+        puanlar[grup]++;
+        document.getElementById("puan"+grup).innerText = puanlar[grup];
+        dogruSes.play();
+    } else {
+        yanlisSes.play();
+    }
+    
+    sorular.splice(aktifSoru,1);
+    aktifGrup = (aktifGrup+1)%gruplar.length;
+    
+    if(sorular.length>0){
+        aktifSoru = aktifSoru % sorular.length;
+        soruGoster();
+    } else {
+        document.getElementById("kutu").innerHTML = "<h3>Oyun bitti!</h3>";
+        document.getElementById("grup").innerText = "-";
+    }
+}
+
+soruGoster();
+</script>
+</body>
+</html>

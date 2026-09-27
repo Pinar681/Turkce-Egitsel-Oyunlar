@@ -198,7 +198,6 @@
             <div class="question-tag" id="modalTag">Soru Türü</div>
             <div class="question-title" id="questionText">Soru metni...</div>
             <div id="questionBody"></div>
-            <!-- İpucu Kutusu Eklendi -->
             <div class="hint-box" id="hintBox"></div>
         </div>
     </div>
@@ -209,10 +208,6 @@
     </div>
 
     <script>
-        /* ---------------------------------------------------------
-           1. GENİŞLETİLMİŞ SORU HAVUZLARI (Tekrar Etmeyi Önler)
-           --------------------------------------------------------- */
-        // 25 Normal Soru (3 Grup * 7 Normal Engel = 21 gerekiyordu, 25 ile hiç tekrar etmez)
         const baseNormalQuestions = [
             { q: "Masal kelimesi dilimize hangi dilden ve kelimeden geçmiştir?", opts: ["Arapça 'mesel'", "Farsça 'destan'", "Eski Türkçe 'sav'", "Latince 'fabula'"], ans: 0 },
             { q: "Aşağıdakilerden hangisi masalların özelliklerinden biri DEĞİLDİR?", opts: ["Anonim olmaları", "Didaktik (öğretici) olmaları", "Millî ve dinî unsurlar içermeleri", "Zaman ve mekânın belirsiz olması"], ans: 2 },
@@ -241,7 +236,6 @@
             { q: "Masalın yazım biçimi nedir?", opts: ["Sadece şiir", "Sadece tekerleme", "Düzyazı (Nesir)", "Mektup"], ans: 2 }
         ];
 
-        // 8 Tehlike Sorusu (3 Grup * 2 Tehlike Engel = 6 gerekiyordu, 8 ile tekrar etmez)
         const baseDangerQuestions = [
             { q: "Masallarda kahramanların ve olayın tanıtıldığı başlangıç bölümünün adı nedir?", type: "text", ans: ["serim"] },
             { q: "Üç Haylaz Masalı'nda üç kafadar Hindistan'a gidip ne yaparak para kazanmışlardır?", type: "text", ans: ["hokkabazlık", "hokkabazlik", "gösteri"] },
@@ -253,7 +247,6 @@
             { q: "Masal sözcüğü dilimize Arapçada 'ibret verici söz' anlamına gelen hangi kelimeden geçmiştir?", type: "text", ans: ["mesel"] }
         ];
 
-        // 5 Tilki Sorusu (3 Grup * 1 Tilki = 3 gerekiyordu, 5 ile tekrar etmez)
         const baseFoxQuestions = [
             { q: "Üç Haylaz Masalı'nın 'Çözüm' bölümünde, açgözlülük yapan haylazlar devin mağarasında kimin avı olmuşlardır?", type: "text", ans: ["tilki", "tilkinin", "kurnaz tilki"] },
             { q: "Masalın bittiğini ilan eden, iyi dileklerin bulunduğu son bölümün adı nedir?", type: "text", ans: ["dilek", "dilek bölümü"] },
@@ -270,7 +263,6 @@
             { q: "Masallarda dil nasıldır?", opts: ["Çok süslü ve ağırdır.", "Sade, yalın ve anlaşılırdır."], ans: 1 }
         ];
 
-        // Soruları Çeken Yapı (Havuzdan silerek çeker)
         let pools = {
             normal: [...baseNormalQuestions],
             danger: [...baseDangerQuestions],
@@ -283,9 +275,6 @@
             return pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
         }
 
-        /* ---------------------------------------------------------
-           2. OYUN SİSTEMİ 
-           --------------------------------------------------------- */
         const groups = [
             { id: 0, name: "Grup 1", icon: "🐓", score: 0, pos: 0, finished: false, nodeData: [] },
             { id: 1, name: "Grup 2", icon: "🦃", score: 0, pos: 0, finished: false, nodeData: [] },
@@ -324,7 +313,6 @@
                         nodeClass += " locked";
                     }
                     
-                    // Node verisini oyun başında oluşturuyoruz. "failedAttempts" İpucu sistemi için 0 başlar.
                     groups[i].nodeData[j] = {
                         type: type,
                         qData: getQuestion(type),
@@ -461,9 +449,6 @@
             updatePanel();
         }
 
-        /* ---------------------------------------------------------
-           5. MODAL & İPUCU SİSTEMİ
-           --------------------------------------------------------- */
         function openModal(nodeEl, nodeData) {
             let pts = nodeData.type === 'fox' ? 5 : (nodeData.type === 'danger' ? 3 : 1);
             activeQuestionObj = { nodeData: nodeData, node: nodeEl, pts: pts };
@@ -484,7 +469,6 @@
             
             overlay.style.display = 'flex';
             setTimeout(() => { box.classList.add('show'); }, 10);
-            
             overlay.classList.add('show-orbiters');
             
             if (type === 'danger') {
@@ -512,7 +496,6 @@
             title.innerText = qData.q;
             body.innerHTML = '';
 
-            // Akıllı İpucu Sistemi (Sadece yazılı sorularda ve en az 1 kez yanlış bilindiyse)
             if (obj.nodeData.failedAttempts > 0 && !qData.opts) {
                 let firstAns = qData.ans[0];
                 let firstChar = firstAns.charAt(0).toUpperCase();
@@ -585,16 +568,12 @@
                 }
                 setTimeout(passTurn, 1000);
             } else {
-                // Yanlış cevap verilince ipucunu devreye sokmak için sayacı artırıyoruz
                 activeQuestionObj.nodeData.failedAttempts++; 
                 showFlashResult("🦊", "YANLIŞ CEVAP! SIRA GEÇTİ.", "rgba(208, 0, 0, 0.85)");
                 setTimeout(passTurn, 1000);
             }
         }
 
-        /* ---------------------------------------------------------
-           6. GÖRSEL EFEKTLER (Particle Canvas & Flash)
-           --------------------------------------------------------- */
         function showFlashResult(icon, text, bgColor) {
             let flash = document.getElementById('resultFlash');
             let iEl = document.getElementById('resultIcon');
@@ -603,7 +582,6 @@
             flash.style.background = bgColor;
             iEl.innerText = icon;
             tEl.innerText = text;
-            
             flash.style.display = 'flex';
             
             iEl.style.animation = 'none'; tEl.style.animation = 'none';
@@ -645,7 +623,6 @@
 
         window.onload = initBoard;
         window.onresize = drawSvgPaths; 
-
     </script>
 </body>
 </html>
