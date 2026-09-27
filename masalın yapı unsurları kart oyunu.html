@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masalın Yapı Unsurları Kart Oyunu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Quicksand:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: #0a0a2a; /* Velvet dark blue */
+            color: white;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        h1, h2, h3, .cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        
+        @keyframes bgCardFloat {
+            0% { transform: translateY(110vh) rotate(-15deg) scale(0.8); opacity: 0; }
+            10% { opacity: 0.1; }
+            90% { opacity: 0.1; }
+            100% { transform: translateY(-20vh) rotate(25deg) scale(1.2); opacity: 0; }
+        }
+
+        @keyframes sparkleAnim {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.8; transform: scale(1.5); }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-active {
+            animation: shake 0.5s;
+        }
+
+        .gold-box {
+            background: linear-gradient(to right, #eab308, #ca8a04);
+            box-shadow: 0 0 15px gold;
+            color: #1a1a1a;
+            border: 2px solid gold;
+        }
+
+        .card-bg {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        .option-btn {
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            background: #fff;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        .option-btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .correct-answer { background: #4ade80 !important; color: white !important; box-shadow: 0 0 20px #4ade80 !important; border: none; }
+        .wrong-answer { background: #f87171 !important; color: white !important; box-shadow: 0 0 20px #f87171 !important; border: none; }
+
+        .ghost-card {
+            position: absolute;
+            width: 140px;
+            height: 190px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .sparkle {
+            position: absolute;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px white, 0 0 20px gold;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .diamond-particle {
+            position: fixed;
+            font-size: 2.5rem;
+            z-index: 9999;
+            pointer-events: none;
+            transition: all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+            filter: drop-shadow(0 0 15px cyan);
+        }
+
+        .scale-in { animation: scaleIn 0.5s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .scale-out { animation: scaleOut 0.4s forwards ease-in; }
+        
+        @keyframes scaleIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes scaleOut { from { transform: scale(1); opacity: 1; } to { transform: scale(0); opacity: 0; } }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body id="game-body" class="h-screen w-screen relative flex flex-col">
+
+    <div id="bg-layer" class="absolute inset-0 z-0 overflow-hidden pointer-events-none"></div>
+
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a2a]/95 backdrop-blur-sm">
+        <h1 class="cinzel text-5xl md:text-7xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 mb-8 drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+            Masalın Yapı Unsurları<br>Kart Oyunu
+        </h1>
+        <div class="card-bg p-8 rounded-2xl flex flex-col items-center max-w-md w-full mx-4 text-center">
+            <h2 class="text-2xl mb-6">Oyuna Başla</h2>
+            <label class="mb-2 text-lg text-gray-300">Kaç grup yarışacak? (2-5)</label>
+            <input type="number" id="group-count" min="2" max="5" value="2" class="w-24 text-center text-3xl p-2 rounded-xl text-black font-bold mb-6 focus:outline-none focus:ring-4 focus:ring-yellow-400">
+            <button onclick="startGame()" class="gold-box px-8 py-4 rounded-xl text-xl font-bold cinzel hover:scale-105 transition-transform w-full">Oyunu Başlat</button>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden flex-col h-full z-10 p-4">
+        
+        <!-- Top Bar & Scoreboard -->
+        <div class="w-full max-w-7xl mx-auto mb-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="card-bg px-6 py-3 rounded-xl border-l-4 border-yellow-400 shadow-lg">
+                    <h2 class="cinzel text-2xl font-bold tracking-wider text-yellow-300" id="turn-display">Sıra: 1. Grup</h2>
+                </div>
+                <div id="scoreboard" class="flex flex-wrap justify-center gap-3 w-full md:w-auto">
+                    <!-- Groups injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow flex flex-col items-center justify-center relative w-full max-w-5xl mx-auto mt-2 h-full overflow-hidden">
+            
+            <button id="btn-bring-card" onclick="bringCard()" class="gold-box px-12 py-6 rounded-full text-3xl font-bold cinzel hover:scale-110 transition-transform shadow-2xl animate-[float_3s_ease-in-out_infinite] z-20">
+                Kart Getir
+            </button>
+
+            <!-- Active Card & Questions -->
+            <div id="active-card" class="hidden flex-col items-center w-full max-h-full overflow-y-auto px-2 pb-20 custom-scroll">
+                
+                <!-- Story Text -->
+                <div class="card-bg p-6 md:p-8 rounded-2xl w-full mb-6 relative">
+                    <div class="absolute -top-10 -right-10 opacity-20 text-9xl pointer-events-none">📜</div>
+                    <h3 id="story-title" class="cinzel text-2xl md:text-3xl font-bold text-yellow-400 mb-4 border-b border-white/20 pb-2">Başlık</h3>
+                    <p id="story-text" class="text-lg md:text-xl leading-relaxed text-gray-100"></p>
+                </div>
+
+                <div class="gold-box w-full p-6 md:p-8 rounded-2xl relative shadow-2xl mt-4">
+                    <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-[#0a0a2a] text-white px-8 py-2 rounded-full border-2 border-yellow-400 font-bold tracking-widest cinzel text-lg shadow-[0_0_10px_gold]" id="question-tag">OLAY</div>
+                    <h4 id="question-title" class="text-2xl md:text-3xl font-bold text-center mt-4 mb-8 text-black">Bu metnin ... nedir?</h4>
+                    <div id="options-container" class="flex flex-col gap-4">
+                        <!-- Options injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Game Button -->
+        <button onclick="endGame()" class="absolute bottom-6 right-6 card-bg px-6 py-3 rounded-xl text-red-300 hover:bg-red-900/80 hover:text-white transition-all border border-red-500/50 text-sm md:text-base font-bold shadow-lg z-30">
+            Oyunu Bitir
+        </button>
+    </div>
+
+    <div id="end-screen" class="hidden absolute inset-0 z-50 flex-col items-center justify-center bg-[#0a0a2a]/95 backdrop-blur-md">
+        <h1 class="cinzel text-6xl md:text-7xl font-bold text-yellow-400 mb-8 animate-bounce drop-shadow-[0_0_20px_gold]">Oyun Bitti!</h1>
+        <div class="card-bg p-8 md:p-12 rounded-3xl w-full max-w-3xl text-center shadow-[0_0_50px_rgba(255,215,0,0.4)] relative">
+            <h2 class="text-4xl mb-8 text-white font-bold border-b border-white/20 pb-4 cinzel">Skor Tablosu</h2>
+            <div id="final-scoreboard" class="flex flex-col gap-4 text-2xl">
+                <!-- Final results injected here -->
+            </div>
+        </div>
+        <button onclick="location.reload()" class="mt-12 bg-white/10 hover:bg-white/20 px-8 py-4 rounded-2xl border-2 border-white/30 transition-all font-bold text-xl hover:scale-105">Yeniden Oyna</button>
+    </div>
+
+    <script>
+        const storyData = [
+            {
+                title: "1. Sihirli Ayva Tohumu",
+                text: "Bir varmış bir yokmuş, uzak diyarların birinde verimli toprakları olan şirin bir köy varmış. Bu köyde yaşayan genç bir çiftçi, tarlasını sürerken parlayan, sihirli bir ayva tohumu bulmuş. Tohumu toprağa ektiği o gece, gökyüzünden süzülen bir yıldız perisi tohumu kutsamış. Ertesi sabah, tohumun yerinde altın yapraklı ve gümüş meyveli devasa bir ağaç duruyormuş. Çiftçi, bu ağacın meyveleriyle tüm köyü bolluğa kavuşturmuş.",
+                olay: { c: "Çiftçinin bulduğu tohumun perinin kutsamasıyla büyüyerek köyü bolluğa kavuşturması.", w: ["Çiftçinin sihirli ayva tohumunu yiyerek periye dönüşmesi ve köyden ayrılması.", "Yıldız perisinin köye altın yapraklı bir ağaç tohumu satıp zengin olması."] },
+                yer: { c: "Uzak diyarlarda şirin bir köy, tarla.", w: ["Uzak diyarlardaki yıldız perisi şatosu.", "Çiftçinin orman içindeki gizli kulübesi."] },
+                zaman: { c: "Bir varmış bir yokmuş, o gece, ertesi sabah.", w: ["Bir varmış bir yokmuş, kırk gün kırk gece sonra.", "Geçen yılın ilkbahar aylarında."] },
+                kisi: { c: "Genç çiftçi, yıldız perisi.", w: ["Yaşlı çiftçi, orman perisi.", "Genç çiftçi, sihirli altın yaprak."] }
+            },
+            {
+                title: "2. Zümrüdüanka Kuşu ve Şifalı Su",
+                text: "Evvel zaman içinde, Kafdağı'nın sarp kayalıklarında efsanevi Zümrüdüanka kuşu yaşarmış. Bir gün, amansız bir hastalığa yakalanan yaşlı kral için şifalı su bulmak üzere cesur bir şövalye yola koyulmuş. Yedi karanlık vadiyi aştıktan sonra kuşun yuvasına ulaşan şövalye, ona kılıcını sunmuş. Kuş, bu cesaretin karşısında kanatlarından bir tüy ve bir damla şifalı su vererek kralı iyileştirmiş.",
+                olay: { c: "Şövalyenin hasta kral için Zümrüdüanka'ya ulaşıp ondan şifalı su alması.", w: ["Şövalyenin kılıcıyla Zümrüdüanka kuşunu yenip şifalı suyu zorla alması.", "Yaşlı kralın yedi karanlık vadiyi aşarak kuşun yuvasına gitmesi."] },
+                yer: { c: "Kafdağı'nın sarp kayalıkları, yedi karanlık vadi, kuşun yuvası.", w: ["Kralın sarp kayalıklardaki şatosu.", "Kafdağı'nın karanlık ormanları ve nehirleri."] },
+                zaman: { c: "Evvel zaman içinde, bir gün.", w: ["Evvel zaman içinde, her dolunay gecesi.", "Eski çağların karanlık bir kış gününde."] },
+                kisi: { c: "Zümrüdüanka kuşu, yaşlı kral, cesur şövalye.", w: ["Zümrüdüanka kuşu, genç kral, bilge şövalye.", "Sihirli kılıç, yaşlı kral, Zümrüdüanka kuşu."] }
+            },
+            {
+                title: "3. Altın Kalpli Balıkçı",
+                text: "Zamanın birinde, uçsuz bucaksız Mavi Deniz'in kıyısındaki derme çatma bir kulübede yoksul bir balıkçı yaşarmış. Balıkçı, fırtınalı bir günde ağlarına takılan ve pulları yakut gibi parlayan denizkızını kıyamayıp suya geri bırakmış. Denizkızı, bu iyiliğin karşılığı olarak balıkçıya denizlerin dibindeki batık bir geminin yerini söylemiş. Balıkçı gemideki hazineyi bulmuş ama zenginliğinin çoğunu kasabadaki yoksullara dağıtmış.",
+                olay: { c: "Balıkçının denizkızını serbest bırakması, bulduğu hazineyi yoksullarla paylaşması.", w: ["Denizkızının balıkçıyı su altındaki batık gemide yaşamaya ikna etmesi.", "Yoksul balıkçının denizkızının yakut pullarını satarak zengin olması."] },
+                yer: { c: "Mavi Deniz'in kıyısı, kulübe, batık gem.", w: ["Yakut Deniz'in kıyısındaki büyük bir kasaba.", "Mavi Deniz'in derinliklerindeki denizkızı sarayı."] },
+                zaman: { c: "Zamanın birinde, fırtınalı bir günde.", w: ["Zamanın birinde, güneşli bir sabah.", "Evvel zaman içinde, üç gün üç gece."] },
+                kisi: { c: "Yoksul balıkçı, denizkızı, kasabadaki yoksullar.", w: ["Zengin balıkçı, denizkızı, gemi kaptanı.", "Yoksul balıkçı, batık gem, yakut balıkları."] }
+            },
+            {
+                title: "4. Uçan Halı ve Kayıp Prens",
+                text: "Çok eski çağlarda, gökyüzüne uzanan kuleleri olan Rüzgarlı Şehir'de bir prens aniden ortadan kaybolmuş. Sarayın terzisi olan kurnaz genç, tavan arasında bulduğu eski ve tozlu bir halının uçabildiğini fark etmiş. Gece yarısı halıya binen terzi, bulutların üzerindeki Devler Ülkesi'ne kadar uçmuş. Orada, zindana kapatılan prensi bulup halıya bindirerek şafak sökmeden saraya geri getirmiş.",
+                olay: { c: "Terzinin uçan halıyla Devler Ülkesi'ne gidip kayıp prensi kurtarması.", w: ["Prensin uçan halıyı çalarak Devler Ülkesi'ne kaçması ve terzinin onu araması.", "Kurnaz terzinin sihirli halıyı prensesle evlenmek için krala satması."] },
+                yer: { c: "Rüzgarlı Şehir, tavan arası, Devler Ülkesi, zindan.", w: ["Bulutlu Şehir, saray bahçesi, Cüceler Ülkesi.", "Rüzgarlı Şehir'in gökyüzü kuleleri ve terzi dükkanı."] },
+                zaman: { c: "Çok eski çağlarda, gece yarısı, şafak sökmeden.", w: ["Çok eski çağlarda, gündüz vakti, akşam olmadan.", "Günlerden bir gün, gece yarısı."] },
+                kisi: { c: "Kurnaz genç terzi, kayıp prens, devler (dolaylı).", w: ["Cesur prens, yaşlı terzi, uçan halı.", "Kral, terzi çırağı, kurnaz dev."] }
+            },
+            {
+                title: "5. Ormanın Gözetleyicisi Baykuş",
+                text: "Günlerden bir gün, Fısıldayan Orman'ın derinliklerinde hayvanlar büyük bir kavgaya tutuşmuşlar. Nehrin suyunu kimin içeceği konusunda anlaşamayan kurtlar ve geyikler ormanın huzurunu bozmuş. Gecenin karanlığı çöktüğünde asırlık meşe ağacının dalında yaşayan Bilge Baykuş uyanmış. Gözlerinden saçtığı büyülü ışıkla herkesi sakinleştirmiş ve suyu adil bir şekilde paylaştırmış.",
+                olay: { c: "Bilge Baykuş'un hayvanlar arasındaki su kavgasını büyüsüyle çözüp barış sağlaması.", w: ["Kurtların ve geyiklerin Bilge Baykuş'un suyunu çalmak için kavga etmesi.", "Bilge Baykuş'un büyülü ışığıyla nehri kurutup kavgayı bitirmesi."] },
+                yer: { c: "Fısıldayan Orman, nehir kenarı, asırlık meşe ağacı.", w: ["Karanlık Orman, göl kenarı, çam ağacı.", "Fısıldayan Orman'ın dışındaki büyük nehir."] },
+                zaman: { c: "Günlerden bir gün, gecenin karanlığı çöktüğünde.", w: ["Her gece yarısı, sabah olduğunda.", "Bir zamanlar, gündüz vakti."] },
+                kisi: { c: "Kurtlar, geyikler, Bilge Baykuş.", w: ["Aslanlar, geyikler, Yaşlı Baykuş.", "Bilge Baykuş, meşe ağacı, nehir perisi."] }
+            },
+            {
+                title: "6. Konuşan Ayna ve Gümüş Tarak",
+                text: "Evvel zaman içinde, yedi tepeli bir krallıkta yaşayan kibirli kraliçe, odasındaki konuşan aynasına kimin daha güzel olduğunu sorup dururmuş. Bir sabah, ayna ona dağın eteğinde yaşayan oduncunun kızının daha güzel olduğunu söylemiş. Kraliçe, kılık değiştirerek kıza zehirli bir gümüş tarak hediye etmiş. Ancak ormandaki iyi kalpli cüceler kızı bulmuş ve tarağı saçından çıkararak onu ölüm uykusundan uyandırmış.",
+                olay: { c: "Kraliçenin oduncunun kızını kıskanıp zehirlemesi ve cücelerin kızı kurtarması.", w: ["Oduncunun kızının kraliçenin konuşan aynasını çalarak cücelere götürmesi.", "Kraliçenin iyi kalpli cücelere zehirli gümüş tarak hediye etmesi."] },
+                yer: { c: "Yedi tepeli krallık, dağın eteği, orman.", w: ["Yedi cücelerin krallığı, oduncunun sarayı.", "Dağın zirvesi, konuşan aynanın odası."] },
+                zaman: { c: "Evvel zaman içinde, bir sabah.", w: ["Çok eski zamanlarda, gece yarısı.", "Bir kış günü, yedi gün yedi gece."] },
+                kisi: { c: "Kibirli kraliçe, konuşan ayna, oduncunun kızı, iyi kalpli cüceler.", w: ["Kibirli kraliçe, oduncu, prens, cüceler.", "Kötü cadı, zehirli tarak, oduncunun kızı."] }
+            },
+            {
+                title: "7. Gökyüzü Korsanları ve Işık Kristali",
+                text: "Zamanın ötesinde, bulutların arasında süzülen Uçan Adalar'da ışık saçan sihirli bir kristal varmış. Bir gece, kalyonlarıyla gökyüzünü yaran karanlık korsanlar bu kristali çalmışlar. Adanın cesur muhafızı Rüzgar Çocuğu, kanatlı atına atlayarak korsanların gemisine gizlice sızmış. Güneş doğarken korsanları sihirli bir rüzgarla savurmuş ve kristali adanın merkezine geri koymuş.",
+                olay: { c: "Rüzgar Çocuğu'nun, korsanların çaldığı ışık kristalini geri alması.", w: ["Korsanların Rüzgar Çocuğu'nun kanatlı atını çalarak Uçan Adalar'dan kaçması.", "Rüzgar Çocuğu'nun korsanlara katılarak ışık kristalini çalması."] },
+                yer: { c: "Uçan Adalar, gökyüzü, korsanların gemisi, adanın merkezi.", w: ["Bulutlu Denizler, korsanların adası, kanatlı atın yuvası.", "Uçan Adalar'ın karanlık mağaraları, gökyüzü."] },
+                zaman: { c: "Zamanın ötesinde, bir gece, güneş doğarken.", w: ["Geçen asırda, dolunay gecesi, öğle vakti.", "Bir varmış bir yokmuş, günlerce."] },
+                kisi: { c: "Karanlık korsanlar, Rüzgar Çocuğu, kanatlı at.", w: ["Gökyüzü perileri, Rüzgar Çocuğu, korsan kaptanı.", "Karanlık korsanlar, Rüzgar Çocuğu, Işık Kristali."] }
+            },
+            {
+                title: "8. Yeraltı Kraliçesi'nin Kolyesi",
+                text: "Bir zamanlar, Yedi Kat Yerin Altı'nda hüküm süren Kraliçe'nin elmas kolyesi kaybolmuş. Yeryüzünde madencilik yapan fakir bir çocuk, toprağı kazarken parlayan bir taş bulmuş ve bunun o efsanevi kolye olduğunu anlamış. Hiç tereddüt etmeden mağaraların derinliklerine inerek kolyeyi Kraliçe'ye teslim etmiş. Kraliçe, çocuğun dürüstlüğüne hayran kalarak ona tükenmeyen bir altın kesesi hediye etmiş.",
+                olay: { c: "Fakir çocuğun bulduğu kolyeyi kraliçeye dürüstçe geri götürüp ödüllendirilmesi.", w: ["Kraliçe'nin elmas kolyesini bulmak için yeryüzüne çıkarak çocuğu ödüllendirmesi.", "Çocuğun bulduğu kolyeyi satarak Yedi Kat Yerin Altı'nda krallık kurması."] },
+                yer: { c: "Yedi Kat Yerin Altı, yeryüzü, mağaraların derinlikleri.", w: ["Yedi Kat Gökyüzü, kraliçenin sarayı, orman.", "Yeryüzü, elmas madeni, kasaba meydanı."] },
+                zaman: { c: "Bir zamanlar.", w: ["Yedi gün yedi gece boyunca.", "Gelecek zamanların birinde."] },
+                kisi: { c: "Yeraltı Kraliçesi, fakir madenci çocuk.", w: ["Kötü Kraliçe, zengin madenci.", "Yeraltı Kraliçesi, elmas kolye, madenci çocuk."] }
+            },
+            {
+                title: "9. Ateş Ejderhası ve Kardan Adam",
+                text: "Bilinmeyen bir çağda, her mevsimin aynı anda yaşandığı Sihirli Vadi'de, Buz Dağı'nın eteklerinde yaşayan bir kardan adam varmış. Bir kış gecesi, vadiye inen Ateş Ejderhası her yeri yakıp yıkmaya başlamış. Kardan adam, kendisinin eriyeceğini bile bile ejderhaya sarılarak onun alevlerini dondurmuş. Kardan adam eriyip bir göle dönüşmüş, ancak vadi kurtulmuş.",
+                olay: { c: "Kardan adamın vadiyi kurtarmak için ejderhaya sarılıp kendini feda etmesi.", w: ["Ateş ejderhasının kardan adamı sihirli bir göle çevirerek vadiyi kurtarması.", "Kardan adamın ejderhayla arkadaş olup vadideki buzları eritmesi."] },
+                yer: { c: "Sihirli Vadi, Buz Dağı'nın etekleri, göl.", w: ["Ejderha Vadisi, Karlı Dağ'ın zirvesi.", "Ateş Dağı, kardan adamın evi, şelale."] },
+                zaman: { c: "Bilinmeyen bir çağda, bir kış gecesi.", w: ["Bir yaz gecesi, sabah olduğunda.", "Evvel zaman içinde, kırk gün boyunca."] },
+                kisi: { c: "Ateş Ejderhası, Kardan Adam.", w: ["Su Ejderhası, Buz Prensi.", "Ateş Ejderhası, Sihirli Vadi halkı."] }
+            },
+            {
+                title: "10. Zamanı Durduran Saatçi",
+                text: "Evvel zaman içinde, kimsenin yaşlanmadığı Sonsuz Saatler Kasabası'nda tuhaf bir saatçi yaşarmış. Bir gün, kasabanın devasa kulesindeki ana saat bozulmuş ve zaman herkes için hızla akmaya, insanlar bir günde yaşlanmaya başlamış. Saatçi, kuleye tırmanıp elindeki gümüş çarkı saatin kalbine yerleştirerek zamanı yeniden sabitlemiş. O andan itibaren saatçi kasabanın kahramanı ilan edilmiş.",
+                olay: { c: "Saatçinin bozulan ana saati tamir ederek insanların hızla yaşlanmasını durdurması.", w: ["Saatçinin kasabalıları hızla yaşlandırmak için ana saati bilerek bozması.", "Kasaba halkının kuleye tırmanıp tuhaf saatçiyi kahraman yapması."] },
+                yer: { c: "Sonsuz Saatler Kasabası, devasa kule.", w: ["Yaşlılar Kasabası, saatçinin dükkanı.", "Gümüş Çark Şehri, zaman mağarası."] },
+                zaman: { c: "Evvel zaman içinde, bir gün, o andan itibaren.", w: ["Çok eski yıllarda, her gece yarısı.", "Bir varmış bir yokmuş, sonsuza kadar."] },
+                kisi: { c: "Tuhaf saatçi, kasaba halkı.", w: ["Yaşlı saatçi, kule muhafızı.", "Genç kahraman, gümüş çark."] }
+            },
+            
+            {
+                title: "11. Görünmezlik Pelerini ve Kayıp Prenses",
+                text: "Çok eskiden, krallığın en yetenekli dokumacısı gizemli ipliklerle görünmezlik pelerini dikmiş. Karanlık Orman'ın Cadısı, krallığın prensesini kaçırdığında dokumacı pelerinini giyerek cadının şatosuna sızmış. Gece yarısı prensesin tutulduğu kuleye ulaşmış ve pelerini ikisinin de üzerine örterek oradan sessizce kaçmışlar. Cadı sabah olduğunda kuleyi boş bulup öfkesinden taşa dönüşmüş.",
+                olay: { c: "Dokumacının görünmezlik peleriniyle prensesi cadının şatosundan kurtarması.", w: ["Prensesin görünmezlik pelerini dikerek cadıyı taşa dönüştürmesi.", "Cadının dokumacıyı kaçırıp ona görünmezlik pelerini diktirmesi."] },
+                yer: { c: "Krallık, Karanlık Orman, cadının şatosu, kule.", w: ["Dokumacının atölyesi, Karanlık Kule.", "Şato, taş ormanı, prensesin odası."] },
+                zaman: { c: "Çok eskiden, gece yarısı, sabah olduğunda.", w: ["Evvel zaman içinde, üç gün üç gece.", "Çok eskiden, gün batımında."] },
+                kisi: { c: "Yetenekli dokumacı, Karanlık Orman'ın Cadısı, prenses.", w: ["Sihirli dokumacı, prens, cadı.", "Kral, cadı, görünmezlik pelerini."] }
+            },
+            {
+                title: "12. Gümüş Orman'ın Koruyucusu",
+                text: "Günlerden bir gün, yaprakları tamamen gümüşten olan Gümüş Orman'a açgözlü oduncular gelmiş. Ağaçları kesmeye başladıklarında, ormanın koruyucusu olan Dev Karınca yeraltından çıkagelmiş. Karınca, devasa ayaklarını yere vurarak küçük bir deprem yaratmış ve oduncuları korkutarak ormandan kaçırmış. Orman o geceden sonra kendini görünmez bir kalkanla korumaya almış.",
+                olay: { c: "Dev Karınca'nın, gümüş ağaçları kesmeye çalışan oduncuları korkutup ormanı kurtarması.", w: ["Oduncuların Dev Karınca'yakalayarak gümüş ormanı tamamen kesmesi.", "Dev Karınca'nın ormanı kesip ağaçlardan görünmez bir kalkan yapması."] },
+                yer: { c: "Gümüş Orman, yeraltı.", w: ["Altın Orman, oduncuların köyü.", "Görünmez Kalkan Vadisi."] },
+                zaman: { c: "Günlerden bir gün, o geceden sonra.", w: ["Bir zamanlar, her sabah.", "Evvel zaman içinde, gece yarısı."] },
+                kisi: { c: "Açgözlü oduncular, Dev Karınca.", w: ["İyi kalpli oduncular, Orman Perisi.", "Dev Karınca, Gümüş Ağaç."] }
+            },
+            {
+                title: "13. Konuşan Kılıç ve Korkak Asker",
+                text: "Zamanın birinde, sınır boyundaki küçük bir kalede nöbet tutan çok korkak bir asker varmış. Bir akşam, deponun dibinde tozlanmış, kendi kendine şarkı söyleyen sihirli bir kılıç bulmuş. Düşman ordusu kaleyi kuşattığında, asker kılıcı eline alır almaz kılıcın sihirli şarkısı ona eşsiz bir cesaret vermiş. Asker tek başına düşmanları geri püskürtmüş ve kılıçla birlikte efsane olmuş.",
+                olay: { c: "Korkak askerin bulduğu konuşan kılıcın şarkısıyla cesaretlenip düşmanı yenmesi.", w: ["Askerin kılıçtan korkarak düşman ordusuna teslim olması.", "Düşman ordusunun kaleye gizlice girip sihirli kılıcı çalması."] },
+                yer: { c: "Sınır boyundaki küçük kale, depo.", w: ["Sınır boyundaki orman, kralın şatosu.", "Düşman kalesi, asker çadırı."] },
+                zaman: { c: "Zamanın birinde, bir akşam.", w: ["Günlerden bir gün, güneş doğarken.", "Çok uzun yıllar önce, kış mevsiminde."] },
+                kisi: { c: "Korkak asker, konuşan kılıç, düşman ordusu.", w: ["Cesur asker, kral, kılıç ustası.", "Düşman komutanı, şarkı söyleyen asker."] }
+            },
+            {
+                title: "14. Sihirli Lamba ve Açgözlü Tüccar",
+                text: "Evvel zaman içinde, Çöl Şehri'nin pazarında dolaşan tüccar, eski bir halı satıcısından antika bir lamba satın almış. Lambayı parlattığında içinden çıkan devasa cin ona üç dilek hakkı sunmuş. Tüccar, açgözlülükle dünyanın tüm altınlarını dileyince altınların ağırlığı altında ezilip kalmış. Cin, \"Gözü doymayanın sonu budur\" diyerek lambasına geri dönmüş.",
+                olay: { c: "Tüccarın cinden açgözlülükle tüm altınları dileyip kendi sonunu hazırlaması.", w: ["Halı satıcısının lambayı çalarak cinin üç dilek hakkını tüccarın elinden alması.", "Cinin tüccara acıyarak ona sihirli bir uçan halı hediye etmesi."] },
+                yer: { c: "Çöl Şehri'nin pazarı.", w: ["Altın Şehri'nin sarayı.", "Halı satıcısının dükkanı ve çöl çadırı."] },
+                zaman: { c: "Evvel zaman içinde.", w: ["Bir cuma günü sabahı.", "Zamanın birinde, gece yarısı."] },
+                kisi: { c: "Tüccar, halı satıcısı, devasa cin.", w: ["Tüccar, padişah, cin.", "Halı satıcısı, sihirli lamba, altınlar."] }
+            },
+            {
+                title: "15. Müzisyen Kedi ve Şifa Veren Melodi",
+                text: "Bir zamanlar, sürekli yağan yağmurların hiç durmadığı Hüzünlü Kasaba'da bir kemancı yaşarmış. Kemancının sarman kedisi, bir dolunay gecesi patileriyle kemanın tellerine dokunarak büyüleyici bir melodi çalmaya başlamış. Melodiyi duyan kara bulutlar dağılmış, hasta olan kasabalılar anında şifa bularak yataktan kalkmış. Kedi, kasabanın onur konuğu ilan edilmiş.",
+                olay: { c: "Kedinin kemanla çaldığı melodinin kasabanın havasını düzeltip hastaları iyileştirmesi.", w: ["Kemancının çaldığı melodi sayesinde sarman kedinin hastalıktan kurtulması.", "Kasabalıların kediyi kovduğu için kasabaya sürekli yağmur yağması."] },
+                yer: { c: "Hüzünlü Kasaba.", w: ["Güneşli Köy.", "Kemancının müzik okulu."] },
+                zaman: { c: "Bir zamanlar, bir dolunay gecesi.", w: ["Zamanın birinde, güneşli bir gün.", "Evvel zaman içinde, her gece."] },
+                kisi: { c: "Kemancı, sarman kedi, kasabalılar.", w: ["Yaşlı kemancı, sihirli keman, doktor.", "Kara bulutlar, sarman kedi, kral."] }
+            },
+            {
+                title: "16. Rüzgarın Kızı ve Uçurtma",
+                text: "Zamanların birinde, Yüksek Tepeler'de yaşayan küçük bir kız, rüzgarla konuşabilme yeteneğine sahipmiş. Bir ilkbahar sabahı, gökyüzünde kaybolan bulutları geri getirmek için devasa bir uçurtma yapmış. Uçurtmanın kuyruğuna rüzgarın fısıltılarını bağlayarak gökyüzüne salmış ve bulutlar uçurtmayı takip ederek yağmur getirmiş. Kuruyan topraklar yeniden yeşermiş.",
+                olay: { c: "Küçük kızın yaptığı uçurtma ve rüzgarın yardımıyla bulutları getirip toprağı yeşertmesi.", w: ["Rüzgarın küçük kızın devasa uçurtmasını yırtarak bulutları kaçırması.", "Kızın uçurtmayla gökyüzüne uçup kayıp bulutların arasında yaşamaya başlaması."] },
+                yer: { c: "Yüksek Tepeler.", w: ["Alçak Vadiler.", "Rüzgarlı Şehir'in sokakları."] },
+                zaman: { c: "Zamanların birinde, bir ilkbahar sabahı.", w: ["Evvel zaman içinde, sonbahar akşamı.", "Uzun yıllar önce, kış mevsimi."] },
+                kisi: { c: "Küçük kız, rüzgar, bulutlar.", w: ["Uçurtma ustası, küçük kız.", "Küçük kız, yağmur perisi, sihirli uçurtma."] }
+            },
+            {
+                title: "17. Cam Dağı ve Cesur Karınca",
+                text: "Evvel zaman içinde, zirvesine kimsenin çıkamadığı pürüzsüz Cam Dağı'nın tepesinde bir şato varmış. Şatoda hapis tutulan Güneş Perisi'ni kurtarmak için bütün şövalyeler dağa tırmanmayı denemiş ama kayıp düşmüşler. Minik bir karınca, ayaklarına yapıştırdığı çam ağacı reçinesiyle günlerce tırmanarak zirveye ulaşmış. Perinin kafesinin kilidini küçük çenesiyle kırarak onu özgürlüğüne kavuşturmuş.",
+                olay: { c: "Şövalyelerin çıkamadığı dağa karıncanın reçineyle tırmanıp periyi kurtarması.", w: ["Şövalyelerin karıncanın yardımıyla Cam Dağı'na tırmanarak periyi kurtarması.", "Güneş Perisi'nin Cam Dağı'nı eriterek şövalyeleri ve karıncayı kurtarması."] },
+                yer: { c: "Cam Dağı, şato.", w: ["Çam Ormanı, şövalyelerin kalesi.", "Cam Şato, yeraltı mağarası."] },
+                zaman: { c: "Evvel zaman içinde, günlerce.", w: ["Bir varmış bir yokmuş, bir gecede.", "Zamanın birinde, sabah saatlerinde."] },
+                kisi: { c: "Şövalyeler, minik karınca, Güneş Perisi.", w: ["Dev karınca, kral, Güneş Perisi.", "Kötü büyücü, şövalyeler, minik karınca."] }
+            },
+            {
+                title: "18. Taşlaşmış Prens ve Sihirli Gözyaşı",
+                text: "Uzun yıllar önce, lanetli bir büyücünün kurbanı olan genç prens sarayın bahçesinde mermer bir heykele dönüşmüş. Sarayın bahçıvanının kızı, yıllarca o heykelin bakımını yapmış ve bir kış günü prensin haline acıyarak gözyaşı dökmüş. Kızın yanağından süzülen saf gözyaşı heykele değdiği anda mermer çatlamış ve prens hayata geri dönmüş. Büyücünün laneti sonsuza dek kırılmış.",
+                olay: { c: "Bahçıvanın kızının döktüğü saf gözyaşının taşlaşmış prensi eski haline döndürmesi.", w: ["Lanetli büyücünün bahçıvanın kızını da mermer heykele dönüştürmesi.", "Taşlaşmış prensin kılıcıyla büyücüyü yenerek kendi lanetini kırması."] },
+                yer: { c: "Sarayın bahçesi.", w: ["Büyücünün karanlık şatosu.", "Bahçıvanın ormandaki kulübesi."] },
+                zaman: { c: "Uzun yıllar önce, yıllarca, bir kış günü.", w: ["Evvel zaman içinde, bir ilkbahar sabahı.", "Gelecek zamanda, dolunay gecesi."] },
+                kisi: { c: "Lanetli büyücü, genç prens (heykel), bahçıvanın kızı.", w: ["Bahçıvan, sihirli heykel, kraliçe.", "İyi kalpli büyücü, genç prens, saf gözyaşı."] }
+            },
+            {
+                title: "19. Kayıp Kıta ve Pusula",
+                text: "Zamanın birinde, denizcilerin sadece efsanelerde duyduğu Kayıp Kıta'yı bulmak için genç bir kaptan yelken açmış. Kaptanın elinde, kuzeyi değil umudu gösteren büyülü bir pusula varmış. Fırtınalarla dolu yedi denizi aştıktan sonra pusulanın ibresi altın sarısı kumsalları olan adayı işaret etmiş. Kaptan, mürettebatıyla birlikte adaya ayak bastığında karşılarına konuşan yunuslar çıkmış.",
+                olay: { c: "Genç kaptanın büyülü pusulası sayesinde fırtınaları aşıp Kayıp Kıta'yı bulması.", w: ["Konuşan yunusların büyülü pusulayı kaptandan çalarak adaya saklanması.", "Kaptanın fırtınada pusulasını kaybedip adayı tesadüfen bulması."] },
+                yer: { c: "Yedi denizler, Kayıp Kıta (altın sarısı kumsalları olan ada).", w: ["Kuzey Denizi, yunusların su altı şehri.", "Liman kasabası, kaptanın gemisinin kamarası."] },
+                zaman: { c: "Zamanın birinde.", w: ["Günlerden bir gün.", "Evvel zaman içinde, üç ay boyunca."] },
+                kisi: { c: "Genç kaptan, mürettebat, konuşan yunuslar.", w: ["Yaşlı denizciler, denizkızları, kaptan.", "Genç kaptan, büyülü pusula, korsanlar."] }
+            },
+            {
+                title: "20. Sihirli Fırça ve Canlanan Resimler",
+                text: "Çok eski zamanlarda, yetenekli ama çok fakir bir ressama yaşlı bir bilge sihirli bir fırça hediye etmiş. Ressam, fırçayla duvara çizdiği ekmeklerin ve kuşların aniden canlanıp gerçeğe dönüştüğünü fark etmiş. Kötü kalpli vali bunu öğrenince ressamı zindana attırıp kendisine altın çizmesini emretmiş. Ressam ise duvara devasa bir ejderha çizmiş; canlanan ejderha valiyi korkutup ressamı kurtarmış.",
+                olay: { c: "Ressamın çizdiklerini canlandıran fırçayla ejderha çizip kötü validen kurtulması.", w: ["Yaşlı bilgenin sihirli fırçayla altınlar çizerek valiyi zengin etmesi.", "Ressamın valinin emriyle altın çizip sarayda lüks içinde yaşamaya başlaması."] },
+                yer: { c: "Fakir ressamın evi, zindan.", w: ["Yaşlı bilgenin dağdaki kulübesi.", "Valinin saray bahçesi."] },
+                zaman: { c: "Çok eski zamanlarda.", w: ["Zamanın birinde, o gece.", "Evvel zaman içinde, güneş doğarken."] },
+                kisi: { c: "Ressam, yaşlı bilge, kötü kalpli vali, canlanan ejderha.", w: ["Fakir ressam, vezir, sihirli kuşlar.", "Sihirli fırça, kötü kalpli vali, prenses."] }
+            },
+
+            {
+                title: "21. Aynalar Ülkesi'nin Sırrı",
+                text: "Evvel zaman içinde, yansımaların gerçek olduğu Aynalar Ülkesi'nde bir çocuğun gölgesi kaybolmuş. Çocuk, gölgesini bulmak için kırık bir aynanın içinden geçerek tersine dönmüş bir dünyaya adım atmış. Orada gölgesinin, hüzünlü bir karanlık perisi tarafından tutsak edildiğini görmüş. Çocuğun anlattığı komik bir fıkraya gülen peri, gölgeyi serbest bırakmış ve çocuk kendi dünyasına dönmüş.",
+                olay: { c: "Çocuğun aynanın içindeki dünyada karanlık perisini güldürerek gölgesini kurtarması.", w: ["Çocuğun karanlık perisiyle savaşarak aynayı kırıp gölgesini zorla alması.", "Gölgenin çocuğu kandırarak Aynalar Ülkesi'ne hapsedip kendi dünyasına dönmesi."] },
+                yer: { c: "Aynalar Ülkesi, tersine dönmüş dünya (aynanın içi).", w: ["Karanlık Orman, perinin şatosu.", "Cam Dağı'nın zirvesindeki ayna sarayı."] },
+                zaman: { c: "Evvel zaman içinde.", w: ["Günlerden bir gün.", "Zamanın birinde, akşam vakti."] },
+                kisi: { c: "Çocuk, gölge, karanlık perisi.", w: ["Çocuk, ayna yapımcısı, ışık perisi.", "Gölge, kırık ayna, dev."] }
+            },
+            {
+                title: "22. Altın Çilek ve Şifa Perisi",
+                text: "Bir varmış bir yokmuş, devasa Mantar Ormanı'nın en ücra köşesinde sadece yüz yılda bir açan altın bir çilek yetişirmiş. Küçük bir çoban köpeği, zehirlenen sahibini kurtarmak için ormanın tehlikelerini aşarak çileği bulmuş. Çileği koruyan Şifa Perisi, köpeğin sadakatini ödüllendirip çileği ona kendi elleriyle vermiş. Köpek, çilekle sahibini kurtarmış.",
+                olay: { c: "Köpeğin sahibini kurtarmak için tehlikeleri aşıp periden altın çileği alması.", w: ["Şifa perisinin çoban köpeğini altın çileğe dönüştürerek ormanı koruması.", "Zehirlenen sahibin ormana gidip Şifa Perisi ile savaşarak çileği alması."] },
+                yer: { c: "Devasa Mantar Ormanı'nın en ücra köşesi.", w: ["Altın Çilek Vadisi, köpeğin kulübesi.", "Şifa Perisi'nin bulutlardaki sarayı."] },
+                zaman: { c: "Bir varmış bir yokmuş.", w: ["Evvel zaman içinde, yedi gün yedi gece.", "Geçen yüzyılda, güneş batarken."] },
+                kisi: { c: "Çoban köpeği, zehirlenen sahip, Şifa Perisi.", w: ["Çoban, zehirli yılanlar, altın çilek.", "Yaşlı bilge, çoban köpeği, orman perisi."] }
+            },
+            {
+                title: "23. Uyku Tozu ve Küçük Dev",
+                text: "Zamanın birinde, Gökyüzü Şatosu'nda yaşayan devlerin en küçüğü, diğerleri gibi korkutucu olmak yerine insanlara iyi uykular getirmek istermiş. Geceleri bulutlardan topladığı gümüş tozları yeryüzündeki çocukların yastıklarına serpermiş. Bir gece kasabaya saldıran korkunç canavarların üzerine bu tozlardan koca bir çuval dökmüş. Canavarlar derin bir uykuya dalmış ve küçük dev kasabanın koruyucusu olmuş.",
+                olay: { c: "Küçük devin çocuklara uyku tozu dağıtırken bu tozla canavarları uyutup kasabayı kurtarması.", w: ["Korkunç canavarların uyku tozlarını çalarak küçük devi yeryüzüne hapsetmesi.", "Küçük devin insanları korkutmak için üzerlerine gümüş tozlar dökmesi."] },
+                yer: { c: "Gökyüzü Şatosu, yeryüzü (kasaba).", w: ["Gümüş Toz Dağı, canavarların mağarası.", "Yeraltı Şehri, çocukların odası."] },
+                zaman: { c: "Zamanın birinde, geceleri, bir gece.", w: ["Bir varmış bir yokmuş, gündüz vakti.", "Uzun yıllar önce, şafak sökerken."] },
+                kisi: { c: "Küçük dev, çocuklar, korkunç canavarlar.", w: ["Korkunç devler, kasabanın muhafızı.", "Gümüş tozlar, küçük dev, kasabalılar."] }
+            },
+            {
+                title: "24. Sihirli Makas ve Terzi Çırağı",
+                text: "Çok eskiden, kestiği kumaşları gece gökyüzüne dönüştüren sihirli bir makas varmış. Bu makas, zalim bir büyücünün kalesinde kara bir sandıkta kilitli tutulurmuş. Cesur bir terzi çırağı, kılık değiştirerek kaleye girmiş ve makası çalarak kaçmış. Makasla bulutları kesip biçerek büyücünün şatosunun üzerine sonsuz bir güneş ışığı örtmüş ve büyücünün karanlık güçlerini yok etmiş.",
+                olay: { c: "Terzi çırağının çaldığı sihirli makasla bulutları keserek büyücünün gücünü yok etmesi.", w: ["Büyücünün sihirli makasla terzi çırağının kumaşlarını keserek onu cezalandırması.", "Terzi çırağının makasla kendisine görünmezlik pelerini dikip şatodan kaçması."] },
+                yer: { c: "Zalim büyücünün kalesi (şatosu).", w: ["Terzi dükkanı, Gökyüzü Sarayı.", "Bulutların üzeri, karanlık orman."] },
+                zaman: { c: "Çok eskiden.", w: ["Evvel zaman içinde, gece yarısı.", "Zamanın birinde, sabah saatlerinde."] },
+                kisi: { c: "Cesur terzi çırağı, zalim büyücü.", w: ["Cesur terzi çırağı, sihirli makas, gökyüzü perisi.", "Büyücü, makas, gökyüzü perisi."] } // Added a dummy wrong option to complete the required 3
+            },
+            {
+                title: "25. Denizlerin Kızı ve İncili İstiridye",
+                text: "Evvel zaman içinde, okyanusun en derin noktasında mercan sarayında yaşayan Denizlerin Kızı, kayıp bir incili istiridyeyi arıyormuş. Bu istiridye, denizdeki dalgaların sakinleşmesini sağlayan sihirli bir kalbe sahipmiş. Denizlerin Kızı, karanlık kanyonlarda yaşayan dev ahtapotu şarkısıyla uyutarak istiridyeyi onun kollarından almış. İstiridyeyi saraya getirdiğinde okyanuslarda sonsuz bir sükunet başlamış.",
+                olay: { c: "Denizlerin Kızı'nın fırtınaları durduran istiridyeyi ahtapottan şarkıyla alıp sükunet sağlaması.", w: ["Dev ahtapotun incili istiridyeyi kullanarak okyanusta büyük bir fırtına koparması.", "Denizlerin Kızı'nın incili istiridyeyi dev ahtapota hediye ederek onunla dost olması."] },
+                yer: { c: "Okyanusun en derin noktası, mercan sarayı, karanlık kanyonlar.", w: ["Sessiz kumsal, balıkçı kasabası.", "İnci Adası, dev ahtapotun gemisi."] },
+                zaman: { c: "Evvel zaman içinde.", w: ["Fırtınalı bir gece yarısı.", "Zamanın birinde, üç gün sonra."] },
+                kisi: { c: "Denizlerin Kızı, dev ahtapot.", w: ["Denizkızı prensesi, yunuslar, istiridye.", "Okyanus kralı, Denizlerin Kızı, balıkçılar."] }
+            },
+            {
+                title: "26. Kayıp Şarkı ve Flütçü",
+                text: "Bilinmeyen bir çağda, hiç müzik çalınmayan Sessiz Vadi'de yalnız bir flütçü gezinirmiş. Flütçü, bir dağ mağarasında taşa kazınmış kadim bir şarkı notası bulmuş. Şarkıyı flütüyle çalmaya başladığında vadideki gri ağaçlar birden rengarenk çiçekler açmış. Flütçünün şarkısı, vadideki kötü kalpli sessizlik ruhunu sonsuza dek sürgün etmiş.",
+                olay: { c: "Flütçünün mağarada bulduğu notayı çalarak vadiyi canlandırması ve sessizlik ruhunu kovması.", w: ["Sessizlik ruhunun flütçünün flütünü çalarak vadideki tüm çiçekleri soldurması.", "Flütçünün şarkı notalarını sessizlik ruhuna satarak zengin bir müzisyen olması."] },
+                yer: { c: "Sessiz Vadi, dağ mağarası.", w: ["Müzik Şehri, konser salonu.", "Rengarenk Orman, perilerin mağarası."] },
+                zaman: { c: "Bilinmeyen bir çağda.", w: ["Bir varmış bir yokmuş, her akşam.", "Zamanın birinde, ilkbahar mevsiminde."] },
+                kisi: { c: "Yalnız flütçü, sessizlik ruhu.", w: ["Yalnız flütçü, koro melekleri, kral.", "Şarkı notası, sessizlik ruhu, orman perisi."] }
+            },
+            {
+                title: "27. Buzdan Köprü ve Ateş Kuşu",
+                text: "Zamanın birinde, iki ayrılmış krallığı birleştiren köprü, kötü bir büyüyle buza çevrilmiş. Krallıkların birleşmesini isteyen Ateş Kuşu, gökyüzünden süzülerek köprünün üzerine konmuş. Günlerce kanat çırparak tüylerinden sıcak alevler dökmüş ve buzları eritmiş. Köprü eski taş haline döndüğünde iki krallık yeniden barış içinde kucaklaşmış.",
+                olay: { c: "Ateş Kuşu'nun sihirle buza dönen köprüyü eriterek iki krallığı barıştırması.", w: ["Kralların büyücülerle anlaşıp Ateş Kuşu'nu buza çevirmesi.", "Ateş Kuşu'nun taş köprüyü yakıp yıkarak krallıkları birbirinden tamamen ayırması."] },
+                yer: { c: "İki ayrılmış krallık, buzdan köprü.", w: ["Ateş Dağı, gökyüzü sarayı.", "Büyücünün şatosu, kralların otağı."] },
+                zaman: { c: "Zamanın birinde, günlerce.", w: ["Evvel zaman içinde, bir gecede.", "Çok eski çağlarda, kış mevsimi boyunca."] },
+                kisi: { c: "Ateş Kuşu, krallık halkları.", w: ["Kötü büyücü, Ateş Kuşu, prens.", "İki kral, buz perisi, ateş perisi."] }
+            },
+            {
+                title: "28. Ayışığı Perisi ve Sihirli Kavanoz",
+                text: "Evvel zaman içinde, gece karanlığından korkan çocuklara cesaret vermek için Ayışığı Perisi gökyüzünden ışık damlaları toplarmış. Bir gece, elindeki kavanozu düşürüp kırmış ve bütün ışıklar Gölgeler Ormanı'na saçılmış. Ormandaki iyi kalpli ateşböcekleri perinin yardımına koşarak kendi ışıklarını yeni bir sihirli kavanoza doldurmuşlar. O günden sonra ateşböcekleri Ayışığı Perisi'nin elçileri olmuşlar.",
+                olay: { c: "Kavanozu kırılan Ayışığı Perisi'ne ateşböceklerinin ışıklarını vererek yardım etmesi.", w: ["Karanlıktan korkan çocukların Gölgeler Ormanı'na gidip sihirli kavanozu kırması.", "Ayışığı Perisi'nin ateşböceklerinin ışıklarını zorla alıp onları karanlıkta bırakması."] },
+                yer: { c: "Gökyüzü, Gölgeler Ormanı.", w: ["Ay Sarayı, çocukların odası.", "Işık Vadisi, perilerin kasabası."] },
+                zaman: { c: "Evvel zaman içinde, bir gece, o günden sonra.", w: ["Zamanın birinde, gündüz vakti, her sabah.", "Günlerden bir gün, yıllarca."] },
+                kisi: { c: "Ayışığı Perisi, korkan çocuklar, iyi kalpli ateşböcekleri.", w: ["Güneş Perisi, karanlık canavarlar, çocuklar.", "Sihirli kavanoz, çocuklar, dev."] } // Added extra wrong options if missing
+            },
+            {
+                title: "29. Çöl Gülü ve Yağmur Bulutu",
+                text: "Çok eskiden, Kızgın Çöl'ün tam ortasında tek başına açan sihirli bir Çöl Gülü varmış. Bu gül susuzluktan boynunu bükmek üzereyken, gökyüzünde sürüklenen minik bir Yağmur Bulutu ona acımış. Bulut, diğer büyük bulutlardan gizlice ayrılarak gülün üzerine bolca yağmur bırakmış. Çöl Gülü o kadar mutlu olmuş ki, etrafındaki kumları yeşil bir vahaya dönüştürmüş.",
+                olay: { c: "Minik yağmur bulutunun kurumak üzere olan çölgülüne su vermesi ve gülün çölü vahaya çevirmesi.", w: ["Çöl Gülünün dikenleriyle büyük yağmur bulutlarını patlatıp sel felaketi yaratması.", "Minik bulutun susuzluktan kuruyup çöle düşmesi ve Çöl Gülü'nün onu kurtarması."] },
+                yer: { c: "Kızgın Çöl'ün tam ortası, vaha.", w: ["Yağmur Ormanları, bulutların sarayı.", "Serap Vadisi, gökyüzü okyanusu."] },
+                zaman: { c: "Çok eskiden.", w: ["Bir zamanlar, kırk gün kırk gece.", "Evvel zaman içinde, ilkbaharda."] },
+                kisi: { c: "Sihirli Çöl Gülü, minik Yağmur Bulutu.", w: ["Çöl kervanı, büyük bulutlar.", "Çöl Gülü, güneş perisi, kum canavarı."] }
+            },
+            {
+                title: "30. Uçan Kitap ve Genç Bilgin",
+                text: "Zamanın birinde, sonsuz rafları olan Bilgelik Kulesi'nde kanat çırpan uçan bir kitap varmış. Bu kitabın sayfalarında evrenin en büyük sırları yazılıymış ama kimse onu yakalayamıyormuş. Genç ve sabırlı bir bilgin, kitabı zorla yakalamak yerine yere oturup ona güzel ninniler söylemeye başlamış. Kitap yavaşça süzülerek bilginin kucağına konmuş ve sırlarını ona açmış.",
+                olay: { c: "Genç bilginin ninni söyleyerek yakalanamayan uçan kitabı sakince yanına çekmesi.", w: ["Uçan kitabın kuledeki tüm bilgileri silerek kuleyi terk etmesi.", "Genç bilginin uçan kitabı dev bir ağ ile avlayarak zorla sırlarını öğrenmesi."] },
+                yer: { c: "Bilgelik Kulesi.", w: ["Sihirli Kütüphane'nin gizli zindanı.", "Bilginin köydeki çalışma odası."] },
+                zaman: { c: "Zamanın birinde.", w: ["Evvel zaman içinde, gece yarısı.", "Günlerden bir gün, saat on ikide."] },
+                kisi: { c: "Genç bilgin, uçan kitap.", w: ["Yaşlı kütüphaneci, sihirli kitap, kral.", "Uçan kitap, büyücü, raflar."] }
+            }
+        ];
+
+        let groupsCount = 2;
+        let scores = [];
+        let currentGroupIndex = 0;
+        
+        let remainingCards = [...Array(30).keys()];
+        let currentCardData = null;
+        
+        // Define exact question stages
+        const stages = [
+            { key: 'olay', title: 'OLAYI' },
+            { key: 'kisi', title: 'KİŞİSİ (VARLIK KADROSU)' },
+            { key: 'yer', title: 'YERİ (MEKANI)' },
+            { key: 'zaman', title: 'ZAMANI' }
+        ];
+        let currentStageIndex = 0;
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playCorrectSound() {
+            if(!audioCtx) return;
+            // Relaxing Chime (C major arpeggio)
+            const freqs = [523.25, 659.25, 783.99, 1046.50];
+            freqs.forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + i * 0.1);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.1);
+                gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + i * 0.1 + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.1 + 1);
+                osc.stop(audioCtx.currentTime + i * 0.1 + 1);
+            });
+        }
+
+        function playWrongSound() {
+            if(!audioCtx) return;
+            // Dissonant sound (C4, Db4, Gb4)
+            const freqs = [261.63, 277.18, 369.99];
+            freqs.forEach((freq) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+                osc.stop(audioCtx.currentTime + 0.6);
+            });
+        }
+
+        function createBackgroundEffects() {
+            const bgLayer = document.getElementById('bg-layer');
+            bgLayer.innerHTML = ''; // Clear previous
+            // Sparkles
+            for(let i=0; i<35; i++) {
+                let spark = document.createElement('div');
+                spark.className = 'sparkle';
+                spark.style.width = Math.random() * 4 + 2 + 'px';
+                spark.style.height = spark.style.width;
+                spark.style.left = Math.random() * 100 + 'vw';
+                spark.style.top = Math.random() * 100 + 'vh';
+                spark.style.animation = `sparkleAnim ${Math.random() * 3 + 2}s infinite alternate ease-in-out`;
+                spark.style.animationDelay = `${Math.random() * 5}s`;
+                bgLayer.appendChild(spark);
+            }
+            // Floating Ghost Cards
+            for(let i=0; i<8; i++) {
+                let card = document.createElement('div');
+                card.className = 'ghost-card';
+                card.style.left = Math.random() * 90 + 'vw';
+                card.style.animation = `bgCardFloat ${Math.random() * 15 + 18}s infinite linear`;
+                card.style.animationDelay = `${Math.random() * -20}s`;
+                bgLayer.appendChild(card);
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            const input = document.getElementById('group-count').value;
+            groupsCount = parseInt(input);
+            if (groupsCount < 2) groupsCount = 2;
+            if (groupsCount > 5) groupsCount = 5;
+
+            scores = Array(groupsCount).fill(0);
+            currentGroupIndex = 0;
+            currentStageIndex = 0;
+            remainingCards = [...Array(30).keys()]; // Fresh deck in order (0 to 29)
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            document.getElementById('game-ui').style.display = 'flex';
+            
+            updateScoreboard();
+            updateTurnDisplay();
+        }
+
+        function updateTurnDisplay() {
+            const turnEl = document.getElementById('turn-display');
+            turnEl.innerText = `Sıra: ${currentGroupIndex + 1}. Grup`;
+        }
+
+        function updateScoreboard() {
+            const sb = document.getElementById('scoreboard');
+            sb.innerHTML = '';
+            
+            let maxScore = -1;
+            if (scores.some(s => s > 0)) {
+                maxScore = Math.max(...scores);
+            }
+
+            scores.forEach((score, i) => {
+                const isLeader = score === maxScore && score > 0;
+                sb.innerHTML += `
+                    <div id="score-box-${i}" class="card-bg px-5 py-2 rounded-xl flex items-center gap-3 border-2 transition-all ${isLeader ? 'border-cyan-400 shadow-[0_0_15px_cyan]' : 'border-transparent'}">
+                        <span class="font-bold text-gray-200 text-lg">${i+1}. Grup:</span>
+                        <span class="text-3xl font-bold text-white w-8 text-center" id="score-val-${i}">${score}</span>
+                        <span class="text-2xl transition-all duration-500 ${isLeader ? 'opacity-100 scale-110 drop-shadow-[0_0_8px_cyan]' : 'opacity-0 scale-50 w-0'}">💎</span>
+                    </div>
+                `;
+            });
+        }
+
+        function bringCard() {
+            if (remainingCards.length === 0) {
+                endGame();
+                return;
+            }
+
+            // Hide bring button
+            document.getElementById('btn-bring-card').classList.add('hidden');
+            
+            // Pick next card sequentially (0 to 29) as requested ("Go in order from 1 to 30")
+            const cardId = remainingCards.shift();
+            
+            currentCardData = storyData[cardId];
+            currentStageIndex = 0;
+
+            // Populate Text
+            document.getElementById('story-title').innerText = currentCardData.title;
+            document.getElementById('story-text').innerText = currentCardData.text;
+
+            const activeCard = document.getElementById('active-card');
+            activeCard.classList.remove('hidden');
+            activeCard.style.display = 'flex';
+            activeCard.classList.remove('scale-out');
+            activeCard.classList.add('scale-in');
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const stage = stages[currentStageIndex];
+            const dataObj = currentCardData[stage.key];
+            
+            document.getElementById('question-tag').innerText = stage.title.split(' ')[0];
+            document.getElementById('question-title').innerText = `Bu metnin ${stage.title} nedir?`;
+
+            // Prepare options (1 correct, 2 wrong)
+            let options = [
+                { text: dataObj.c, isCorrect: true },
+                { text: dataObj.w[0], isCorrect: false },
+                { text: dataObj.w[1], isCorrect: false }
+            ];
+            
+            // Shuffle answers
+            options.sort(() => Math.random() - 0.5);
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+            
+            options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-5 rounded-xl text-lg md:text-xl font-bold border-2 border-gray-300 shadow-sm leading-snug';
+                btn.innerText = opt.text;
+                btn.onclick = (e) => handleAnswer(opt.isCorrect, btn, e);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(isCorrect, btnElement, event) {
+            // Disable all buttons immediately
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => {
+                b.disabled = true;
+                b.style.pointerEvents = 'none';
+                if (b.innerText === currentCardData[stages[currentStageIndex].key].c && !isCorrect) {
+                    b.classList.add('correct-answer'); // Highlight correct one anyway
+                }
+            });
+
+            if (isCorrect) {
+                btnElement.classList.add('correct-answer');
+                playCorrectSound();
+                
+                // Diamond Animation & Score Update
+                const rect = btnElement.getBoundingClientRect();
+                animateDiamond(event.clientX || rect.left + rect.width/2, event.clientY || rect.top + rect.height/2, currentGroupIndex);
+                
+                // Add score visually after diamond arrives
+                setTimeout(() => {
+                    scores[currentGroupIndex]++;
+                    updateScoreboard();
+                }, 900);
+
+            } else {
+                btnElement.classList.add('wrong-answer');
+                playWrongSound();
+                document.body.classList.add('shake-active');
+                setTimeout(() => document.body.classList.remove('shake-active'), 500);
+            }
+
+            // Next Turn & Stage Logic after 2.5s delay to let users read
+            setTimeout(() => {
+                advanceTurnAndStage();
+            }, 2500);
+        }
+
+        function animateDiamond(startX, startY, groupIndex) {
+            const diamond = document.createElement('div');
+            diamond.className = 'diamond-particle';
+            diamond.innerText = '💎';
+            diamond.style.left = startX + 'px';
+            diamond.style.top = startY + 'px';
+            document.body.appendChild(diamond);
+
+            // Wait a frame to ensure starting position is rendered
+            requestAnimationFrame(() => {
+                const targetBox = document.getElementById(`score-box-${groupIndex}`);
+                if(!targetBox) return;
+                const targetRect = targetBox.getBoundingClientRect();
+                
+                setTimeout(() => {
+                    diamond.style.left = (targetRect.left + targetRect.width / 2 - 20) + 'px';
+                    diamond.style.top = (targetRect.top + targetRect.height / 2 - 20) + 'px';
+                    diamond.style.transform = 'scale(0.5)';
+                }, 50);
+
+                setTimeout(() => {
+                    diamond.remove();
+                }, 850);
+            });
+        }
+
+        function advanceTurnAndStage() {
+            // ALWAYS pass turn to NEXT group on EVERY question
+            currentGroupIndex = (currentGroupIndex + 1) % groupsCount;
+            updateTurnDisplay();
+
+            currentStageIndex++;
+            if (currentStageIndex >= 4) {
+                // All 4 questions answered. Card Finished.
+                const activeCard = document.getElementById('active-card');
+                activeCard.classList.remove('scale-in');
+                activeCard.classList.add('scale-out');
+                
+                setTimeout(() => {
+                    activeCard.classList.add('hidden');
+                    activeCard.style.display = 'none';
+                    document.getElementById('btn-bring-card').classList.remove('hidden');
+                    
+                    if (remainingCards.length === 0) {
+                        endGame();
+                    }
+                }, 400); // match scaleOut duration
+            } else {
+                // Next question on same card
+                showQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('game-ui').classList.add('hidden');
+            const endScreen = document.getElementById('end-screen');
+            endScreen.classList.remove('hidden');
+            endScreen.style.display = 'flex';
+
+            // Calculate Ranks
+            let results = scores.map((score, index) => ({ group: index + 1, score: score }));
+            results.sort((a, b) => b.score - a.score);
+
+            const finalSb = document.getElementById('final-scoreboard');
+            finalSb.innerHTML = '';
+            
+            results.forEach((res, idx) => {
+                let medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '👏';
+                finalSb.innerHTML += `
+                    <div class="flex justify-between items-center bg-white/10 p-5 rounded-xl border border-white/20 hover:bg-white/20 transition-colors">
+                        <span class="font-bold flex items-center gap-3"><span class="text-3xl">${medal}</span> ${res.group}. Grup</span>
+                        <span class="text-3xl font-bold text-yellow-400">${res.score} Puan</span>
+                    </div>
+                `;
+            });
+
+            createConfetti();
+        }
+
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff0000', '#00ff00', '#0000ff', '#ff00ff', '#00ffff'];
+            for(let i=0; i<150; i++) {
+                let conf = document.createElement('div');
+                conf.style.position = 'absolute';
+                conf.style.width = Math.random() * 12 + 6 + 'px';
+                conf.style.height = conf.style.width;
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = -20 + 'px';
+                conf.style.opacity = Math.random() + 0.5;
+                conf.style.zIndex = 100;
+                conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
+                
+                let duration = Math.random() * 3 + 2;
+                conf.animate([
+                    { transform: `translate3d(0,0,0) rotate(0deg)`, opacity: 1 },
+                    { transform: `translate3d(${Math.random()*300 - 150}px, 110vh, 0) rotate(${Math.random()*1080}deg)`, opacity: 0 }
+                ], {
+                    duration: duration * 1000,
+                    easing: 'cubic-bezier(.37,0,.63,1)',
+                    delay: Math.random() * 2000,
+                    iterations: Infinity
+                });
+                
+                document.getElementById('end-screen').appendChild(conf);
+            }
+        }
+
+        // Init setup on load
+        window.onload = () => {
+            createBackgroundEffects();
+        };
+
+    </script>
+</body>
+</html>

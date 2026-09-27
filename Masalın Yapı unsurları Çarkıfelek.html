@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Masal Çarkıfeleği - Tam Sürüm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #00cec9;
+            --accent: #fd79a8;
+            --gold: #fdcb6e;
+            --silver: #dfe6e9;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(-45deg, #1e0233, #090a0f, #150030, #001220);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Kurulum Ekranı */
+        #setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            z-index: 10;
+        }
+
+        #setup-screen h1 {
+            font-size: 4rem;
+            background: linear-gradient(to right, #00cec9, #fd79a8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0px 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .input-group {
+            margin: 30px 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="number"] {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            width: 80px;
+            text-align: center;
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            outline: none;
+        }
+
+        button {
+            font-family: 'Poppins', sans-serif;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: white;
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 25px rgba(108, 92, 231, 0.6);
+        }
+
+        /* Oyun Ekranı */
+        #game-screen {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            padding: 30px;
+            box-sizing: border-box;
+            height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        #scoreboard {
+            padding: 25px;
+            min-width: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #scoreboard::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(transparent, var(--gold), transparent 30%);
+            animation: rotateBorder 4s linear infinite;
+            z-index: -2;
+        }
+        
+        #scoreboard::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: #1a1a2e;
+            border-radius: 21px;
+            z-index: -1;
+        }
+
+        @keyframes rotateBorder {
+            100% { transform: rotate(1turn); }
+        }
+
+        .score-title {
+            margin-top: 0;
+            color: var(--gold);
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(253, 203, 110, 0.5);
+        }
+
+        .group-score {
+            font-size: 1.2rem;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+
+        .active-turn {
+            background: linear-gradient(90deg, rgba(253, 203, 110, 0.2), transparent);
+            border-left: 4px solid var(--gold);
+            transform: scale(1.05) translateX(10px);
+            font-weight: 800;
+        }
+
+        #turn-info {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #dfe6e9, #b2bec3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+        }
+
+        /* 3 Boyutlu Çarkıfelek Tasarımı */
+        .wheel-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%);
+            width: 450px;
+            height: 450px;
+            perspective: 1200px;
+        }
+
+        .wheel-glow-wrapper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 30px rgba(0, 206, 201, 0.5));
+            transform-style: preserve-3d;
+        }
+
+        #pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #ff7675;
+            z-index: 20;
+            filter: drop-shadow(0px 10px 10px rgba(0,0,0,0.6));
+            animation: pointerPulse 1s infinite alternate;
+        }
+
+        @keyframes pointerPulse {
+            from { transform: translateX(-50%) translateY(0) scale(1); }
+            to { transform: translateX(-50%) translateY(5px) scale(1.1); }
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(29.29% 0%, 70.71% 0%, 100% 29.29%, 100% 70.71%, 70.71% 100%, 29.29% 100%, 0% 70.71%, 0% 29.29%);
+            background: conic-gradient(
+                #e84393 0deg 45deg,
+                #0984e3 45deg 90deg,
+                #00b894 90deg 135deg,
+                #6c5ce7 135deg 180deg,
+                #d63031 180deg 225deg,
+                #e17055 225deg 270deg,
+                #fdcb6e 270deg 315deg, /* Altın */
+                #bdc3c7 315deg 360deg  /* Gümüş */
+            );
+            transform-style: preserve-3d;
+            transform: rotateX(25deg) rotateZ(0deg);
+            transition: transform 5s cubic-bezier(0.2, 0.8, 0.1, 1);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        .slice-label {
+            position: absolute;
+            top: 0; left: 50%;
+            width: 140px; height: 225px;
+            margin-left: -70px;
+            transform-origin: bottom center;
+            text-align: center;
+            padding-top: 25px;
+            box-sizing: border-box;
+        }
+
+        /* Dilim İçi Grafikler (Gölge, Işıltı, Emoji) */
+        .glow-1 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px rgba(255,255,255,0.8);
+            display: inline-block;
+        }
+
+        .slice-emoji {
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
+            display: inline-block;
+        }
+
+        #spin-btn {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #00b894, #00cec9);
+            box-shadow: 0 10px 25px rgba(0, 184, 148, 0.5);
+            z-index: 30;
+        }
+
+        #spin-btn:hover {
+            background: linear-gradient(45deg, #00cec9, #00b894);
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* Soru Ekranı */
+        #question-area {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 900px;
+            padding: 40px;
+            text-align: center;
+            z-index: 50;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translate(-50%, -40%) scale(0.8); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .diff-badge {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            color: #00cec9;
+            margin-bottom: 15px;
+            border: 1px solid #00cec9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #question-text {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+            line-height: 1.4;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            font-size: 1.5rem;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            margin: 0;
+        }
+
+        .option-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(108, 92, 231, 0.5);
+        }
+
+        /* Animasyonlar ve Kaos */
+        .emoji-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.8));
+            animation: flyOut 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .chaos-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 4.5rem;
+            filter: drop-shadow(0 0 20px #ff0000) hue-rotate(90deg);
+            animation: chaosZoom 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite alternate;
+        }
+
+        @keyframes flyOut {
+            0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 0; }
+            20% { opacity: 1; scale(1.2); }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes chaosZoom {
+            0% { transform: translate(0, 0) scale(0.5) rotate(-30deg); }
+            50% { transform: translate(100px, -100px) scale(2) rotate(45deg); }
+            100% { transform: translate(-100px, 100px) scale(0.8) rotate(-45deg); }
+        }
+
+        .kaos-bg {
+            animation: screenShake 0.4s cubic-bezier(.36,.07,.19,.97) both infinite;
+            filter: hue-rotate(90deg) contrast(150%);
+        }
+
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-2px, 2px, 0); }
+            20%, 80% { transform: translate3d(4px, -4px, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 6px, 0); }
+            40%, 60% { transform: translate3d(8px, -6px, 0); }
+        }
+
+        /* Bitiş Ekranı */
+        #end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        #end-screen h1 {
+            font-size: 5rem;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(253, 203, 110, 0.8);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen" class="glass-panel" style="padding: 50px; margin-top: auto; margin-bottom: auto;">
+        <h1>Çarkıfelek 2026</h1>
+        <p style="font-size: 1.2rem; color: #dfe6e9;">Masal Unsurları Macerası</p>
+        <div class="input-group">
+            <label for="group-count">Grup Sayısı (2-5): </label>
+            <input type="number" id="group-count" min="2" max="5" value="2">
+        </div>
+        <button onclick="startGame()">Maceraya Başla</button>
+    </div>
+
+    <div id="game-screen">
+        <div class="header">
+            <div id="scoreboard" class="glass-panel">
+                <h3 class="score-title">✨ SKOR TABLOSU ✨</h3>
+                <div id="score-list"></div>
+            </div>
+            
+            <div style="text-align: right;">
+                <div id="turn-info">Sıra: <span id="current-group-name" style="color: var(--gold);"></span></div>
+                <button id="end-btn" onclick="endGame()" style="background: linear-gradient(45deg, #d63031, #ff7675); font-size:1rem; padding: 12px 25px;">Oyunu Bitir</button>
+            </div>
+        </div>
+
+        <div class="wheel-container">
+            <div id="pointer"></div>
+            <div class="wheel-glow-wrapper">
+                <div id="wheel"></div>
+            </div>
+            <button id="spin-btn" onclick="spinWheel()">ÇARK'I ÇEVİR</button>
+        </div>
+
+        <div id="question-area" class="glass-panel">
+            <div id="diff-badge" class="diff-badge">Seviye</div>
+            <div id="question-text">Soru buraya gelecek...</div>
+            <div class="options-container">
+                <button class="option-btn" onclick="checkAnswer('Olay')">Olay</button>
+                <button class="option-btn" onclick="checkAnswer('Kişi')">Kişi / Varlık</button>
+                <button class="option-btn" onclick="checkAnswer('Yer')">Yer</button>
+                <button class="option-btn" onclick="checkAnswer('Zaman')">Zaman</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-screen" class="glass-panel" style="padding: 60px;">
+        <h1>OYUN BİTTİ!</h1>
+        <div id="final-scores" style="font-size: 2.5rem; margin-bottom: 40px; line-height: 1.8;"></div>
+        <button onclick="location.reload()">Yeniden Oyna</button>
+    </div>
+
+    <script>
+        // PDF'deki 60 Sorunun Tamamı (Seviyelere Göre Ayrılmış)
+        const questionsEasy = [
+            { text: "Evvel zaman içinde, kalbur saman içinde...", answer: "Zaman" },
+            { text: "Kafdağı'nın ardındaki billur saray.", answer: "Yer" },
+            { text: "Yedi başlı, ağzından ateş püskürten ejderha.", answer: "Kişi" },
+            { text: "Keloğlan'ın ormanda dolaşırken sihirli tası bulması.", answer: "Olay" },
+            { text: "Padişahın dünya güzeli, altın saçlı en küçük kızı.", answer: "Kişi" },
+            { text: "Göz alabildiğine uzanan, rengarenk çiçeklerin olduğu Periler Ülkesi.", answer: "Yer" },
+            { text: "Bir varmış, bir yokmuş...", answer: "Zaman" },
+            { text: "Üzerine binildiğinde istenilen yere uçan sihirli halı.", answer: "Kişi" },
+            { text: "Kötü kalpli kraliçenin prensese zehirli elma yedirmesi.", answer: "Olay" },
+            { text: "Karanlık ve derin ormanın tam ortasındaki cücelerin küçük evi.", answer: "Yer" },
+            { text: "Padişahın kızı için kırk gün kırk gece süren bir düğün yapılması.", answer: "Zaman" },
+            { text: "Sadece iyilik düşünen, asasıyla dilekleri gerçekleştiren peri.", answer: "Kişi" },
+            { text: "Prensesin öpücüğüyle çirkin kurbağanın yakışıklı bir prense dönüşmesi.", answer: "Olay" },
+            { text: "İnsanların yaşamadığı yedi kat yerin altı.", answer: "Yer" },
+            { text: "Sihirli fasulyelerin bir gece içinde gökyüzüne, devlerin ülkesine kadar uzaması.", answer: "Olay" },
+            { text: "Sadece geceleri parlayan altın elma ağacının bulunduğu saray bahçesi.", answer: "Yer" },
+            { text: "Günlerden bir gün, uzak diyarların birinde...", answer: "Zaman" },
+            { text: "Duvara asılı olan ve sadece doğruları söyleyen konuşan ayna.", answer: "Kişi" },
+            { text: "Fakir oduncunun ormanda yolunu kaybedip devin inine girmesi.", answer: "Olay" },
+            { text: "Pamuk Prenses'e kötülük yapan kurnaz ve kıskanç üvey anne.", answer: "Kişi" }
+        ];
+
+        const questionsMedium = [
+            { text: "Pireler berber, develer tellal iken...", answer: "Zaman" },
+            { text: "Tamamen camdan yapılmış, etrafı sönmeyen alevlerle çevrili uçurumun kenarındaki şato.", answer: "Yer" },
+            { text: "Gündüzleri sıradan bir insan, geceleri ise beyaz bir kuşa dönüşen lanetli şehzade.", answer: "Kişi" },
+            { text: "Üç kardeşin babalarının vasiyeti üzerine yola çıkıp üç farklı sihirli eşya bulmaları.", answer: "Olay" },
+            { text: "Saçları altın tellerden olan, gözyaşları yaraları iyileştiren Zümrüdüanka kuşu.", answer: "Kişi" },
+            { text: "Sularının şifa dağıttığı, dev bir yılanın nöbet tuttuğu efsanevi pınar.", answer: "Yer" },
+            { text: "Üç vakte kadar, güneşin tam tepeye geldiği o an...", answer: "Zaman" },
+            { text: "Kötü cadının, prenses kaçamasın diye sarayı görünmez bir kalkanla kaplaması.", answer: "Olay" },
+            { text: "Parmağı kadar boyu olan ama devleri bile kandırabilen zeki ve kurnaz çocuk (Parmak Çocuk).", answer: "Kişi" },
+            { text: "Ağaçlarının yaprakları zümrütten, meyveleri ise paha biçilemez yakuttan olan orman.", answer: "Yer" },
+            { text: "Zamanın un ufak olduğu, kimsenin yaşını bilmediği o eski çağlarda...", answer: "Zaman" },
+            { text: "Prens tarafından bulunan cam ayakkabının, saraydaki kimseye uymayıp sadece Külkedisi'nin ayağına uyması.", answer: "Olay" },
+            { text: "İnsanoğlunun dilinden anlayan, sahibine zenginlik getiren çizmeli kedi.", answer: "Kişi" },
+            { text: "Bulutların üzerinde, insanların asla ulaşamayacağı devlerin yaşadığı gökyüzü krallığı.", answer: "Yer" },
+            { text: "Az gitmişler uz gitmişler, dere tepe düz gitmişler, altı ayla bir güz gitmişler...", answer: "Zaman" },
+            { text: "Şehzadenin girdiği karanlık mağarada, kötü büyücü tarafından taşa dönüştürülmüş insanları kurtarmaya çalışması.", answer: "Olay" },
+            { text: "Takan kişiyi görünmez yapan ve yaklaşan kötülükleri fısıldayan sihirli yüzük.", answer: "Kişi" },
+            { text: "Hiçbir insanın adım atmadığı, güneşin yüzünü göstermediği sisli ve karanlık vadi.", answer: "Yer" },
+            { text: "Günler ayları, aylar yılları kovalarken, prensesin kuledeki yalnızlığı devam ediyormuş.", answer: "Zaman" },
+            { text: "Padişahın, hiç gülmeyen kızını güldürebilen kişiye kızını ve ülkesinin yarısını vereceğini ilan etmesi.", answer: "Olay" }
+        ];
+
+        const questionsHard = [
+            { text: "Ben annemin beşiğini tıngır mıngır sallar iken, babamın tarlasında karga kovar iken...", answer: "Zaman" },
+            { text: "Ucu bucağı olmayan, gidenin bir daha geri dönmediği Çin ü Maçin padişahlığının sınırları.", answer: "Yer" },
+            { text: "Dudaklarından her söz döküldüğünde etrafa inciler ve güller saçılan saf kız.", answer: "Kişi" },
+            { text: "Kahramanın kendi kibri yüzünden bir dağa hapsedilmesi ve oradan ancak gerçek bir sevgi gözyaşıyla kurtulabilmesi.", answer: "Olay" },
+            { text: "Yeraltı diyarının, ışıktan korkan ve gölgelerden beslenen şekilsiz hükümdarı.", answer: "Kişi" },
+            { text: "Sadece kalbi tamamen masum olanların görebildiği, haritalarda yer almayan görünmez ada.", answer: "Yer" },
+            { text: "Güneşin doğmayı unuttuğu, ayın gökyüzüne küsüp yüzünü sakladığı o uzun ve bitmek bilmeyen kışta...", answer: "Zaman" },
+            { text: "Şehzadenin, devin ruhunun saklı olduğu kutuyu bulmak için üç okyanusu ve yedi dağı aşmak zorunda kalması.", answer: "Olay" },
+            { text: "Kendi kendine şarkı söyleyen ve her telinde farklı bir duygu barındıran altından yapılmış sihirli arp.", answer: "Kişi" },
+            { text: "Duvarları fırtınalardan, çatısı ise parlayan yıldızlardan örülmüş, kimsenin giremediği sonsuzluk tapınağı.", answer: "Yer" },
+            { text: "Gökten üç elmanın düşmesine saniyeler kala, gökyüzünün kızıla boyandığı o sihirli an.", "answer": "Zaman" },
+            { text: "Şehzadenin, Zümrüdüanka kuşunun kanadına tutunarak diyardan diyara uçup kayıp sevgilisini araması.", answer: "Olay" },
+            { text: "Gözlerine bakan herkesi anında taşa çeviren, saçları yılanlarla kaplı, kalbi taştan ifrit.", answer: "Kişi" },
+            { text: "Devlerin gözyaşlarından oluşmuş, üzerinde hüzün gemilerinin sessizce yüzdüğü uçsuz bucaksız deniz.", answer: "Yer" },
+            { text: "Masal kuşunun bir kez kanat çırptığı ve tüm dünyanın uykuya daldığı o anlık sonsuzlukta...", answer: "Zaman" },
+            { text: "Kötü vezirin bir büyüyle saraydaki herkesi yüzyıllık bir uykuya daldırarak krallığı ele geçirmesi.", answer: "Olay" },
+            { text: "Sadece doğruları fısıldayan ve yalan söylendiğini duyduğunda yapraklarını döken bilge ağaç.", answer: "Kişi" },
+            { text: "Zamanın akmadığı, hiçbir şeyin yaşlanmadığı ve solmadığı yitikler ve unutulmuşlar şehri.", answer: "Yer" },
+            { text: "Şafak söküp de ilk horozun öttüğü, gecenin karanlığının kırıldığı ve tüm büyülerin bozulduğu o saniyede...", answer: "Zaman" },
+            { text: "Kahramanın sihirli aynada kendi yansımasıyla yüzleşerek içindeki kötülüğü yenmesi ve diyara barış getirmesi.", answer: "Olay" }
+        ];
+
+        const symbols = ['🌻', '🐞', '☀️', '🦋', '🍀'];
+        let groups = [];
+        let currentTurn = 0;   // Hangi grupta olduğunu tutar
+        let roundNumber = 1;   // Kaçıncı turda olunduğunu tutar (1:Kolay, 2:Orta, 3:Zor, 4:Kolay...)
+        
+        let isSpinning = false;
+        let currentQuestion = null;
+        let currentMultiplier = 1;
+
+        // Çark Dilimleri (Işıltılı 1'ler ve Emojilerle)
+        const slices = [
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='glow-1'>1</span>", multiplier: 1 },
+            { name: "<span class='slice-emoji'>🥇</span>", multiplier: 2, isGold: true },
+            { name: "<span class='slice-emoji'>🥈</span>", multiplier: 3, isSilver: true }
+        ];
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playWinSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); 
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); 
+            osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); 
+            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); 
+            gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        function playLoseSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.3);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.7);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.2);
+        }
+
+        function buildWheel() {
+            const wheel = document.getElementById('wheel');
+            slices.forEach((slice, index) => {
+                const label = document.createElement('div');
+                label.className = 'slice-label';
+                label.style.transform = `rotate(${index * 45}deg)`;
+                label.innerHTML = slice.name;
+                wheel.appendChild(label);
+            });
+        }
+
+        function startGame() {
+            let count = parseInt(document.getElementById('group-count').value);
+            if(count < 2) count = 2;
+            if(count > 5) count = 5;
+
+            for(let i=0; i<count; i++) {
+                groups.push({ id: i+1, symbol: symbols[i], score: 0, hasHadGold: false, hasHadSilver: false });
+            }
+
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            
+            buildWheel();
+            updateTurnDisplay();
+        }
+
+        function updateScoreboard() {
+            const list = document.getElementById('score-list');
+            list.innerHTML = '';
+            groups.forEach((g, index) => {
+                const div = document.createElement('div');
+                div.className = `group-score ${index === currentTurn ? 'active-turn' : ''}`;
+                div.innerHTML = `<span>Grup ${g.id} <span style="font-size:1.5rem">${g.symbol}</span></span> <span style="color:var(--gold); font-weight:bold;">${g.score} Puan</span>`;
+                list.appendChild(div);
+            });
+        }
+
+        function updateTurnDisplay() {
+            const current = groups[currentTurn];
+            document.getElementById('current-group-name').innerHTML = `Grup ${current.id} ${current.symbol}`;
+            
+            const btn = document.getElementById('spin-btn');
+            btn.style.display = 'block';
+            setTimeout(() => { btn.style.transform = 'translateX(-50%) scale(1)'; }, 50);
+            
+            document.getElementById('question-area').style.display = 'none';
+            document.querySelector('.wheel-container').style.opacity = '1';
+            updateScoreboard();
+        }
+
+        function spinWheel() {
+            if(isSpinning) return;
+            isSpinning = true;
+            document.getElementById('spin-btn').style.transform = 'translateX(-50%) scale(0)';
+            setTimeout(() => { document.getElementById('spin-btn').style.display = 'none'; }, 300);
+            
+            const group = groups[currentTurn];
+            let targetSliceIndex = Math.floor(Math.random() * 8);
+            
+            // Altın ve Gümüş Kontrolü (Sadece 1 kez denk gelmesi kuralı)
+            if(targetSliceIndex === 6 && group.hasHadGold) targetSliceIndex = Math.floor(Math.random() * 6);
+            else if (targetSliceIndex === 7 && group.hasHadSilver) targetSliceIndex = Math.floor(Math.random() * 6);
+
+            if(targetSliceIndex === 6) group.hasHadGold = true;
+            if(targetSliceIndex === 7) group.hasHadSilver = true;
+            
+            currentMultiplier = slices[targetSliceIndex].multiplier;
+
+            // Rastgele ofset ile ibrenin hep tam çizgiye gelmesini engelle (-15 ile +15 derece arası)
+            const randomOffset = Math.floor(Math.random() * 31) - 15;
+            const spinSpins = 6; 
+            const degreesPerSlice = 45;
+            
+            // Toplam dönme açısına rastgele ofseti ekliyoruz
+            const totalDegree = (spinSpins * 360) - (targetSliceIndex * degreesPerSlice) + randomOffset;
+
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotateX(25deg) rotateZ(${totalDegree}deg)`;
+
+            setTimeout(() => {
+                document.querySelector('.wheel-container').style.opacity = '0.3';
+                showQuestion();
+                isSpinning = false;
+                
+                // Rotasyonu resetle ki sonraki turda doğru dönüş yapsın
+                wheel.style.transition = 'none';
+                const normalizeDegree = totalDegree % 360;
+                wheel.style.transform = `rotateX(25deg) rotateZ(${normalizeDegree}deg)`;
+                setTimeout(() => { wheel.style.transition = 'transform 5s cubic-bezier(0.2, 0.8, 0.1, 1)'; }, 50);
+            }, 5000);
+        }
+
+        function showQuestion() {
+            let activePool;
+            let levelLabel = "";
+            let colorLabel = "";
+
+            // Sırayla Kolay, Orta, Zor belirleme (Tur numarasına göre)
+            if (roundNumber % 3 === 1) {
+                activePool = questionsEasy;
+                levelLabel = "Kolay Seviye";
+                colorLabel = "#00cec9"; // Mavi ton
+            } else if (roundNumber % 3 === 2) {
+                activePool = questionsMedium;
+                levelLabel = "Orta Seviye";
+                colorLabel = "#fdcb6e"; // Sarı ton
+            } else {
+                activePool = questionsHard;
+                levelLabel = "Zor Seviye";
+                colorLabel = "#ff7675"; // Kırmızı ton
+            }
+
+            // Seçilen havuz bittiyse (Yani 20 sorusu da sorulduysa) başka havuza geç
+            if (activePool.length === 0) {
+                if (questionsEasy.length > 0) activePool = questionsEasy;
+                else if (questionsMedium.length > 0) activePool = questionsMedium;
+                else if (questionsHard.length > 0) activePool = questionsHard;
+                else {
+                    alert("Harika! Masal Diyarındaki tüm soruları tamamladınız.");
+                    endGame();
+                    return;
+                }
+            }
+
+            // Rastgele soru çekme ve havuzdan çıkarma
+            const qIndex = Math.floor(Math.random() * activePool.length);
+            currentQuestion = activePool[qIndex];
+            activePool.splice(qIndex, 1);
+            
+            const specialText = currentMultiplier > 1 
+                ? `<br><span style="color:var(--gold); font-size:1.5rem; text-shadow: 0 0 10px var(--gold);">✨ Bu soru ${currentMultiplier} Puan Değerinde! ✨</span>` 
+                : '';
+            
+            const badge = document.getElementById('diff-badge');
+            badge.innerText = levelLabel;
+            badge.style.color = colorLabel;
+            badge.style.borderColor = colorLabel;
+
+            document.getElementById('question-text').innerHTML = `"${currentQuestion.text}"${specialText}`;
+            document.getElementById('question-area').style.display = 'block';
+        }
+
+        function checkAnswer(selectedOption) {
+            document.getElementById('question-area').style.display = 'none';
+
+            if(selectedOption === currentQuestion.answer) {
+                groups[currentTurn].score += currentMultiplier;
+                playWinSound();
+                spawnSuccessEmojis();
+            } else {
+                playLoseSound();
+                activateChaosMode();
+            }
+
+            // Bir sonraki gruba geç
+            currentTurn++;
+            
+            // Eğer herkes oynadıysa tur sayısını (Round) 1 artır, başa dön
+            if (currentTurn >= groups.length) {
+                currentTurn = 0;
+                roundNumber++;
+            }
+
+            setTimeout(() => { updateTurnDisplay(); }, 2500);
+        }
+
+        function spawnSuccessEmojis() {
+            const emojis = ['🌟', '✨', '🔥', '🎉', groups[currentTurn].symbol];
+            for(let i=0; i<35; i++) {
+                const el = document.createElement('div');
+                el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                el.className = 'emoji-particle';
+                
+                const tx = (Math.random() * 200 - 100) + 'vw';
+                const ty = (Math.random() * -100 - 50) + 'vh';
+                el.style.setProperty('--tx', tx);
+                el.style.setProperty('--ty', ty);
+                
+                el.style.left = '50vw';
+                el.style.top = '80vh';
+                
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2500);
+            }
+        }
+
+        function activateChaosMode() {
+            document.body.classList.add('kaos-bg');
+            const emojis = ['👾', '🌪️', '💥', '🙈', '🐒'];
+            const chaosElements = [];
+            
+            for(let i=0; i<30; i++) {
+                const el = document.createElement('div');
+                el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                el.className = 'chaos-particle';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.top = Math.random() * 100 + 'vh';
+                el.style.animationDelay = (Math.random() * 0.5) + 's';
+                document.body.appendChild(el);
+                chaosElements.push(el);
+            }
+
+            setTimeout(() => {
+                document.body.classList.remove('kaos-bg');
+                chaosElements.forEach(el => el.remove());
+            }, 2000);
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'flex';
+            
+            const sorted = [...groups].sort((a,b) => b.score - a.score);
+            let resultHTML = '';
+            sorted.forEach((g, index) => {
+                const medal = index === 0 ? '🏆' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : ''));
+                resultHTML += `<div>${medal} ${index+1}. Grup ${g.id} ${g.symbol} : <span style="color:white;">${g.score} Puan</span></div>`;
+            });
+            document.getElementById('final-scores').innerHTML = resultHTML;
+        }
+    </script>
+</body>
+</html>

@@ -74,5 +74,23 @@
     "picture": "orange",
     "tagClass": "turkce-tag",
     "description": "Zarf açarak anlatım bozukluklarını bul ve Türkçe becerilerini geliştir."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "Masalın Yapı unsurları Çarkıfelek.html",
+    "title": "Masalın Yapı Unsurları Çarkıfelek",
+    "icon": "🎡📜",
+    "picture": "purple",
+    "description": "Masalın yapı unsurlarını çarkıfelek oyunu ile pekiştir."
+  },
+  {
+    "category": "Masal ve Destanlarımız",
+    "id": "masal-destan",
+    "file": "masalın yapı unsurları kart oyunu.html",
+    "title": "Masalın Yapı Unsurları Kart Oyunu",
+    "icon": "🃏📜",
+    "picture": "cyan",
+    "description": "Masalın yapı unsurlarını kartlarla keşfet ve soruları yanıtla."
   }
 ]
